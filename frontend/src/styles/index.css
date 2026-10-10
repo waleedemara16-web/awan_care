@@ -1,0 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:ital,wght@0,600;0,800;0,900;1,700&family=Tajawal:wght@400;500;700&family=Poppins:wght@500;600;700;800&family=Nunito:wght@400;600;700&display=swap');
+/* Stylesheets ported unchanged from awan_8/css, in the same order as index.html */
+@import './01-base.css';
+@import './02-landing-screens.css';
+@import './03-operations.css';
+@import './04-autopilot.css';
+@import './05-ipad-staff.css';
+@import './06-journey-brain.css';

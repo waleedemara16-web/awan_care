@@ -1,0 +1,182 @@
+{
+ "actions": [],
+ "autoname": "field:patient_id",
+ "creation": "2026-10-10 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "patient_id",
+  "patient_name",
+  "file_no",
+  "status",
+  "archived",
+  "column_break_1",
+  "age",
+  "need",
+  "program",
+  "school",
+  "section_family",
+  "guardian",
+  "phone",
+  "family_code",
+  "school_code",
+  "section_data",
+  "data"
+ ],
+ "fields": [
+  {
+   "fieldname": "patient_id",
+   "fieldtype": "Data",
+   "label": "Patient ID",
+   "reqd": 1,
+   "unique": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "اسم الطفل",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "file_no",
+   "fieldtype": "Data",
+   "label": "رقم الملف",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "label": "الحالة",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "archived",
+   "fieldtype": "Check",
+   "label": "مؤرشف",
+   "default": "0"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "age",
+   "fieldtype": "Data",
+   "label": "العمر"
+  },
+  {
+   "fieldname": "need",
+   "fieldtype": "Data",
+   "label": "الاحتياج"
+  },
+  {
+   "fieldname": "program",
+   "fieldtype": "Data",
+   "label": "البرنامج"
+  },
+  {
+   "fieldname": "school",
+   "fieldtype": "Data",
+   "label": "المدرسة"
+  },
+  {
+   "fieldname": "section_family",
+   "fieldtype": "Section Break",
+   "label": "الأسرة"
+  },
+  {
+   "fieldname": "guardian",
+   "fieldtype": "Data",
+   "label": "ولي الأمر"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "الجوال"
+  },
+  {
+   "fieldname": "family_code",
+   "fieldtype": "Data",
+   "label": "كود الأسرة"
+  },
+  {
+   "fieldname": "school_code",
+   "fieldtype": "Data",
+   "label": "كود المدرسة"
+  },
+  {
+   "fieldname": "section_data",
+   "fieldtype": "Section Break",
+   "label": "بيانات الملف الكاملة",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "JSON",
+   "label": "Data"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-10 13:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Awan Care",
+ "name": "Awan Patient",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "share": 1,
+   "role": "System Manager",
+   "create": 1,
+   "write": 1,
+   "delete": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "share": 1,
+   "role": "Awan Management",
+   "create": 1,
+   "write": 1,
+   "delete": 1
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "print": 1,
+   "role": "Awan Supervisor"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "role": "Awan Reception"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "role": "Awan Staff"
+  }
+ ],
+ "search_fields": "patient_name,file_no,guardian",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "patient_name",
+ "track_changes": 1
+}
