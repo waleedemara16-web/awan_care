@@ -19,4 +19,24 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
   },
+  // frappe-ui imports virtual ~icons/lucide/* modules that esbuild's
+  // pre-bundler can't resolve; leave them external so Vite resolves them
+  // through frappe-ui's lucide plugin when serving the bundle.
+  optimizeDeps: {
+    // CommonJS deps imported from frappe-ui's .vue sources
+    include: ['feather-icons', 'socket.io-client'],
+    esbuildOptions: {
+      plugins: [
+        {
+          name: 'external-virtual-icons',
+          setup(build) {
+            build.onResolve({ filter: /^~icons\// }, (args) => ({
+              path: args.path,
+              external: true,
+            }))
+          },
+        },
+      ],
+    },
+  },
 })
