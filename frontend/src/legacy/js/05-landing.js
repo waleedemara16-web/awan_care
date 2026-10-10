@@ -4,87 +4,89 @@
     // ===================== AWAN — Landing v2 (واجهة عالمية تفاعلية) =====================
     const LX={
       ar:{
-        nav:["المميزات","البوابات","كيف تبدأ","الخصوصية"], login:"تسجيل الدخول", demo:"جرّب المنصة",
-        pillNew:"جديد", pill:"محرك تعميم المهارات بين المركز والبيت",
+        nav:["المميزات","عقل أوان","كيف تبدأ","الخصوصية"], login:"تسجيل الدخول", demo:"جرّب لوحة الإدارة",
+        pillNew:"جديد", pill:"عقل أوان: إدارة مركزك بالذكاء الاصطناعي",
         h1a:"لكل طفل وقته،", h1b:"ولكل طفل", h1em:"طريقه.",
-        rotPre:"منصة تشغيل واحدة لـ", rot:["مراكز التأهيل","عيادات التخاطب","مراكز التوحد وABA","أقسام المستشفيات","المدارس الدامجة"],
-        lede:"أوان تجمع الإدارة والأخصائيين والأسرة والمدرسة في مساحة واحدة — من أول إحالة، إلى الجلسة، إلى تقرير التقدم اللي يوصل للأسرة في نفس اليوم.",
-        cta1:"جرّب المنصة الآن", cta2:"تسجيل الدخول",
-        checks:["عربي وإنجليزي","يعمل على الجوال والتابلت","صلاحيات مستقلة لكل دور"],
-        mockUrl:"أوان · لوحة القيادة", mockHi:"صباح الخير، د. فيصل", mockSub:"12 جلسة اليوم · 3 إحالات جديدة", mockTag:"مباشر",
+        rotPre:"منصة وحدة تدير", rot:["مراكز التأهيل","عيادات التخاطب","مراكز التوحد وABA","أقسام المستشفيات","المدارس الدامجة"],
+        lede:"أوان تعطي إدارة المركز صورة كاملة ولحظية: من أول اتصال من الأسرة، لين الجلسة والتقرير والفاتورة — وكل خطوة موثّقة وتوصلك على طول.",
+        cta1:"جرّب لوحة الإدارة", cta2:"تسجيل الدخول",
+        checks:["عربي وإنجليزي","يشتغل على الجوال والآيباد","صلاحيات تتحكم فيها الإدارة"],
+        mockUrl:"أوان · مركز القيادة", mockHi:"صباح الخير، د. فيصل", mockSub:"12 جلسة اليوم · 3 قرارات تنتظرك", mockTag:"مباشر",
         kpis:[["جلسات اليوم","12"],["حضور الفريق","86%"],["أهداف متحققة","78%"]],
         rows:[["علي ناصر","نطق ولغة · 09:00"],["سعود ماجد","علاج طبيعي · 10:30"],["فهد تركي","علاج وظيفي · 11:15"]],
-        f1:["تقرير تقدم جاهز","اتبعت لأسرة علي ✓"], f2:["تنبيه تعميم","أداء البيت أقل من المركز"], f3:["رسالة من ولي أمر","هل يمكن تأجيل موعد الغد؟"],
-        marq:["ملف المستفيد الموحد","الجدولة وكشف التعارض","تقارير التقدم بنقرة","محرك تعميم المهارات","أوان كونكت","الفوترة والباقات","أدوات التقييم القياسية","مكتبة الإرشاد الأسري","بوابة الأسرة","بوابة الطبيب","بوابة المدرسة","كشك الحضور"],
-        stats:[[16,"وحدة تشغيلية","من الاستقبال حتى الفوترة"],[4,"بوابات خارجية","للأسرة والطبيب والمدرسة والحضور"],[6,"أدوات تقييم قياسية","VB-MAPP · ABLLS-R · PEP-3 وغيرها"],[3,"صيغ تقرير بنقرة","للأسرة والمدرسة والتأمين"]],
-        fEy:"كل ما يحتاجه مركزك", fH:"منصة واحدة بدل <em>عشر أدوات</em> متفرقة", fSub:"من أول مكالمة مع الأسرة لآخر فاتورة — كل خطوة موثّقة ومربوطة باللي قبلها وبعدها.",
+        f1:["مطالبة تأمين جاهزة","تدقّقت قبل الإرسال ✓"], f2:["تنبيه تعميم","أداء البيت أقل من المركز"], f3:["مكالمة جديدة","انحجز تقييم أولي تلقائيًا"],
+        marq:["عقل أوان","الإدارة الآلية","المراقبة الحية","الاستقبال الذكي","الاستقبال الصوتي","رحلة الطفل","الكاتب الذكي","محرك تعميم المهارات","مطالبات التأمين","الفوترة والباقات","أوان كونكت","سجل التدقيق","الترخيص البلدي","دعم الدولة"],
+        stats:[[9,"محاور تشغيل","من الاستقبال لين الحوكمة"],[24,"ساعة رد على المكالمات","استقبال صوتي ذكي على رقم المركز"],[3,"صيغ تقرير بنقرة","للأسرة والمدرسة والتأمين"],[100,"٪ بدون ورق","من باب المركز لين الجلسة"]],
+        fEy:"كل اللي يحتاجه مركزك", fH:"منصة وحدة بدال <em>عشر أدوات</em> متفرقة", fSub:"من أول مكالمة مع الأسرة لين آخر فاتورة — كل خطوة موثّقة ومربوطة باللي قبلها واللي بعدها.",
         gapC:"المركز", gapH:"البيت",
         feats:[
-          {ic:"pulse",cls:"w2 dark",badge:"حصري في أوان",t:"محرك تعميم المهارات",d:"يقارن أداء الطفل في جلسات المركز بما تسجّله الأسرة في البيت لنفس الهدف، وينبّه الأخصائي فورًا لو فيه فجوة — عشان المهارة تثبت فعلًا خارج المركز.",gap:true},
-          {ic:"patients",t:"ملف المستفيد الموحد",d:"بيانات الطفل، الملف الصحي من الولادة، التقييمات، الخطط، والحساب المالي — في صفحة واحدة."},
-          {ic:"schedule",t:"جدولة بدون تعارض",d:"كشف تلقائي لتعارض الأخصائي أو الغرفة، جلسات تعويضية، وتنبيه قبل انتهاء الباقة."},
-          {ic:"chart",t:"تقرير تقدم بنقرة",d:"نفس ملاحظات الجلسة تتحول لثلاث صيغ: مبسّطة للأسرة، رسمية للمدرسة، وسريرية للتأمين."},
-          {ic:"clipboardCheck",cls:"w2",t:"أدوات التقييم القياسية",d:"سجّل نتائج أدوات التقييم المعتمدة لكل طفل وتابع تطوّر الدرجات مع الوقت، مع إسناد البرامج العلاجية اللي فعّلها كل قسم.",chips:["VB-MAPP","ABLLS-R","PEP-3","ASQ","AFLS","PEAK"]},
-          {ic:"video",t:"أوان كونكت",d:"اجتماعات بين الأقسام ومع الأسر، محضر يتكتب تلقائيًا، ولوحة قرارات تتابع التنفيذ."},
-          {ic:"invoice",t:"الفوترة والباقات",d:"فواتير بضريبة القيمة المضافة، دفعات جزئية، باقات جلسات، وذمم مستحقة واضحة."},
-          {ic:"book",t:"مكتبة الإرشاد الأسري",d:"مقالات وأنشطة منزلية تُقترح تلقائيًا حسب الهدف الحالي لكل طفل."},
-          {ic:"commHub",t:"أوان تواصل",d:"رسائل وقرارات لحظية بين الاستقبال والأقسام والإشراف والأسرة، مع حالة كل رسالة."},
-          {ic:"idcard",t:"الفريق والحضور",d:"كود دخول شخصي لكل موظف، كشك حضور، وجلسات إشرافية لتقييم أداء الأخصائيين."}
+          {ic:"pulse",cls:"w2 dark",badge:"حصري في أوان",t:"محرك تعميم المهارات",d:"يقارن أداء الطفل في جلسات المركز باللي تسجّله الأسرة في البيت لنفس الهدف، وينبّه الأخصائي على طول إذا فيه فجوة — عشان المهارة تثبت فعلًا برّا المركز.",gap:true},
+          {ic:"target",t:"رحلة الطفل",d:"كل طفل على مسار واحد من الاستقبال لين تقرير الثلاث شهور، وكل خطوة تنقفل تنقله للي بعدها تلقائيًا."},
+          {ic:"schedule",t:"جدولة بدون تعارض",d:"اسحب الجلسة لوقت أو أخصائي ثاني، والنظام يكشف أي تعارض، والتعديل يوصل لآيباد الأخصائي في نفس اللحظة."},
+          {ic:"book",t:"الكاتب الذكي",d:"الأخصائي يسجّل الجلسة صوت بموافقة الأسرة أو يكتب سطرين، والكاتب يطلّع ملاحظة SOAP كاملة — وما ينحفظ شي بدون توقيعه."},
+          {ic:"idcard",cls:"w2",t:"مطالبات التأمين",d:"كل جلسة مكتملة لطفل مؤمَّن تتحول لمطالبة، وتتدقّق ضد أسباب الرفض قبل ما تطلع. الناقص يوصل للمسؤول عنه، والنظام يتعلّم من كل رفض — رفض أقل وتحصيل أسرع."},
+          {ic:"chart",t:"تقرير تقدم بنقرة",d:"ملاحظات الجلسة نفسها تطلع بثلاث صيغ: مبسّطة للأسرة، رسمية للمدرسة، وسريرية للتأمين."},
+          {ic:"video",t:"أوان كونكت",d:"اجتماعات بين الأقسام ومع الأسر، ومحضر ينكتب تلقائيًا، ولوحة قرارات تتابع التنفيذ."},
+          {ic:"invoice",t:"الفوترة والباقات",d:"فواتير بضريبة القيمة المضافة، ودفعات جزئية، وباقات جلسات، وذمم مستحقة واضحة."},
+          {ic:"shield",t:"الحوكمة والامتثال",d:"سجل تدقيق ثابت، ومتابعة الترخيص البلدي، وخطوات التوافق مع برامج دعم الدولة — في مكان واحد."},
+          {ic:"team",t:"الفريق والحضور",d:"كود دخول شخصي لكل موظف، وكشك حضور، وجلسات إشرافية لمتابعة أداء الأخصائيين."}
         ],
-        pEy:"بوابة لكل طرف", pH:"كل شخص يشوف <em>اللي يخصّه بس</em>", pSub:"جرّب كل بوابة بنفسك الآن بالبيانات النموذجية.",
-        portals:[
-          {ic:"settings",t:"الإدارة",d:"لوحة التحكم الأم للمركز.",items:["مؤشرات تشغيلية ومالية لحظية","صلاحيات مخصّصة لكل دور","الأقسام والخدمات والفريق"],btn:"جرّب لوحة الإدارة",act:"lxEnter('management')"},
-          {ic:"medical",t:"الأخصائي",d:"مساحة عمل يومية مركّزة.",items:["جدولي ومهام اليوم","تسجيل أداء الجلسة بالصوت","خطط وتقييمات وتقارير"],btn:"جرّب مساحة الأخصائي",act:"lxEnter('staff')"},
-          {ic:"team",t:"الأسرة",d:"الأسرة شريك في رحلة طفلها.",items:["متابعة التقدم والتقارير","حجز الجلسات والباقات","تواصل مباشر مع المركز"],hint:"للتجربة: علي ناصر القحطاني · كود ALI-1001",btn:"جرّب بوابة الأسرة",act:"goPublic('parent')"},
-          {ic:"school",t:"الطبيب والمدرسة",d:"تنسيق آمن مع الجهات الخارجية.",items:["إحالات وتقارير طبية للمراجعة","أهداف مصرّح بها للمعلم فقط","رمز ربط طبي لكل طفل"],btn:"جرّب بوابة الطبيب",act:"goPublic('doctor')"}
+        aEy:"عقل أوان", aH:"إدارة ذكية <em>تشتغل معك</em> طول اليوم", aSub:"وكلاء أذكياء يتابعون المركز لحظة بلحظة، يجهّزون الإجراءات، ويرفعون لك بس القرارات اللي تحتاجك.",
+        ai:[
+          {ic:"idea",t:"مركز القيادة",d:"كل اللي يحتاج قرارك في شاشة وحدة.",items:["ملخص يومي تلقائي من بيانات المركز","قرارات معلّقة مرتبة حسب الأولوية","تنبيه على الملفات الناقصة والموافقات"]},
+          {ic:"settings",t:"الإدارة الآلية",d:"وكلاء ينجزون الشغل الروتيني عنك.",items:["تحليل دراسة الحالة وحجز التقييم الأولي","إشعار المشرف والأخصائي في وقتها","تقرير يومي جاهز للمدير"]},
+          {ic:"pulse",t:"المراقبة الحية",d:"شوف مركزك كامل لحظة بلحظة.",items:["كل آيبادات الفريق على شاشة وحدة","الوصول والخروج من الباب لين الجلسة","تنبيهات فورية إذا صار شي يحتاج تدخل"]},
+          {ic:"chat",t:"الاستقبال الذكي والصوتي",d:"ولا مكالمة ولا إحالة تضيع.",items:["رد آلي على مكالمات المركز في أي وقت","دراسة الحالة تنعبّى من الجوال أو الآيباد","فتح الملف وحجز التقييم تلقائيًا"]}
         ],
+        aBtn:"جرّب لوحة الإدارة",
         hEy:"كيف تبدأ", hH:"مركزك على أوان في <em>ثلاث خطوات</em>",
-        steps:[["سجّل مركزك","اسم المركز وشعاره — ويظهر جنب شعار أوان في كل شاشة."],["أضف أقسامك وفريقك","كل أخصائي ياخد كود دخول شخصي وصلاحيات حسب دوره."],["ابدأ الجلسات وشارك الأسر","كل جلسة تتوثّق، والأسرة تتابع تقدّم طفلها من بوابتها."]],
-        tEy:"الخصوصية أولًا", tH:"بيانات الأطفال <em>أمانة</em>", tSub:"أوان متصممة بحيث ما تطلعش أي معلومة إلا لمن يحق له يشوفها.",
-        trust:[["صلاحيات حسب الدور","الإدارة تحدد بدقة إيه اللي يشوفه الإشراف والاستقبال والأخصائي."],["مشاركة بموافقة","الملف الصحي ما يظهرش للأسرة أو المدرسة إلا بتفعيل صريح."],["أكواد وصول مستقلة","كود للأسرة وكود للمدرسة ورمز ربط طبي لكل طفل."],["موافقات موثّقة","موافقة ولي الأمر على التواصل بتتسجّل داخل الملف."]],
-        finH:"جاهز تشوف أوان شغّالة في مركزك؟", finSub:"جرّب المنصة الآن بالبيانات النموذجية — من غير تسجيل.",
+        steps:[["سجّل مركزك","اسم المركز وشعاره — ويطلع جنب شعار أوان في كل شاشة."],["أضف أقسامك وفريقك","كل موظف ياخذ كود دخول شخصي، والإدارة تحدد صلاحياته."],["شغّل مركزك وتابع من لوحتك","الجلسات تتوثّق لحظتها، والتقارير والمطالبات تجهز تلقائيًا، وأنت تتابع كل شي من مكان واحد."]],
+        tEy:"الخصوصية أولًا", tH:"بيانات الأطفال <em>أمانة</em>", tSub:"أوان مصممة بحيث ما تطلع أي معلومة إلا للي له حق يشوفها.",
+        trust:[["صلاحيات تحددها الإدارة","أنت تحدد بالضبط وش يشوف الإشراف والاستقبال والأخصائي."],["سجل تدقيق ثابت","كل فتح أو تعديل لملف ينسجّل باسم الشخص والوقت، وما أحد يقدر يعدّله أو يمسحه."],["مشاركة بموافقة","الملف الصحي ما يطلع لأي جهة خارجية إلا بتفعيل صريح."],["موافقات موثّقة","موافقة ولي الأمر على العلاج والتواصل تنحفظ داخل الملف."]],
+        finH:"جاهز تشوف أوان شغّالة في مركزك؟", finSub:"جرّب لوحة الإدارة الحين بالبيانات النموذجية — بدون تسجيل.",
         foot:"منصة تشغيل مراكز الرعاية والتأهيل", rights:"© 2026 أوان. جميع الحقوق محفوظة."
       },
       en:{
-        nav:["Features","Portals","Get started","Privacy"], login:"Log in", demo:"Try the platform",
-        pillNew:"New", pill:"Skill-generalization engine — center ↔ home",
+        nav:["Features","AWAN Brain","Get started","Privacy"], login:"Log in", demo:"Try the admin dashboard",
+        pillNew:"New", pill:"AWAN Brain: AI-powered center management",
         h1a:"Every child has their time,", h1b:"and their own", h1em:"path.",
-        rotPre:"One operating platform for", rot:["rehab centers","speech clinics","autism & ABA centers","hospital departments","inclusive schools"],
-        lede:"AWAN brings management, specialists, families and schools into one space — from the first referral, to the session, to a progress report that reaches the family the same day.",
-        cta1:"Try the platform now", cta2:"Log in",
-        checks:["Arabic & English","Works on phone and tablet","Separate permissions per role"],
-        mockUrl:"AWAN · Dashboard", mockHi:"Good morning, Dr. Faisal", mockSub:"12 sessions today · 3 new referrals", mockTag:"Live",
+        rotPre:"One platform to run", rot:["rehab centers","speech clinics","autism & ABA centers","hospital departments","inclusive schools"],
+        lede:"AWAN gives center management a complete, real-time picture: from a family's first call, to the session, the report and the invoice — every step documented and in front of you instantly.",
+        cta1:"Try the admin dashboard", cta2:"Log in",
+        checks:["Arabic & English","Works on phone and iPad","Permissions controlled by management"],
+        mockUrl:"AWAN · Command center", mockHi:"Good morning, Dr. Faisal", mockSub:"12 sessions today · 3 decisions waiting", mockTag:"Live",
         kpis:[["Sessions today","12"],["Team present","86%"],["Goals met","78%"]],
         rows:[["Ali Nasser","Speech · 09:00"],["Saud Majed","Physio · 10:30"],["Fahad Turki","OT · 11:15"]],
-        f1:["Progress report ready","Sent to Ali's family ✓"], f2:["Generalization alert","Home lags behind center"], f3:["Message from a parent","Can we move tomorrow's session?"],
-        marq:["Unified case file","Conflict-free scheduling","One-click progress reports","Generalization engine","AWAN Connect","Billing & packages","Standardized assessments","Family guidance library","Family portal","Doctor portal","School portal","Attendance kiosk"],
-        stats:[[16,"Operational modules","From front desk to billing"],[4,"External portals","Family, doctor, school, attendance"],[6,"Standardized assessments","VB-MAPP · ABLLS-R · PEP-3 and more"],[3,"One-click report formats","Family, school and insurer"]],
-        fEy:"Everything your center needs", fH:"One platform instead of <em>ten scattered tools</em>", fSub:"From the first call with a family to the last invoice — every step documented and connected.",
+        f1:["Insurance claim ready","Checked before sending ✓"], f2:["Generalization alert","Home lags behind center"], f3:["New call","Initial assessment booked automatically"],
+        marq:["AWAN Brain","Autopilot admin","Live operations","Smart intake","Voice reception","Child journey","AI scribe","Generalization engine","Insurance claims","Billing & packages","AWAN Connect","Audit log","Municipal license","Government support"],
+        stats:[[9,"Operating hubs","From intake to governance"],[24,"Hour call answering","AI voice reception on the center's number"],[3,"One-click report formats","Family, school and insurance"],[100,"% paperless","From the front door to the session"]],
+        fEy:"Everything your center needs", fH:"One platform instead of <em>ten scattered tools</em>", fSub:"From the first call with a family to the last invoice — every step documented and linked to what came before and after.",
         gapC:"Center", gapH:"Home",
         feats:[
-          {ic:"pulse",cls:"w2 dark",badge:"Only in AWAN",t:"Skill-generalization engine",d:"Compares a child's performance in center sessions with what the family logs at home for the same goal, and alerts the specialist the moment a gap appears — so skills really hold outside the center.",gap:true},
-          {ic:"patients",t:"Unified case file",d:"Child details, health record from birth, assessments, plans and billing — on one page."},
-          {ic:"schedule",t:"Conflict-free scheduling",d:"Automatic clinician and room conflict checks, make-up sessions, and package-expiry alerts."},
+          {ic:"pulse",cls:"w2 dark",badge:"Only in AWAN",t:"Skill-generalization engine",d:"Compares a child's performance in center sessions with what the family records at home for the same goal, and alerts the specialist instantly when there's a gap — so skills truly hold outside the center.",gap:true},
+          {ic:"target",t:"Child journey",d:"Every child follows one connected path from intake to the 3-month report; closing a step moves them to the next automatically."},
+          {ic:"schedule",t:"Conflict-free scheduling",d:"Drag a session to another time or specialist; conflicts are caught and changes reach the specialist's iPad instantly."},
+          {ic:"book",t:"AI scribe",d:"Record the session by voice (with family consent) or type two lines, and get a full SOAP note — nothing is saved without the specialist's signature."},
+          {ic:"idcard",cls:"w2",t:"Insurance claims",d:"Every completed session for an insured child becomes a claim, checked against rejection reasons before it goes out. Gaps go to whoever owns them, and every rejection teaches the system — fewer rejections, faster collection."},
           {ic:"chart",t:"One-click progress reports",d:"The same session notes become three formats: simple for families, formal for schools, clinical for insurers."},
-          {ic:"clipboardCheck",cls:"w2",t:"Standardized assessments",d:"Record results from recognized assessment tools and track score changes over time, plus assign the programs each department runs.",chips:["VB-MAPP","ABLLS-R","PEP-3","ASQ","AFLS","PEAK"]},
           {ic:"video",t:"AWAN Connect",d:"Cross-department and family meetings, auto-written minutes, and a decision board that tracks follow-through."},
           {ic:"invoice",t:"Billing & packages",d:"VAT invoices, partial payments, session packages and clear receivables."},
-          {ic:"book",t:"Family guidance library",d:"Articles and home activities suggested automatically from each child's current goal."},
-          {ic:"commHub",t:"AWAN Comm Hub",d:"Real-time messages and decisions between front desk, departments, supervisors and families."},
-          {ic:"idcard",t:"Team & attendance",d:"Personal login codes, an attendance kiosk, and supervision sessions to review specialist performance."}
+          {ic:"shield",t:"Governance & compliance",d:"A tamper-proof audit log, municipal license tracking, and government-support program readiness — in one place."},
+          {ic:"team",t:"Team & attendance",d:"Personal login codes, an attendance kiosk, and supervision sessions to follow specialist performance."}
         ],
-        pEy:"A portal for everyone", pH:"Everyone sees <em>only what's theirs</em>", pSub:"Try each portal yourself right now with sample data.",
-        portals:[
-          {ic:"settings",t:"Management",d:"The center's master control panel.",items:["Live operational and financial KPIs","Custom permissions per role","Departments, services and team"],btn:"Try the admin panel",act:"lxEnter('management')"},
-          {ic:"medical",t:"Specialist",d:"A focused daily workspace.",items:["My schedule and tasks","Voice-logged session results","Plans, assessments and reports"],btn:"Try the specialist space",act:"lxEnter('staff')"},
-          {ic:"team",t:"Family",d:"Families as partners in the journey.",items:["Progress and reports","Book sessions and packages","Direct messaging with the center"],hint:"Demo: علي ناصر القحطاني · code ALI-1001",btn:"Try the family portal",act:"goPublic('parent')"},
-          {ic:"school",t:"Doctors & schools",d:"Secure coordination with outside parties.",items:["Referrals and medical reports for review","Teacher-approved goals only","A medical link code per child"],btn:"Try the doctor portal",act:"goPublic('doctor')"}
+        aEy:"AWAN Brain", aH:"Smart management <em>working with you</em> all day", aSub:"AI agents watch the center moment by moment, prepare the actions, and bring you only the decisions that need you.",
+        ai:[
+          {ic:"idea",t:"Command center",d:"Everything that needs your decision on one screen.",items:["Automatic daily summary from center data","Pending decisions ranked by priority","Alerts on incomplete files and consents"]},
+          {ic:"settings",t:"Autopilot admin",d:"Agents that handle routine work for you.",items:["Case-study analysis and first-assessment booking","Timely notifications to supervisors and specialists","A daily report ready for the director"]},
+          {ic:"pulse",t:"Live operations",d:"See your whole center moment by moment.",items:["All team iPads on one screen","Arrivals and exits from door to session","Instant alerts when something needs attention"]},
+          {ic:"chat",t:"Smart & voice intake",d:"No call or referral slips through.",items:["AI answers the center's calls any time","Case studies filled on phone or iPad","File opened and assessment booked automatically"]}
         ],
+        aBtn:"Try the admin dashboard",
         hEy:"Get started", hH:"Your center on AWAN in <em>three steps</em>",
-        steps:[["Register your center","Your name and logo — shown next to AWAN's on every screen."],["Add departments and team","Each specialist gets a personal login code and role-based permissions."],["Run sessions, share with families","Every session is documented, and families follow progress from their portal."]],
-        tEy:"Privacy first", tH:"Children's data is <em>a trust</em>", tSub:"AWAN is designed so no information leaves except to those entitled to see it.",
-        trust:[["Role-based permissions","Management decides exactly what supervisors, front desk and specialists can see."],["Consent-based sharing","The health record is only visible to families or schools when explicitly enabled."],["Separate access codes","A family code, a school code and a medical link code for every child."],["Recorded consents","A guardian's consent to be contacted is recorded in the file."]],
-        finH:"Ready to see AWAN running in your center?", finSub:"Try the platform now with sample data — no sign-up needed.",
+        steps:[["Register your center","Your name and logo — shown next to AWAN's on every screen."],["Add departments and team","Each employee gets a personal login code; management sets their permissions."],["Run your center from your dashboard","Sessions are documented as they happen, reports and claims are prepared automatically, and you follow everything from one place."]],
+        tEy:"Privacy first", tH:"Children's data is <em>a trust</em>", tSub:"AWAN is designed so no information reaches anyone who isn't entitled to see it.",
+        trust:[["Permissions set by management","You decide exactly what supervisors, front desk and specialists can see."],["Tamper-proof audit log","Every file opened or edited is logged with the person and time, and no one can edit or delete it."],["Consent-based sharing","The health record never reaches an outside party without explicit activation."],["Documented consents","Guardian consent for treatment and communication is stored in the file."]],
+        finH:"Ready to see AWAN running in your center?", finSub:"Try the admin dashboard now with sample data — no sign-up needed.",
         foot:"Operations platform for care & rehab centers", rights:"© 2026 AWAN. All rights reserved."
       }
     };
@@ -93,7 +95,7 @@
       const L=lxL();
       const chk=ic("check",14,2.6);
       const arrow=`<span class="lx-arrow">${ic("chevronLeft",16,2.4)}</span>`;
-      const secIds=["lx-features","lx-portals","lx-how","lx-trust"];
+      const secIds=["lx-features","lx-ai","lx-how","lx-trust"];
       const nav=`<nav class="lx-nav"><div class="lx-wrap lx-nav-in">
         <button type="button" class="lx-brand" onclick="lxGo('lx-top')"><span class="lx-brand-mark">${mark(30)}</span><span><b>${esc(t("brandName"))}</b><small>${esc(t("brandTag"))}</small></span></button>
         <div class="lx-links">${secIds.map((id,i)=>`<button type="button" onclick="lxGo('${id}')">${esc(L.nav[i])}</button>`).join("")}</div>
@@ -128,15 +130,15 @@
       const gapViz=`<div class="lx-gap"><div><i style="--h:85%;background:linear-gradient(180deg,#5FD3C6,#0E8388)"></i>${esc(L.gapC)} · 85%</div><div><i style="--h:45%;background:linear-gradient(180deg,#F7C77A,#F5795F)"></i>${esc(L.gapH)} · 45%</div></div>`;
       const feats=`<section class="lx-sec" id="lx-features"><div class="lx-wrap"><div class="lx-center lx-rv"><span class="lx-eyebrow">${ic("star",13)} ${esc(L.fEy)}</span><h2 class="lx-h2">${L.fH}</h2><p class="lx-sub">${esc(L.fSub)}</p></div>
         <div class="lx-bento">${L.feats.map((f,i)=>`<article class="lx-card lx-rv ${f.cls||""}" style="--d:${(i%4)*80}ms">${f.badge?`<span class="lx-badge-new">${esc(f.badge)}</span>`:""}<span class="lx-ic">${ic(f.ic,23)}</span><h3>${esc(f.t)}</h3><p>${esc(f.d)}</p>${f.chips?`<div class="lx-chips">${f.chips.map(c=>`<span>${esc(c)}</span>`).join("")}</div>`:""}${f.gap?gapViz:""}</article>`).join("")}</div></div></section>`;
-      const portalsSec=`<section class="lx-sec lx-alt" id="lx-portals"><div class="lx-wrap"><div class="lx-center lx-rv"><span class="lx-eyebrow">${ic("globe",13)} ${esc(L.pEy)}</span><h2 class="lx-h2">${L.pH}</h2><p class="lx-sub">${esc(L.pSub)}</p></div>
-        <div class="lx-portals">${L.portals.map((p,i)=>`<article class="lx-card lx-portal lx-rv" style="--d:${i*90}ms"><span class="lx-ic">${ic(p.ic,23)}</span><h3>${esc(p.t)}</h3><p>${esc(p.d)}</p><ul>${p.items.map(x=>`<li>${chk}<span>${esc(x)}</span></li>`).join("")}</ul>${p.hint?`<div class="lx-hint">${esc(p.hint)}</div>`:""}<button type="button" class="lx-btn lx-btn-dark" onclick="${p.act}">${esc(p.btn)} ${arrow}</button></article>`).join("")}</div></div></section>`;
+      const aiSec=`<section class="lx-sec lx-alt" id="lx-ai"><div class="lx-wrap"><div class="lx-center lx-rv"><span class="lx-eyebrow">${ic("idea",13)} ${esc(L.aEy)}</span><h2 class="lx-h2">${L.aH}</h2><p class="lx-sub">${esc(L.aSub)}</p></div>
+        <div class="lx-portals">${L.ai.map((p,i)=>`<article class="lx-card lx-portal lx-rv" style="--d:${i*90}ms"><span class="lx-ic">${ic(p.ic,23)}</span><h3>${esc(p.t)}</h3><p>${esc(p.d)}</p><ul>${p.items.map(x=>`<li>${chk}<span>${esc(x)}</span></li>`).join("")}</ul><button type="button" class="lx-btn lx-btn-dark" onclick="lxEnter('management')">${esc(L.aBtn)} ${arrow}</button></article>`).join("")}</div></div></section>`;
       const how=`<section class="lx-sec" id="lx-how"><div class="lx-wrap"><div class="lx-center lx-rv"><span class="lx-eyebrow">${ic("target",13)} ${esc(L.hEy)}</span><h2 class="lx-h2">${L.hH}</h2></div>
         <div class="lx-steps">${L.steps.map((s,i)=>`<div class="lx-step lx-rv" style="--d:${i*100}ms"><span class="lx-step-n">0${i+1}</span><h3>${esc(s[0])}</h3><p>${esc(s[1])}</p></div>`).join("")}</div></div></section>`;
       const trust=`<section class="lx-wrap" id="lx-trust"><div class="lx-trust lx-rv"><div><span class="lx-eyebrow">${ic("shield",13)} ${esc(L.tEy)}</span><h2 class="lx-h2">${L.tH}</h2><p class="lx-sub">${esc(L.tSub)}</p></div>
         <div class="lx-trust-list">${L.trust.map(x=>`<div class="lx-trust-item"><b>${ic("shield",16)} ${esc(x[0])}</b>${esc(x[1])}</div>`).join("")}</div></div></section>`;
       const final=`<section class="lx-wrap" style="margin-top:90px"><div class="lx-final lx-rv"><h2 class="lx-h2">${esc(L.finH)}</h2><p class="lx-sub">${esc(L.finSub)}</p><div class="lx-cta"><button type="button" class="lx-btn lx-btn-light lx-mag" onclick="lxEnter('management')">${esc(L.cta1)} ${arrow}</button><button type="button" class="lx-btn lx-btn-ghost lx-mag" onclick="openModal('entryGate')">${ic("lock",15)} ${esc(L.cta2)}</button></div></div></section>`;
       const footer=`<footer class="lx-footer"><div class="lx-wrap lx-foot-in"><div class="lx-brand"><span class="lx-brand-mark">${mark(28)}</span><span><b>${esc(t("brandName"))}</b><small>${esc(L.foot)}</small></span></div><div class="lx-foot-links">${secIds.map((id,i)=>`<button type="button" onclick="lxGo('${id}')">${esc(L.nav[i])}</button>`).join("")}<button type="button" onclick="openModal('about')">${esc(t("navAbout"))}</button></div><span class="lx-foot-copy">${esc(L.rights)}</span></div></footer>`;
-      return `<div class="lx">${nav}${hero}${marq}${stats}${feats}${portalsSec}${how}${trust}${final}${footer}</div>`;
+      return `<div class="lx">${nav}${hero}${marq}${stats}${feats}${aiSec}${how}${trust}${final}${footer}</div>`;
     }
     function lxGo(id){const el=document.getElementById(id);if(!el)return;const y=el.getBoundingClientRect().top+window.scrollY-(id==="lx-top"?0:80);window.scrollTo({top:Math.max(0,y),behavior:"smooth"})}
     function lxEnter(role){state.role=role;state.currentStaffId=null;state.staffSection=null;state.view="dashboard";delete state.portal;persist();render();window.scrollTo(0,0)}
