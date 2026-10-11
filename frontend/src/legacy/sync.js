@@ -32,7 +32,7 @@ async function push() {
     changed.forEach((p) => snap.set(p.id, json(p)))
     deleted.forEach((id) => snap.delete(id))
   } catch (e) {
-    window.notify?.('تعذّر حفظ ملفات الأطفال على السيرفر — هتتحفظ تاني أول ما الاتصال يرجع')
+    window.notify?.('تعذّر حفظ ملفات الأطفال على السيرفر — بتنحفظ أول ما يرجع الاتصال')
     setTimeout(schedule, 8000)
   } finally {
     busy = false
@@ -55,7 +55,8 @@ export async function startPatientSync() {
   const s = engineState()
   const server = await call('awan_care.api.get_patients')
   if (server.length) {
-    s.patients = server
+    // records saved before the Saudi-dialect pass get converted here and pushed back
+    s.patients = window.awanDialect ? window.awanDialect(JSON.parse(JSON.stringify(server))) : server
     remember(server)
     window.persist()
     window.render()

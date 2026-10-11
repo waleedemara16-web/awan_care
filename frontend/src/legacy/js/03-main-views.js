@@ -1,6 +1,6 @@
 "use strict";
 // أوان — الجزء 3 من 16: 03-main-views
-// كل ملفات js/ دي بتشتغل كأنها ملف واحد بالترتيب — ما تغيّرش ترتيبها في index.html
+// كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
     // =====================================================================
     const AWAN_API_BASE = "https://api.awan.sa"; // placeholder base URL for the future production billing server
     async function apiCreateInvoice(payload){
@@ -83,7 +83,7 @@
     function sidebar(){const allowed=roles[state.role].nav; const labelKey={dashboard:"navHome",patients:"navPatients",schedule:"navSchedule",referrals:"navReferrals",team:"navTeam",departments:"navDepartments",attendance:"navAttendance",reports:"navReports",invoices:"navInvoices",connect:"navConnect",communicationHub:"navCommHub",library:"navLibrary",journey:"navJourney",license:"navLicense",govSupport:"navGovSupport",reviewRequests:"navReviewRequests",audit:"navAudit",intakeAI:"navIntakeAI",liveOps:"navLiveOps",videoLab:"navVideoLab",assessments:"navAssess",ebnak:"navEbnak",scribe:"navScribe",claims:"navClaims",calls:"navCalls",server:"navServer",myIpad:"navMyIpad",staffPage:"navMyIpad",ipads:"navIpads",deptPlan:"navDeptPlan",agents:"navAgents",digital:"navDigital",settings:"navSettings"};const canSeeBookingAlerts=state.role==="management"||state.role==="reception";const nb=canSeeBookingAlerts?newBookingsCount():0;const pdCount=(state.role==="management"||state.role==="supervisor")?pendingDecisionsCount():0;const commCount=pendingCommCount();return `<aside class="sidebar"><div class="side-kicker">${esc(t("workspaceLabel"))} · ${esc(roles[state.role].label)}</div><nav class="side-nav">${navItems.filter(n=>allowed.includes(n[0])).map(n=>`<button class="${state.view===n[0]?"active":""}" onclick="setView('${n[0]}')"><span class="nav-icon">${ic(n[1],16)}</span>${esc(t(labelKey[n[0]]))}${n[0]==="schedule"&&nb>0?'<span class="nav-dot-red"></span>':""}${n[0]==="connect"&&pdCount>0?'<span class="nav-dot-red"></span>':""}${n[0]==="communicationHub"&&commCount>0?'<span class="nav-dot-red"></span>':""}</button>`).join("")}</nav><div class="side-footer"><b>${esc(state.center.name)}</b><br>${esc(state.center.city)}<br><span style="color:#22c55e">● ${esc(t("dataLocal"))}</span><br><button class="btn btn-outline" style="margin-top:10px;width:100%;font-size:10px" onclick="resetData()">${esc(t("resetSample"))}</button></div></aside>`}
     function shell(body){return `${topbar()}<div class="layout">${sidebar()}<main class="content">${body}</main></div>`}
     function head(eyebrow,title,desc,action=""){return `<div class="page-head"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1>${desc?`<div class="muted">${esc(desc)}</div>`:""}</div>${action}</div>`}
-    // زر عودة موحّد وملفت — يُعرض دايمًا في مكان ثابت ومنفصل أعلى محتوى الصفحة، مش مدسوس بين أزرار تانية
+    // زر عودة موحّد وملفت — يُعرض دايمًا في مكان ثابت ومنفصل أعلى محتوى الصفحة، مو مدسوس بين أزرار ثانية
     function backBtn(onclick,label){return `<button type="button" class="back-link-top page-back" onclick="${onclick}"><span class="back-link-arrow">${ic("chevronLeft",14,2.4)}</span>${esc(label)}</button>`}
     function metric(icon,label,value,detail,theme){return `<div class="metric"><div class="metric-top"><span class="metric-icon${theme==="gold"?" gold":""}">${ic(icon,18)}</span>${pill(t("updatedToday"))}</div><b>${esc(value)}</b><small>${esc(label)} · ${esc(detail)}</small></div>`}
     function svgBarChart(data,opts={}){
@@ -402,12 +402,12 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
     }
     // ---- جلسة DTT للأخصائي (تابلت وموبايل) ----
     // مبنية على Awan_Dashboard_DTT: جدول اليوم ← فتح الجلسة ← الأهداف ← 10 محاولات لكل هدف بأكواد I / C / P / NR.
-    // النتيجة بتتكتب في state.sessionLogs (نفس سجل أداء الجلسات في ملف الطفل) والموعد بيتحول «مكتمل».
+    // النتيجة تتكتب في state.sessionLogs (نفس سجل أداء الجلسات في ملف الطفل) والموعد يتحول «مكتمل».
     const DTT_CODES=[
       {k:"I",d:"صح بدون مساعدة",c:"dt-i"},
       {k:"C",d:"صح بعد المساعدة",c:"dt-c"},
       {k:"P",d:"مساعدة كاملة",c:"dt-p"},
-      {k:"NR",d:"مفيش استجابة",c:"dt-nr"}];
+      {k:"NR",d:"ما فيه استجابة",c:"dt-nr"}];
     const DTT_BLOCK=10;
     function lsPerson(){return (state.sipadMode&&state.sipad&&personById(state.sipad))||getCurrentPerson()||state.staff.find(s=>s.roleCategory==="staff")||state.staff[0]}
     function dttPct(tr){return tr.length?Math.round(tr.filter(x=>x.r==="I").length/tr.length*100):null}
@@ -422,7 +422,7 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
       if(pt){add(pt.goal);state.sessionLogs.filter(l=>l.patientId===pt.id).forEach(l=>add(l.goalText))}
       return list.slice(0,6);
     }
-    // اليوم اللي هيتعرض في الجدول: النهارده لو فيه مواعيد، وإلا أقرب يوم جاي، وإلا آخر يوم فات
+    // اليوم اللي بيتعرض في الجدول: اليوم لو فيه مواعيد، وإلا أقرب يوم جاي، وإلا آخر يوم فات
     function dttDays(person){return [...new Set(state.appointments.filter(a=>a.clinician===person.name&&a.status!=="ملغي").map(a=>a.date))].sort()}
     function dttPickDay(person){
       const days=dttDays(person);if(!days.length)return null;
@@ -432,11 +432,11 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
     }
     function dttTimeline(person,compact){
       const days=dttDays(person);const day=dttPickDay(person);const L=dttLive();
-      if(!day) return `<div class="empty">مفيش مواعيد في جدولك.</div>`;
+      if(!day) return `<div class="empty">ما فيه مواعيد في جدولك.</div>`;
       const rows=state.appointments.filter(a=>a.clinician===person.name&&a.date===day&&a.status!=="ملغي").sort((x,y)=>x.time.localeCompare(y.time));
       const nextId=(rows.find(a=>a.status!=="مكتمل")||{}).id;
       const today=localDateOf(new Date());
-      return `${days.length>1?`<div class="dt-days">${days.map(d=>`<button class="${d===day?"on":""}" onclick="dttSetDay('${d}')">${d===today?"النهارده":date(d)}</button>`).join("")}</div>`:""}
+      return `${days.length>1?`<div class="dt-days">${days.map(d=>`<button class="${d===day?"on":""}" onclick="dttSetDay('${d}')">${d===today?"اليوم":date(d)}</button>`).join("")}</div>`:""}
         <div class="dt-tl">${rows.map(a=>{const live=L&&L.aptId===a.id&&!L.locked;const done=a.status==="مكتمل";const isNext=a.id===nextId;
           return `<div class="dt-slot ${done?"done":""} ${isNext?"next":""}"><div class="dt-slot-time">${time(a.time)}</div><div class="dt-slot-main"><strong>${esc(a.patient)}</strong><small>${esc(a.service)} · ${esc(a.room)}</small></div>
             <div class="dt-slot-end">${done?`<span class="pill pill-good">تمت ✓</span>`:live?`<button class="btn btn-primary" onclick="dttResume()">كمّلي الجلسة</button>`:`<button class="btn ${isNext?"btn-primary":"btn-outline"}" onclick="startLiveSession('${a.id}')">فتح الجلسة</button>`}</div></div>`}).join("")}</div>`;
@@ -450,7 +450,7 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
     function liveSessionView(){
       const person=lsPerson();const back=backBtn("closeStaffSection()",state.sipadMode?"رجوع لجدول اليوم":"العودة لمساحتي");const L=dttLive();
       if(!L||L.staffId!==person.id){
-        return back+head("مساحتي / الجلسات","جلساتي","افتحي الجلسة من الجدول. كل ضغطة بتتسجل فورًا، ولما تقفلي الجلسة النتيجة بتتضاف لملف الطفل.","")
+        return back+head("مساحتي / الجلسات","جلساتي","افتحي الجلسة من الجدول. كل ضغطة تتسجل فورًا، ولما تقفلي الجلسة النتيجة تتضاف لملف الطفل.","")
           +`<section class="card">${dttTimeline(person)}</section>`;
       }
       const pt=state.patients.find(x=>x.id===L.patientId);const cs=pt&&typeof consentStatus==="function"?consentStatus(pt,"recording"):null;
@@ -458,12 +458,12 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
       const n=L.targets.length;const t=L.targets[L.cur]||L.targets[0];
       const allDone=L.targets.every(x=>x.trials.length>=DTT_BLOCK);
       let h=`<div class="dt-head card"><div class="dt-head-main"><div class="dt-kicker">جلسة الطفل</div><h2>${esc(L.patient)}</h2><div class="dt-meta"><span>${esc(L.service)}</span><span>${esc(L.room)}</span><span>${n} أهداف</span><span class="dt-timer" id="dt-timer">${dttClock(L)}</span></div>
-          ${cs?`<div class="dt-consent ${cs.st==="active"?"ok":""}">${cs.st==="active"?"تسجيل عينة كلام: مسموح بموافقة ولي الأمر":"تسجيل عينة كلام: مش مسموح، مفيش موافقة سارية"}</div>`:""}</div>
-        ${L.locked?`<span class="pill pill-good">مقفولة</span>`:`<button class="dt-panic ${armed?"arm":""}" onclick="livePanic()">${armed?"اضغطي تاني للتأكيد":"طلب مساعدة"}</button>`}</div>`;
+          ${cs?`<div class="dt-consent ${cs.st==="active"?"ok":""}">${cs.st==="active"?"تسجيل عينة كلام: مسموح بموافقة ولي الأمر":"تسجيل عينة كلام: مو مسموح، ما فيه موافقة سارية"}</div>`:""}</div>
+        ${L.locked?`<span class="pill pill-good">مقفولة</span>`:`<button class="dt-panic ${armed?"arm":""}" onclick="livePanic()">${armed?"اضغطي ثاني للتأكيد":"طلب مساعدة"}</button>`}</div>`;
       h+=`<div class="dt-targets" role="tablist">${L.targets.map((x,i)=>{const p=dttPct(x.trials);const st=x.trials.length>=DTT_BLOCK?"done":i===L.cur&&!L.locked?"active":"";
         return `<button class="dt-target ${st}" onclick="liveSelectGoal(${i})" role="tab" aria-selected="${i===L.cur}"><span class="dt-tn">الهدف ${i+1}</span><b>${esc(x.text)}</b><span class="dt-td">${esc(x.domain)}</span><span class="dt-ts">${x.trials.length>=DTT_BLOCK?`تم ✓ · ${p}%`:x.trials.length?`جاري · ${x.trials.length}/${DTT_BLOCK}`:"لم يبدأ"}</span></button>`}).join("")}</div>`;
       if(L.locked){
-        h+=`<section class="card dt-complete"><div class="dt-done-mark">✓</div><h2>الجلسة اتقفلت</h2><p class="muted">النتايج اتضافت لسجل أداء الجلسات في ملف ${esc(L.patient)}.</p>
+        h+=`<section class="card dt-complete"><div class="dt-done-mark">✓</div><h2>الجلسة انقفلت</h2><p class="muted">النتايج انضافت لسجل أداء الجلسات في ملف ${esc(L.patient)}.</p>
           <div class="table-wrap"><table class="data-table"><thead><tr><th>الهدف</th><th>I</th><th>C</th><th>P</th><th>NR</th><th>النسبة</th><th>النتيجة</th></tr></thead><tbody>${L.targets.map(x=>{const p=dttPct(x.trials);return `<tr><td><b>${esc(x.text)}</b><br><small class="muted">${esc(x.domain)}</small></td><td>${dttCount(x.trials,"I")}</td><td>${dttCount(x.trials,"C")}</td><td>${dttCount(x.trials,"P")}</td><td>${dttCount(x.trials,"NR")}</td><td><b>${p==null?"—":p+"%"}</b></td><td>${p==null?"—":genResultPill(dttResult(p))}</td></tr>`}).join("")}</tbody></table></div>
           ${L.note?`<div class="notice" style="margin-top:12px;white-space:pre-wrap">${esc(L.note)}</div>`:""}
           <div class="dt-actions">${L.patientId?`<button class="btn btn-outline" onclick="liveOpenPatient()">افتحي ملف الطفل</button>`:""}<button class="btn btn-primary" onclick="liveCloseSession()">رجوع للجدول</button></div></section>`;
@@ -480,7 +480,7 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
       h+=`<details class="card dt-add"><summary>إضافة هدف للجلسة</summary><form onsubmit="liveAddGoal(event)" class="dt-add-form"><input class="input" name="g" placeholder="الهدف، مثال: أن يسمي بطة" required maxlength="120"><input class="input" name="d" placeholder="المجال، مثال: اللغة التعبيرية" maxlength="60"><label class="dt-chk"><input type="checkbox" name="nr" checked> مسموح NR</label><button class="btn btn-outline" type="submit">إضافة</button></form></details>`;
       h+=`<section class="card dt-note"><div class="card-head"><h2>ملاحظة الجلسة</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-outline" onclick="liveSoap()">قالب SOAP</button><button class="btn btn-outline dt-dict" onclick="liveDictate()">إملاء صوتي</button></div></div>
         <textarea class="input" id="ls-note" rows="4" oninput="liveNoteInput(this.value)" placeholder="اكتبي أو أملي ملاحظة قصيرة">${esc(L.note||"")}</textarea></section>`;
-      h+=`<div class="dt-end-row"><button class="btn btn-primary dt-end ${allDone?"pulse":""}" onclick="liveEndSession()">إنهاء وقفل الجلسة</button><span class="muted">النتيجة هتتضاف لملف ${esc(L.patient)}.</span></div>`;
+      h+=`<div class="dt-end-row"><button class="btn btn-primary dt-end ${allDone?"pulse":""}" onclick="liveEndSession()">إنهاء وقفل الجلسة</button><span class="muted">النتيجة بتتضاف لملف ${esc(L.patient)}.</span></div>`;
       return `<div class="ls-live dt">`+back+h+`</div>`;
     }
     function dttClock(L){const s=Math.max(0,Math.floor(((L.endedAt||Date.now())-L.startedAt)/1000));return pad2(Math.floor(s/60))+":"+pad2(s%60)}
@@ -518,8 +518,8 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
     function liveSoap(){const L=dttLive();L.note=(L.note?L.note+"\n":"")+"S (ملاحظة ذاتية): \nO (ملاحظة موضوعية): \nA (تقييم): \nP (الخطة): ";persist();render()}
     function liveDictate(){
       const R=window.SpeechRecognition||window.webkitSpeechRecognition;
-      if(!R){notify("الإملاء الصوتي مش مدعوم في المتصفح ده — جربي Chrome أو Safari");return}
-      try{const r=new R();r.lang="ar-SA";r.interimResults=false;r.onresult=ev=>{const L=dttLive();if(!L)return;L.note=(L.note?L.note+" ":"")+ev.results[0][0].transcript;persist();render()};r.onerror=()=>notify("ما قدرتش أوصل للميكروفون");r.start();notify("اتكلمي دلوقتي...")}catch(err){notify("ما قدرتش أشغّل الإملاء")}
+      if(!R){notify("الإملاء الصوتي مو مدعوم في المتصفح هذا — جربي Chrome أو Safari");return}
+      try{const r=new R();r.lang="ar-SA";r.interimResults=false;r.onresult=ev=>{const L=dttLive();if(!L)return;L.note=(L.note?L.note+" ":"")+ev.results[0][0].transcript;persist();render()};r.onerror=()=>notify("ما قدرت أوصل للميكروفون");r.start();notify("تكلمي الحين...")}catch(err){notify("ما قدرت أشغّل الإملاء")}
     }
     function livePanic(){
       const L=dttLive();const person=lsPerson();if(!L)return;
@@ -529,7 +529,7 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
         const to=(sups.length?sups:state.staff.filter(s=>s.roleCategory==="supervisor"||s.roleCategory==="management")).slice(0,2);
         to.forEach(s=>state.messages.unshift({id:"msg-"+Date.now()+"-"+s.id,fromId:person.id,fromName:person.name,toId:s.id,toName:s.name,text:`🔴 طلب مساعدة عاجل — ${L.room} · جلسة ${L.patient}`,date:todayISO(),read:false}));
         audit("طلب مساعدة عاجل",L.patient);dttBuzz([30,60,30]);
-        persist();notify(to.length?"اتبعت طلب المساعدة لـ "+to.map(s=>s.name).join(" و "):"مفيش مشرف مسجل لإرسال الطلب");render();
+        persist();notify(to.length?"انرسل طلب المساعدة لـ "+to.map(s=>s.name).join(" و "):"ما فيه مشرف مسجل لإرسال الطلب");render();
       }else{L.panicArm=Date.now();render();setTimeout(()=>{const L2=dttLive();if(L2&&L2.panicArm)render()},4100)}
     }
     function liveEndSession(){
@@ -539,7 +539,7 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
         state.sessionLogs.unshift({id:"sl-"+Date.now()+"-"+i,patientId:L.patientId,date:d,goalText:t.text,result:dttResult(p),notes:`${p}% صحيح مستقل في ${t.trials.length} محاولات (I ${dttCount(t.trials,"I")} · C ${dttCount(t.trials,"C")} · P ${dttCount(t.trials,"P")} · NR ${dttCount(t.trials,"NR")}).${L.note?" "+L.note:""}`,staffId:person.id,staffName:person.name,source:"dtt"})});
       const a=state.appointments.find(x=>x.id===L.aptId);if(a){a.status="مكتمل";a.newForStaff=false}
       L.locked=true;L.endedAt=Date.now();audit("قفل جلسة",L.patient);dttWake(false);dttBuzz(20);
-      persist();notify("الجلسة اتقفلت والنتيجة اتضافت لملف الطفل");render();window.scrollTo(0,0);
+      persist();notify("الجلسة انقفلت والنتيجة انضافت لملف الطفل");render();window.scrollTo(0,0);
     }
     function liveCloseSession(){state.liveSession=null;dttWake(false);persist();render()}
     function liveOpenPatient(){if(state.sipadMode){liveCloseSession();return}const L=dttLive();const id=L&&L.patientId;state.liveSession=null;state.staffSection=null;persist();if(id)openPatient(id);else render()}
@@ -639,7 +639,7 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
       const receivablesTotal=receivables.reduce((s,i)=>s+invoiceBalance(i),0);
       const deptPalette=["var(--teal)","var(--gold)","var(--sage)","var(--purple)","var(--navy-2)","#E4A6C5","#7FB3D5","#C9A66B"];
       const deptChartData=Object.entries(byDept).map(([dept,n],i)=>({label:departmentLabel(dept),value:n,color:deptPalette[i%deptPalette.length]}));
-      return head("التقارير / 08","تقارير الأداء العامة","نظرة عامة سريعة على أداء المركز — للاطّلاع، بدون الحاجة لتصدير خارجي.","")
+      return head("التقارير / 08","تقارير الأداء العامة","نظرة عامة سريعة على أداء المركز — للاطّلاع، بدون الشي لتصدير خارجي.","")
       +`<section class="metric-grid">${metric("schedule","إجمالي المواعيد",totalAppts,"كل المواعيد المسجلة")}${metric("check","جلسات مكتملة",completed,scheduled+" مجدولة")}${metric("referrals","إحالات بانتظار المراجعة",pendingReferrals,"تحتاج إجراء","gold")}${metric("patients","ملفات نشطة",activePatients,"من إجمالي "+state.patients.length)}</section>`
       +(deptChartData.length?`<section class="card"><div class="card-head"><h2>توزيع المواعيد على الأقسام</h2><span class="muted">رسم بياني تفاعلي</span></div><div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap"><div>${svgDonutChart(deptChartData)}</div><div style="flex:1;min-width:180px">${chartLegend(deptChartData)}</div></div></section>`:"")
       +`<div class="grid-2" style="margin-top:18px"><section class="card"><div class="card-head"><h2>المواعيد حسب المعالج</h2></div><div class="list">${Object.keys(byClinician).length?Object.entries(byClinician).sort((a,b)=>b[1]-a[1]).map(([name,n])=>`<div class="list-row"><div class="list-main"><strong>${esc(name)}</strong></div><div class="list-end"><b>${n}</b></div></div>`).join(""):`<div class="empty">لا توجد بيانات كافية.</div>`}</div></section><section class="card"><div class="card-head"><h2>المواعيد حسب القسم</h2></div><div class="list">${Object.keys(byDept).length?Object.entries(byDept).map(([dept,n])=>`<div class="list-row"><div class="list-main"><strong>${esc(departmentLabel(dept))}</strong></div><div class="list-end"><b>${n}</b></div></div>`).join(""):`<div class="empty">لا توجد بيانات كافية.</div>`}</div></section></div>`

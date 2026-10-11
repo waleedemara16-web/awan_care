@@ -1,8 +1,8 @@
 "use strict";
 // أوان — الجزء 16 من 16: 16-profile-journey-brain
-// كل ملفات js/ دي بتشتغل كأنها ملف واحد بالترتيب — ما تغيّرش ترتيبها في index.html
+// كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
     // =================== الملف المهني للأخصائي (صورة، درجة علمية، ترخيص، شهادات) + دليل الإيميل والدرايف ===================
-    // ملفات الشهادات بتتحفظ في IndexedDB (مش في localStorage عشان الحجم)، والبيانات الوصفية في state.
+    // ملفات الشهادات تتحفظ في IndexedDB (مو في localStorage عشان الحجم)، والبيانات الوصفية في state.
     const PF_DB={db:null};
     function pfDb(){return new Promise((ok,no)=>{if(PF_DB.db)return ok(PF_DB.db);try{const r=indexedDB.open("awan-files",1);r.onupgradeneeded=()=>{r.result.createObjectStore("files")};r.onsuccess=()=>{PF_DB.db=r.result;ok(r.result)};r.onerror=()=>no(r.error)}catch(e){no(e)}})}
     async function pfPut(id,blob){const db=await pfDb();return new Promise((ok,no)=>{const t=db.transaction("files","readwrite");t.objectStore("files").put(blob,id);t.oncomplete=()=>ok();t.onerror=()=>no(t.error)})}
@@ -18,7 +18,7 @@
     function pfIsSelf(s){const m=pfMe();return !!m&&!!s&&m.id===s.id}
     function pfCanVerify(s){return typeof ipCanCtl==="function"?ipCanCtl(s)||(state.role==="management"):state.role==="management"}
     function pfAv(s,cls){const p=s&&s.profile;const ini=esc(((s&&s.name||"").replace(/^(أ\.|د\.)\s*/,"")||"?").charAt(0));return p&&p.photo?`<span class="pf-av ${cls||""}"><img src="${p.photo}" alt=""></span>`:`<span class="pf-av ${cls||""}">${ini}</span>`}
-    function pfLic(s){const p=pfOf(s);if(!p.licenseExp)return null;const d=Math.floor((Date.parse(p.licenseExp)-Date.parse(localDateOf(new Date())))/864e5);return {days:d,cls:d<0?"bad":d<=60?"warn":"ok",txt:d<0?`الترخيص منتهي من ${-d} يوم`:d<=60?`الترخيص بينتهي بعد ${d} يوم`:`الترخيص ساري لحد ${date(p.licenseExp)}`}}
+    function pfLic(s){const p=pfOf(s);if(!p.licenseExp)return null;const d=Math.floor((Date.parse(p.licenseExp)-Date.parse(localDateOf(new Date())))/864e5);return {days:d,cls:d<0?"bad":d<=60?"warn":"ok",txt:d<0?`الترخيص منتهي من ${-d} يوم`:d<=60?`الترخيص ينتهي بعد ${d} يوم`:`الترخيص ساري لين ${date(p.licenseExp)}`}}
     function pfDone(s){const p=pfOf(s);const k=["photo","degree","major","university","licenseNo","licenseClass","licenseExp","years","email","bio"];const n=k.filter(x=>p[x]).length+(p.certs.length?2:0);return Math.round(n/(k.length+2)*100)}
     function pfHtml(s,mode){
       const p=pfOf(s);const self=mode==="self";const ver=!self&&pfCanVerify(s);const lic=pfLic(s);const pc=pfDone(s);const dep=state.departments.find(x=>x.id===s.department);
@@ -36,30 +36,30 @@
           <div class="field full"><label>نبذة مهنية قصيرة</label><textarea class="textarea" name="bio" rows="3" placeholder="خبراتك واهتماماتك وأساليبك المفضلة في التدخل">${v("bio")}</textarea></div></div>
           <button class="btn btn-primary">حفظ ملفي</button></form>`;
       else h+=`<div class="pf-view">${[["الدرجة العلمية","degree"],["التخصص","major"],["الجامعة","university"],["سنة التخرج","gradYear"],["رقم الترخيص","licenseNo"],["التصنيف","licenseClass"],["انتهاء الترخيص","licenseExp"],["سنين الخبرة","years"],["الإيميل","email"],["اللغات","langs"]].map(([l,k])=>`<div><small>${l}</small><b ${k==="email"?'dir="ltr"':""}>${p[k]?esc(k==="licenseExp"?date(p[k]):p[k]):"—"}</b></div>`).join("")}${p.bio?`<div class="full"><small>نبذة</small><b>${esc(p.bio)}</b></div>`:""}</div>`;
-      h+=`<h3 class="pf-h3">الشهادات والتراخيص <span class="muted">(${p.certs.length})</span></h3>${p.certs.length?`<div class="pf-certs">${p.certs.map(c=>`<div class="pf-cert ${c.verified?"ok":""}"><span class="pf-ci">${/pdf/.test(c.mime||"")?"📄":"🖼️"}</span><div><b>${esc(c.name)}</b><small>${esc(c.type||"")}${c.issuer?" · "+esc(c.issuer):""}${c.date?" · "+date(c.date):""}</small>${c.verified?`<em>✓ اتحقق منها ${esc(c.verifiedBy||"")}</em>`:`<em class="wait">لسه ما اتراجعتش</em>`}</div>
-          <div class="pf-ca"><button class="btn btn-outline" onclick="pfOpen('${s.id}','${c.id}')">فتح</button>${ver&&!c.verified?`<button class="btn btn-primary" onclick="pfVerify('${s.id}','${c.id}')">تم التحقق</button>`:""}${self?`<button class="btn btn-outline dv-del" onclick="pfCertDel('${s.id}','${c.id}')">حذف</button>`:""}</div></div>`).join("")}</div>`:`<div class="empty">${self?"ارفع شهاداتك وترخيصك عشان المشرف يراجعها.":"لسه ما رفعش شهادات."}</div>`}`;
+      h+=`<h3 class="pf-h3">الشهادات والتراخيص <span class="muted">(${p.certs.length})</span></h3>${p.certs.length?`<div class="pf-certs">${p.certs.map(c=>`<div class="pf-cert ${c.verified?"ok":""}"><span class="pf-ci">${/pdf/.test(c.mime||"")?"📄":"🖼️"}</span><div><b>${esc(c.name)}</b><small>${esc(c.type||"")}${c.issuer?" · "+esc(c.issuer):""}${c.date?" · "+date(c.date):""}</small>${c.verified?`<em>✓ تحقق منها ${esc(c.verifiedBy||"")}</em>`:`<em class="wait">للحين ما تراجعت</em>`}</div>
+          <div class="pf-ca"><button class="btn btn-outline" onclick="pfOpen('${s.id}','${c.id}')">فتح</button>${ver&&!c.verified?`<button class="btn btn-primary" onclick="pfVerify('${s.id}','${c.id}')">تم التحقق</button>`:""}${self?`<button class="btn btn-outline dv-del" onclick="pfCertDel('${s.id}','${c.id}')">حذف</button>`:""}</div></div>`).join("")}</div>`:`<div class="empty">${self?"ارفع شهاداتك وترخيصك عشان المشرف يراجعها.":"للحين ما رفع شهادات."}</div>`}`;
       if(self)h+=`<form class="pf-add" onsubmit="pfAddCert(event,'${s.id}')"><h3>＋ شهادة جديدة</h3><div class="form-grid"><div class="field"><label>اسم الشهادة</label><input class="input" name="name" required placeholder="مثال: بكالوريوس اضطرابات التواصل"></div><div class="field"><label>النوع</label><select class="select" name="type">${PF_CTYPES.map(t=>`<option>${t}</option>`).join("")}</select></div>
           <div class="field"><label>الجهة المانحة</label><input class="input" name="issuer"></div><div class="field"><label>التاريخ</label><input class="input" type="date" name="date"></div>
           <div class="field full"><label>الملف (صورة أو PDF)</label><input class="input" type="file" name="file" accept="image/*,application/pdf" required></div></div>
-          <button class="btn btn-primary" ${PFUI.busy?"disabled":""}>${PFUI.busy?"بيترفع…":"ارفع الشهادة"}</button><p class="muted" style="font-size:12px;margin:6px 0 0">الصور بتتضغط تلقائي. الـPDF لحد 8 ميجا. الملفات بتتحفظ على الجهاز ده لحد ما المنصة تشتغل على السيرفر.</p></form>`;
+          <button class="btn btn-primary" ${PFUI.busy?"disabled":""}>${PFUI.busy?"يترفع…":"ارفع الشهادة"}</button><p class="muted" style="font-size:12px;margin:6px 0 0">الصور تتضغط تلقائي. الـPDF لين 8 ميجا. الملفات تتحفظ على الجهاز هذا لين ما المنصة تشتغل على السيرفر.</p></form>`;
       return h+`</section>`;
     }
-    async function pfPhoto(inp,sid){const s=personById(sid);const f=inp.files&&inp.files[0];if(!s||!f||!pfIsSelf(s))return;try{const r=await pfImg(f,320,0.82);pfOf(s).photo=r.url;audit("تحديث الصورة الشخصية",s.name);persist();notify("✓ صورتك اتحدثت");render()}catch(_e){notify("مقدرتش أقرا الصورة، جرّب صورة تانية")}}
+    async function pfPhoto(inp,sid){const s=personById(sid);const f=inp.files&&inp.files[0];if(!s||!f||!pfIsSelf(s))return;try{const r=await pfImg(f,320,0.82);pfOf(s).photo=r.url;audit("تحديث الصورة الشخصية",s.name);persist();notify("✓ صورتك تحدثت");render()}catch(_e){notify("ما قدرت أقرا الصورة، جرّب صورة ثانية")}}
     function pfPhotoDel(sid){const s=personById(sid);if(!s||!pfIsSelf(s))return;pfOf(s).photo=null;persist();render()}
-    function pfSave(e,sid){e.preventDefault();const s=personById(sid);if(!s||!pfIsSelf(s))return notify("كل موظف بيعدّل ملفه بنفسه");const f=Object.fromEntries(new FormData(e.target).entries());const p=pfOf(s);
+    function pfSave(e,sid){e.preventDefault();const s=personById(sid);if(!s||!pfIsSelf(s))return notify("كل موظف يعدّل ملفه بنفسه");const f=Object.fromEntries(new FormData(e.target).entries());const p=pfOf(s);
       ["degree","major","university","gradYear","licenseNo","licenseClass","licenseExp","years","email","langs","bio"].forEach(k=>p[k]=String(f[k]||"").trim());p.updatedAt=new Date().toISOString();if(p.email)s.email=p.email;
-      audit("تحديث الملف المهني",s.name);persist();notify("✓ ملفك المهني اتحفظ");render()}
+      audit("تحديث الملف المهني",s.name);persist();notify("✓ ملفك المهني انحفظ");render()}
     async function pfAddCert(e,sid){e.preventDefault();const s=personById(sid);if(!s||!pfIsSelf(s))return;const fd=new FormData(e.target);const file=fd.get("file");if(!file||!file.size)return notify("اختار ملف الشهادة");
       const isPdf=/pdf/.test(file.type);if(!isPdf&&!/^image\//.test(file.type))return notify("الملف لازم يكون صورة أو PDF");if(isPdf&&file.size>8*1024*1024)return notify("الـPDF أكبر من 8 ميجا");
       PFUI.busy=true;render();try{const id="cert-"+Date.now();let blob=file,mime=file.type;if(!isPdf){const r=await pfImg(file,1800,0.8);blob=r.blob;mime="image/jpeg"}await pfPut(id,blob);
         pfOf(s).certs.unshift({id,name:String(fd.get("name")||"").trim(),type:fd.get("type"),issuer:String(fd.get("issuer")||"").trim(),date:fd.get("date")||"",mime,size:blob.size,at:new Date().toISOString(),verified:false});
         audit("رفع شهادة: "+fd.get("name"),s.name);const sup=s.department?agSup(s.department):null;if(sup&&sup.id!==s.id)state.messages.unshift({id:"msg-"+Date.now()+"-pf",fromId:s.id,fromName:s.name,toId:sup.id,toName:sup.name,text:`📄 رفعت شهادة جديدة «${fd.get("name")}» على ملفي المهني — محتاجة مراجعتك.`,date:todayISO(),read:false});
-        persist();notify("✓ الشهادة اترفعت ووصلت للمشرف يراجعها")}catch(_e){notify("مقدرتش أحفظ الملف على الجهاز ده")}PFUI.busy=false;render()}
-    async function pfOpen(sid,cid){try{const b=await pfGet(cid);if(!b)return notify("الملف ده مش موجود على الجهاز ده (اترفع من جهاز تاني)");const u=URL.createObjectURL(b);const w=window.open(u,"_blank");if(!w){const a=document.createElement("a");a.href=u;a.download=cid;a.click()}setTimeout(()=>URL.revokeObjectURL(u),60000)}catch(_e){notify("مقدرتش أفتح الملف")}}
-    function pfCertDel(sid,cid){const s=personById(sid);if(!s||!pfIsSelf(s))return;const p=pfOf(s);const c=p.certs.find(x=>x.id===cid);if(!c)return;if(PFUI.delArm!==cid){PFUI.delArm=cid;notify("اضغط «حذف» تاني للتأكيد");setTimeout(()=>{if(PFUI.delArm===cid)PFUI.delArm=null},4000);return}
+        persist();notify("✓ الشهادة انرفعت ووصلت للمشرف يراجعها")}catch(_e){notify("ما قدرت أحفظ الملف على الجهاز هذا")}PFUI.busy=false;render()}
+    async function pfOpen(sid,cid){try{const b=await pfGet(cid);if(!b)return notify("الملف هذا مو موجود على الجهاز هذا (انرفع من جهاز ثاني)");const u=URL.createObjectURL(b);const w=window.open(u,"_blank");if(!w){const a=document.createElement("a");a.href=u;a.download=cid;a.click()}setTimeout(()=>URL.revokeObjectURL(u),60000)}catch(_e){notify("ما قدرت أفتح الملف")}}
+    function pfCertDel(sid,cid){const s=personById(sid);if(!s||!pfIsSelf(s))return;const p=pfOf(s);const c=p.certs.find(x=>x.id===cid);if(!c)return;if(PFUI.delArm!==cid){PFUI.delArm=cid;notify("اضغط «حذف» ثاني للتأكيد");setTimeout(()=>{if(PFUI.delArm===cid)PFUI.delArm=null},4000);return}
       PFUI.delArm=null;p.certs=p.certs.filter(x=>x.id!==cid);pfDelFile(cid);audit("حذف شهادة: "+c.name,s.name);persist();render()}
     function pfVerify(sid,cid){const s=personById(sid);if(!s||!pfCanVerify(s))return notify("التحقق من الشهادات للمشرف والإدارة");const c=pfOf(s).certs.find(x=>x.id===cid);if(!c)return;const me=getCurrentPerson();c.verified=true;c.verifiedBy=me?me.name:(state.role==="management"?"الإدارة":"المشرف");c.verifiedAt=new Date().toISOString();
-      audit("التحقق من شهادة: "+c.name,s.name);state.messages.unshift({id:"msg-"+Date.now()+"-pv",fromId:me?me.id:null,fromName:c.verifiedBy,toId:s.id,toName:s.name,text:`✓ شهادتك «${c.name}» اتراجعت واتحقق منها.`,date:todayISO(),read:false});persist();notify("اتسجل التحقق");render()}
+      audit("التحقق من شهادة: "+c.name,s.name);state.messages.unshift({id:"msg-"+Date.now()+"-pv",fromId:me?me.id:null,fromName:c.verifiedBy,toId:s.id,toName:s.name,text:`✓ شهادتك «${c.name}» تراجعت انتحقق منها.`,date:todayISO(),read:false});persist();notify("انسجل التحقق");render()}
 
     // ---- دليل الإيميل والدرايف ----
     function dirEnsure(){state.center=state.center||{};if(!state.center.mailDomain)state.center.mailDomain="center.sa";if(!state.center.dir)state.center.dir={};return state.center.dir}
@@ -74,7 +74,7 @@
     function dirCanEdit(e){if(state.sipadMode)return false;if(state.role==="management")return true;if(state.role!=="supervisor")return false;const me=getCurrentPerson();return !!e.dept&&(!me||!me.department||me.department===e.dept)}
     function dirHtml(compact){const L=dirEntries();const groups=[...new Set(L.map(e=>e.group))];const anyEdit=L.some(dirCanEdit);const guess=L.filter(e=>!e.set).length;
       return `<section class="card dir-card"><div class="card-head"><h2>${ic("chat",18)} دليل الإيميل والدرايف</h2>${state.role==="management"&&!state.sipadMode?`<button class="btn btn-outline" onclick="dirEdit()">${PFUI.dirEdit?"إغلاق التعديل":"تعديل الدليل"}</button>`:anyEdit?`<button class="btn btn-outline" onclick="dirEdit()">${PFUI.dirEdit?"إغلاق":"تعديل قسمي"}</button>`:""}</div>
-        ${guess&&state.role==="management"&&!state.sipadMode?`<p class="dir-note">${guess} عنوان لسه مقترح على دومين <b dir="ltr">${esc(state.center.mailDomain)}</b> — اكتب الإيميلات الحقيقية من «تعديل الدليل».</p>`:""}
+        ${guess&&state.role==="management"&&!state.sipadMode?`<p class="dir-note">${guess} عنوان للحين مقترح على دومين <b dir="ltr">${esc(state.center.mailDomain)}</b> — اكتب الإيميلات الحقيقية من «تعديل الدليل».</p>`:""}
         ${PFUI.dirEdit?dirForm(L):groups.map(g=>`<h4 class="dir-g">${esc(g)}</h4><div class="dir-list">${L.filter(e=>e.group===g).map(e=>`<div class="dir-row">${e.person?pfAv(e.person,"sm"):`<span class="pf-av sm">${ic(e.group==="الأقسام"?"departments":"team",14)}</span>`}<div><b>${esc(e.name)}</b>${e.sub?`<small>${esc(e.sub)}</small>`:""}<code dir="ltr">${e.email?esc(e.email):"—"}${e.email&&!e.set?' <i class="dir-sug">مقترح</i>':""}</code></div>
           <div class="dir-act">${e.email?`<a class="btn btn-primary" href="mailto:${esc(e.email)}" target="_blank" rel="noopener">✉️ إيميل</a><button class="btn btn-outline" onclick="dirCopy('${esc(e.email)}')">نسخ</button>`:""}${e.drive?`<a class="btn btn-outline" href="${esc(e.drive)}" target="_blank" rel="noopener">📁 الدرايف</a>`:""}</div></div>`).join("")}</div>`).join("")}</section>`}
     function dirForm(L){const ed=L.filter(dirCanEdit);return `<form class="dir-form" onsubmit="dirSave(event)">${state.role==="management"?`<div class="field"><label>دومين إيميلات المركز</label><input class="input" name="domain" dir="ltr" value="${esc(state.center.mailDomain)}"></div>`:""}
@@ -83,8 +83,8 @@
     function dirSave(e){e.preventDefault();const D=dirEnsure();const f=Object.fromEntries(new FormData(e.target).entries());const L=dirEntries();
       if(state.role==="management"&&f.domain)state.center.mailDomain=String(f.domain).trim().replace(/^@/,"");
       L.filter(dirCanEdit).forEach(x=>{["email","drive"].forEach(k=>{const v=f[x.key+"."+k];if(v===undefined)return;const t=String(v).trim();if(t)D[x.key+"."+k]=t;else delete D[x.key+"."+k]})});
-      audit("تحديث دليل الإيميل والدرايف","");PFUI.dirEdit=false;persist();notify("✓ الدليل اتحدث");render()}
-    function dirCopy(t){try{navigator.clipboard.writeText(t).then(()=>notify("اتنسخ: "+t),()=>notify(t))}catch(_e){notify(t)}}
+      audit("تحديث دليل الإيميل والدرايف","");PFUI.dirEdit=false;persist();notify("✓ الدليل تحدث");render()}
+    function dirCopy(t){try{navigator.clipboard.writeText(t).then(()=>notify("انتسخ: "+t),()=>notify(t))}catch(_e){notify(t)}}
     // ---- ربط الواجهات ----
     function pfSwap(h){state.staff.forEach(s=>{if(!s.profile||!s.profile.photo)return;const n=esc(s.name).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
       h=h.replace(new RegExp('<span class="sp-av">[^<]{0,4}</span>(<b>|<span><b>)'+n+'</b>','g'),(m,g1)=>`<span class="sp-av has-ph"><img src="${s.profile.photo}" alt=""></span>${g1}${esc(s.name)}</b>`)});return h}
@@ -94,14 +94,14 @@
     // الآيباد: زرار «ملفي» + شاشة الملف المهني (فيها دليل الإيميل كمان)
     const _pfScr=staffIpadScreen;staffIpadScreen=function(){let h=_pfScr();const s=state.sipad&&sipadStaff();if(!s)return h;
       h=h.replace('<button class="spn-top" onclick="attOpen()">',`<button class="spn-top" onclick="pfIpad(true)">${s.profile&&s.profile.photo?`<img class="pf-mini" src="${s.profile.photo}" alt="">`:"👤"} ملفي</button><button class="spn-top" onclick="attOpen()">`);
-      if(PFUI.open){const i=h.indexOf('<main class="ki-main">');const j=h.lastIndexOf("</main>");if(i>=0&&j>i)h=h.slice(0,i)+`<main class="ki-main"><div class="ev-head"><div><h1>ملفي المهني</h1><small>بياناتك وشهاداتك — المشرف بيراجعها ويوثّقها</small></div><button class="btn btn-outline" onclick="pfIpad(false)">← رجوع لجدولي</button></div>${pfHtml(s,"self")}${dirHtml()}`+h.slice(j)}
+      if(PFUI.open){const i=h.indexOf('<main class="ki-main">');const j=h.lastIndexOf("</main>");if(i>=0&&j>i)h=h.slice(0,i)+`<main class="ki-main"><div class="ev-head"><div><h1>ملفي المهني</h1><small>بياناتك وشهاداتك — المشرف يراجعها ويوثّقها</small></div><button class="btn btn-outline" onclick="pfIpad(false)">← رجوع لجدولي</button></div>${pfHtml(s,"self")}${dirHtml()}`+h.slice(j)}
       return h};
     function pfIpad(on){PFUI.open=!!on;render();window.scrollTo(0,0)}
     const _pfSLock=sipadLock;sipadLock=function(){PFUI.open=false;return _pfSLock()};
     const _pfHome=sipadHome;sipadHome=function(s){const h=_pfHome(s);const p=s.profile;if(!p||!p.photo)return h;return h.replace('<section class="sp-hello"><div>',`<section class="sp-hello"><div class="sp-hello-ph"><img src="${p.photo}" alt=""></div><div>`)};
     // المنصة: «آيبادي» فيها ملفي المهني، وصفحة الموظف للمشرف فيها ملفه للمراجعة
     const _pfMine=myIpadView;myIpadView=function(){let h=_pfMine();const me=getCurrentPerson();if(!me||!ipOwnerEligible(me))return h;const p=pfOf(me);const lic=pfLic(me);
-      const strip=`<section class="card pf-strip">${pfAv(me,"lg")}<div><b>ملفي المهني</b><small>${p.degree?esc(p.degree)+(p.major?" · "+esc(p.major):""):"لسه ما كملتش بياناتك"} · ${p.certs.length} شهادة${lic?" · "+esc(lic.txt):""}</small></div><span class="pf-pctm">${pfDone(me)}%</span><button class="btn ${PFUI.page?"btn-outline":"btn-primary"}" onclick="pfPage()">${PFUI.page?"إغلاق":"افتح ملفي وارفع شهاداتي"}</button></section>${PFUI.page?pfHtml(me,"self"):""}`;
+      const strip=`<section class="card pf-strip">${pfAv(me,"lg")}<div><b>ملفي المهني</b><small>${p.degree?esc(p.degree)+(p.major?" · "+esc(p.major):""):"للحين ما كمّلت بياناتك"} · ${p.certs.length} شهادة${lic?" · "+esc(lic.txt):""}</small></div><span class="pf-pctm">${pfDone(me)}%</span><button class="btn ${PFUI.page?"btn-outline":"btn-primary"}" onclick="pfPage()">${PFUI.page?"إغلاق":"افتح ملفي وارفع شهاداتي"}</button></section>${PFUI.page?pfHtml(me,"self"):""}`;
       const k=h.indexOf('<div class="mi-wrap">');return k>=0?h.slice(0,k)+strip+h.slice(k):h+strip};
     function pfPage(){PFUI.page=!PFUI.page;render()}
     const _pfStaffPage=staffPageHtml;staffPageHtml=function(s,self){let h=_pfStaffPage(s,self);if(!s||self)return h;h=h.replace(/<div class="pg-av">[^<]*<\/div>/,`<div class="pg-av">${s.profile&&s.profile.photo?`<img src="${s.profile.photo}" alt="">`:esc((s.name.replace(/^(أ\.|د\.)\s*/,"")||"?").charAt(0))}</div>`);
@@ -120,7 +120,7 @@
     render();
 
     /* === تفاعلية إضافية: ميل ثلاثي الأبعاد للكروت + توهج يتبع المؤشر + تموّج عند الضغط ===
-       تعمل بالتفويض (delegation) على document عشان تفضل شغالة حتى بعد كل render() اللي بيستبدل محتوى #app بالكامل. */
+       تعمل بالتفويض (delegation) على document عشان تفضل شغالة حتى بعد كل render() اللي يستبدل محتوى #app بالكامل. */
     (function initExtraInteractivity(){
       const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const canHover = window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches;
@@ -222,7 +222,7 @@
         <h3 style="font-size:14px;margin:18px 0 10px">٤) عرض الحجز الذهبي <small class="muted" style="font-weight:400">(اختياري)</small></h3>
         <div class="chips"><label class="chip ${!d.offer?"checked":""}" onclick="pickBookingOffer('')">بدون عرض</label>${state.goldenOffers.map(o=>`<label class="chip ${d.offer===o.id?"checked":""}" onclick="pickBookingOffer('${o.id}')">🌟 ${esc(o.name)}</label>`).join("")}</div>
         ${calc.offer?`<div class="notice" style="margin-top:10px">${esc(calc.offer.desc)}</div>`:""}
-        <div class="notice-blue" style="margin-top:18px">تحجزين أكتر من جلسة في الأسبوع؟ <b>الباقات العلاجية</b> توفرلك في السعر — <a class="back-link" onclick="setParentTab('packages')">شوفي الباقات</a></div>
+        <div class="notice-blue" style="margin-top:18px">تحجزين أكثر من جلسة في الأسبوع؟ <b>الباقات العلاجية</b> توفرلك في السعر — <a class="back-link" onclick="setParentTab('packages')">شوفي الباقات</a></div>
         <h3 style="font-size:14px;margin:18px 0 10px">٥) طريقة الدفع</h3>
         <div class="pay-grid">${["Apple Pay","مدى","تابي","تمارا"].map(m=>`<div class="pay-opt ${d.payment===m?"selected":""}" onclick="pickBookingPayment('${m}')">${m}</div>`).join("")}</div>
         <div class="amount-box" style="margin-top:20px"><small>المبلغ المطلوب لهذه الجلسة</small><b>${calc.price} ر.س</b>${calc.bonusNote?`<div class="gateway-badges"><span>${esc(calc.bonusNote)}</span></div>`:""}</div>
@@ -245,8 +245,8 @@
       if(!rows.length) return `<div class="empty">لا يوجد حجوزات بعد. <a class="back-link" onclick="setParentTab('sessionBooking')">احجزي جلسة الآن</a></div>`;
       return `<div class="list">${rows.map(b=>{const waMsg=`تذكير: حجز جلسة يوم ${date(b.day)} الساعة ${time(b.time)} مع ${b.specialist} في ${esc(state.center.name)}.`;return `<div class="list-row" style="align-items:flex-start"><div class="list-main"><strong>${date(b.day)} · ${time(b.time)} — ${esc(b.specialist)}</strong><small>${b.price} ر.س · ${esc(b.payment)}${b.offer?" · 🌟 "+esc(b.offer):""}</small></div><div class="list-end">${pillFor(b.status)}${b.status!=="ملغي"?`<div style="margin-top:8px;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap"><a class="btn btn-outline" style="padding:6px 10px;font-size:11px" target="_blank" rel="noopener" href="${waLink(waMsg)}">${ic("chat",12)} تذكير واتساب</a><button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="openModal('reschedule','${b.id}')">تأجيل</button><button class="btn btn-outline" style="padding:6px 10px;font-size:11px;color:var(--danger)" onclick="cancelBooking('${b.id}')">اعتذار / إلغاء</button></div>`:""}</div></div>`}).join("")}</div>`;
     }
-    // ↪ الدالة cancelBooking اتنقلت لملف js/06-assess-programs-consents-intake.js عشان تكون جاهزة وقت التحميل
-    // ↪ الدالة confirmReschedule اتنقلت لملف js/06-assess-programs-consents-intake.js عشان تكون جاهزة وقت التحميل
+    // ↪ الدالة cancelBooking انتقلت لملف js/06-assess-programs-consents-intake.js عشان تكون جاهزة وقت التحميل
+    // ↪ الدالة confirmReschedule انتقلت لملف js/06-assess-programs-consents-intake.js عشان تكون جاهزة وقت التحميل
     function packagesView(){return `<div class="section-grid-3">${state.packages.map(p=>`<div class="section-card" style="position:relative">${p.badge?`<span class="pill pill-gold" style="position:absolute;top:14px;left:14px">${esc(p.badge)}</span>`:""}<span class="section-icon">${ic("target",22)}</span><h3>${esc(p.name)}</h3><p>${esc(p.desc)}</p><div style="font-weight:900;color:var(--navy);font-size:20px;margin-bottom:4px">${p.price} ر.س</div><div class="muted" style="font-size:11px;margin-bottom:4px">${p.sessions} جلسة · ${Math.round(p.price/p.sessions)} ر.س للجلسة</div>${p.billingNote?`<div class="muted" style="font-size:11px;margin-bottom:12px;color:var(--teal)">${esc(p.billingNote)}</div>`:`<div style="margin-bottom:12px"></div>`}<button class="btn btn-primary" style="width:100%" onclick="buyPackage('${p.id}')">اختيار الباقة</button></div>`).join("")}</div>`}
     function buyPackage(id){if(!state.familySession){notify("سجّلي دخول من «متابعة طفلي وحجوزاتي» أولًا لإتمام الاشتراك");return}openModal('package',id)}
     function confirmPackagePurchase(e,id){e.preventDefault();const f=formData(e);const pkg=state.packages.find(x=>x.id===id);const patient=state.patients.find(x=>x.code===state.familySession.code);state.packagePurchases.unshift({id:"PK-"+Date.now().toString().slice(-6),patientId:patient?patient.id:null,patientName:state.familySession.name,package:pkg.name,packageId:pkg.id,sessionsTotal:pkg.sessions,sessionsUsed:0,price:pkg.price,payment:f.payment,date:new Date().toISOString().slice(0,10)});createInvoice({patientId:patient?patient.id:null,patientName:state.familySession.name,type:"باقة",label:pkg.name,amount:pkg.price,payment:f.payment});persist();closeModal();notify(`تم الاشتراك في ${pkg.name} والدفع عبر ${f.payment} ✓`);render()}
@@ -358,7 +358,7 @@
       const logo=fval("logo",null);
       return `<div class="public-shell"><div class="gate card" style="max-width:760px">${headAdmin}${topBack}
         <h2 style="margin-top:18px">أهلًا ${esc(state.adminSession.ownerName)}</h2>
-        <p class="muted">${org?"بيانات مؤسستك — أي تعديل هيتحدث فورًا في الصفحة الرئيسية.":"سجّلي بيانات مؤسستك عشان تظهر جنب شعار أوان في الصفحة الرئيسية."}</p>
+        <p class="muted">${org?"بيانات مؤسستك — أي تعديل بيتحدث فورًا في الصفحة الرئيسية.":"سجّلي بيانات مؤسستك عشان تظهر جنب شعار أوان في الصفحة الرئيسية."}</p>
         <form onsubmit="saveOrgProfile(event)" style="margin-top:14px">
           <div class="form-grid">
             <div class="field"><label>اسم المركز / المستشفى</label><input class="input" name="orgName" required value="${esc(fval("orgName",""))}"></div>
@@ -378,7 +378,7 @@
     }
     function registerAdmin(e){
       e.preventDefault();const f=formData(e);
-      if(state.adminAccounts.find(a=>a.username===f.username)){document.getElementById("admin-result").innerHTML=`<div class="notice" style="background:var(--danger-2);border-color:#fecaca;color:var(--danger)">البريد الإلكتروني ده مسجّل بالفعل، جرّبي بريد تاني أو سجّلي الدخول.</div>`;return false}
+      if(state.adminAccounts.find(a=>a.username===f.username)){document.getElementById("admin-result").innerHTML=`<div class="notice" style="background:var(--danger-2);border-color:#fecaca;color:var(--danger)">البريد الإلكتروني هذا مسجّل بالفعل، جرّبي بريد ثاني أو سجّلي الدخول.</div>`;return false}
       state.adminAccounts.push({username:f.username,password:f.password,ownerName:f.ownerName,org:null});
       state.adminSession={username:f.username,ownerName:f.ownerName};
       persist();render();
@@ -413,11 +413,11 @@
           const w=img.width*scale,h=img.height*scale;
           ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
           let dataUrl;
-          try{dataUrl=canvas.toDataURL("image/jpeg",0.85)}catch(err){notify("تعذّر معالجة الصورة، جرّبي صورة تانية");return}
+          try{dataUrl=canvas.toDataURL("image/jpeg",0.85)}catch(err){notify("تعذّر معالجة الصورة، جرّبي صورة ثانية");return}
           state.orgProfileDraft=Object.assign({},state.orgProfileDraft,snap,{logo:dataUrl});
           persist();render();
         };
-        img.onerror=()=>{notify("تعذّر تحميل الصورة، جرّبي صورة تانية")};
+        img.onerror=()=>{notify("تعذّر تحميل الصورة، جرّبي صورة ثانية")};
         img.src=reader.result;
       };
       reader.onerror=()=>{notify("تعذّر قراءة الملف")};
@@ -439,13 +439,13 @@
           const w=img.width*scale,h=img.height*scale;
           ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
           let dataUrl;
-          try{dataUrl=canvas.toDataURL("image/jpeg",0.85)}catch(err){notify("تعذّر معالجة الصورة، جرّبي صورة تانية");return}
+          try{dataUrl=canvas.toDataURL("image/jpeg",0.85)}catch(err){notify("تعذّر معالجة الصورة، جرّبي صورة ثانية");return}
           state.orgProfileDraft=Object.assign({},state.orgProfileDraft,{logo:dataUrl});
           persist();
           const holder=document.getElementById("bizLogoPreview");
           if(holder) holder.innerHTML=`<img src="${dataUrl}" style="width:44px;height:44px;border-radius:12px;object-fit:cover;border:1px solid var(--line)"><button type="button" class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:11px" onclick="bizClearLogo()">إزالة الشعار</button>`;
         };
-        img.onerror=()=>{notify("تعذّر تحميل الصورة، جرّبي صورة تانية")};
+        img.onerror=()=>{notify("تعذّر تحميل الصورة، جرّبي صورة ثانية")};
         img.src=reader.result;
       };
       reader.onerror=()=>{notify("تعذّر قراءة الملف")};
@@ -460,7 +460,7 @@
     function saveOrgProfile(e){
       e.preventDefault();
       try{
-        if(!state.adminSession){notify("انتهت الجلسة، سجّلي الدخول تاني من فضلك");render();return}
+        if(!state.adminSession){notify("انتهت الجلسة، سجّلي الدخول ثاني من فضلك");render();return}
         const f=formData(e);
         if(!f.orgName||!f.orgName.trim()){notify("من فضلك اكتبي اسم المؤسسة");return}
         let acc=state.adminAccounts.find(a=>a.username===state.adminSession.username);
@@ -482,16 +482,16 @@
         state.featuredPartner={orgName:f.orgName,orgType:f.orgType,location:f.location,logo};
         state.orgProfileDraft=null;
         persist();
-        notify("تم الحفظ — مؤسستك ظاهرة دلوقتي في الصفحة الرئيسية ✓");
+        notify("تم الحفظ — مؤسستك ظاهرة الحين في الصفحة الرئيسية ✓");
         render();
       }catch(err){
         reportUnexpectedError(err);
       }
     }
   
-    // =================== رحلة الطفل الموحّدة: من أول ما الطفل يدخل المركز لحد تقرير ٣ شهور ===================
-    // طبقة ربط واحدة بتقرا من كل التابات (الإحالات، دراسة الحالة، الموافقات، التقييمات، الأهداف، المواعيد، الجلسات، التقارير)
-    // وبتطلع لكل طفل: هو فين في الرحلة، الخطوة الجاية إيه، مين مسؤول، وزرار بيوديك على المكان الصح في التاب الصح.
+    // =================== رحلة الطفل الموحّدة: من أول ما الطفل يدخل المركز لين تقرير ٣ شهور ===================
+    // طبقة ربط واحدة تقرا من كل التابات (الإحالات، دراسة الحالة، الموافقات، التقييمات، الأهداف، المواعيد، الجلسات، التقارير)
+    // بتطلع لكل طفل: هو وين في الرحلة، الخطوة الجاية وش، مين مسؤول، وزرار يوديك على المكان الصح في التاب الصح.
     const JR_STEPS=[
       {k:"intake",l:"الاستقبال",ic:"referrals"},
       {k:"case",l:"دراسة الحالة",ic:"book"},
@@ -504,7 +504,7 @@
       {k:"quarter",l:"تقرير ٣ شهور",ic:"star"}
     ];
     const JR_CYCLE=90,JR_QDUE=75;
-    // نفس مراحل محرك «أوان يعرف إيه التالي» بقت هي مراحل الرحلة — مصدر واحد لكل الشاشات (لوحة الملفات، التصدير، الوكلاء…)
+    // نفس مراحل محرك «أوان يعرف وش التالي» صارت هي مراحل الرحلة — مصدر واحد لكل الشاشات (لوحة الملفات، التصدير، الوكلاء…)
     NX_STAGES.splice(0,NX_STAGES.length,...JR_STEPS.map(s=>s.l));
     function jrToday(){return localDateOf(new Date())}
     function jrAdd(d,n){const x=new Date(d+"T12:00:00");x.setDate(x.getDate()+n);return localDateOf(x)}
@@ -540,7 +540,7 @@
       const planDone=appr.length>0||!!planOk||legacy;
       const planDate=jrMin([...appr.map(g=>g.approvedAt),planOk&&planOk.date])||(legacy?jrMin([...doneTherapy.map(a=>a.date),...logs.map(l=>l.date)]):null);
       const bookDone=upTherapy.length>0||doneTherapy.length>0||logs.length>0;
-      // الدورة العلاجية (٩٠ يوم): تبدأ من اعتماد الخطة، وكل تقرير ٣ شهور بيفتح دورة جديدة
+      // الدورة العلاجية (٩٠ يوم): تبدأ من اعتماد الخطة، وكل تقرير ٣ شهور يفتح دورة جديدة
       const Q=jrQuarters(p);const lastQ=Q[Q.length-1];
       const cycleNo=Q.length+1;
       const cycleStart=planDone?(lastQ?lastQ.date:(jrMin([planDate,...doneTherapy.map(a=>a.date),...logs.map(l=>l.date)])||today)):null;
@@ -555,21 +555,21 @@
       const S={};const st=(k,status,o)=>{S[k]=Object.assign({k,status},o||{})};
       st("intake","done",{date:intakeDate,info:ref?`إحالة: ${ref.name}`:si?"دراسة حالة إلكترونية / كشك الاستقبال":"تسجيل مباشر",owner:"الاستقبال"});
       if(cs)st("case","done",{date:jrDay(cs.at),info:cs.source||"دراسة الحالة",owner:"الاستقبال"});
-      else st("case",planDone?"miss":"todo",{info:planDone?"ناقصة — الطفل شغال بخطة من غير دراسة حالة":"لسه ما اتملتش",owner:"الاستقبال",act:"ابعت رابط دراسة الحالة / املأها",go:`jrGo('${id}','case')`});
+      else st("case",planDone?"miss":"todo",{info:planDone?"ناقصة — الطفل شغال بخطة من غير دراسة حالة":"للحين ما انعبّت",owner:"الاستقبال",act:"أرسل رابط دراسة الحالة / املأها",go:`jrGo('${id}','case')`});
       if(assessDone)st("assess","done",{date:assessDate,info:sa[0]?`${sa[0].instrument} · ${assessPctOf(sa[0])}%`:evOk[0]||evWait?"تقييم من آيباد الأخصائي":"جلسة تقييم أولي",owner:"الأخصائي"});
-      else if(legacy)st("assess","miss",{info:"مفيش تقييم مسجّل على أوان — يُفضّل تقييم قياسي كخط أساس",owner:"الأخصائي",act:"سجّل تقييم قياسي",go:`jrGo('${id}','std')`});
+      else if(legacy)st("assess","miss",{info:"ما فيه تقييم مسجّل على أوان — يُفضّل تقييم قياسي كخط أساس",owner:"الأخصائي",act:"سجّل تقييم قياسي",go:`jrGo('${id}','std')`});
       else{const up=assessApts.find(a=>a.status!=="مكتمل"&&a.date>=today);
-        st("assess","todo",up?{info:`محجوز ${up.date===today?"النهارده":date(up.date)} ${time(up.time)} مع ${up.clinician}`,owner:"الأخصائي",act:"سجّل نتيجة التقييم",go:`jrGo('${id}','std')`,booked:true}:{info:"مفيش موعد تقييم",owner:"الاستقبال",act:"احجز تقييم أولي",go:`jrGo('${id}','assessBook')`})}
+        st("assess","todo",up?{info:`محجوز ${up.date===today?"اليوم":date(up.date)} ${time(up.time)} مع ${up.clinician}`,owner:"الأخصائي",act:"سجّل نتيجة التقييم",go:`jrGo('${id}','std')`,booked:true}:{info:"ما فيه موعد تقييم",owner:"الاستقبال",act:"احجز تقييم أولي",go:`jrGo('${id}','assessBook')`})}
       if(planDone)st("plan","done",{date:planDate,info:appr.length?`${appr.length} أهداف معتمدة`:planOk?planOk.title:"خطة قائمة",owner:"المشرف"});
-      else if(evWait)st("plan","todo",{info:`تقييم ${evWait.staffName||"الأخصائي"} مستني اعتماد المشرف`,owner:"المشرف",sup:true,act:"راجع واعتمد",go:`jrGo('${id}','plan')`});
-      else if(prop.length)st("plan","todo",{info:`${prop.length} أهداف مقترحة مستنية توقيع المشرف`,owner:"المشرف",sup:true,act:"اعتمد الأهداف",go:`jrGo('${id}','plan')`});
+      else if(evWait)st("plan","todo",{info:`تقييم ${evWait.staffName||"الأخصائي"} بانتظار اعتماد المشرف`,owner:"المشرف",sup:true,act:"راجع واعتمد",go:`jrGo('${id}','plan')`});
+      else if(prop.length)st("plan","todo",{info:`${prop.length} أهداف مقترحة بانتظار توقيع المشرف`,owner:"المشرف",sup:true,act:"اعتمد الأهداف",go:`jrGo('${id}','plan')`});
       else if(planBack||evBack)st("plan","todo",{info:"الخطة رجعت للأخصائي بملاحظات المشرف",owner:"الأخصائي",act:"عدّل الخطة",go:`jrGo('${id}','plan')`});
-      else if(planWait)st("plan","todo",{info:`«${planWait.title}» مستنية الاعتماد`,owner:"المشرف",sup:true,act:"اعتمد الخطة",go:`jrGo('${id}','file')`,planId:planWait.id});
-      else st("plan","todo",{info:assessDone?"التقييم خلص ومفيش أهداف لسه":"بعد التقييم",owner:"الأخصائي",act:"اكتب الأهداف",go:`jrGo('${id}','plan')`});
+      else if(planWait)st("plan","todo",{info:`«${planWait.title}» بانتظار الاعتماد`,owner:"المشرف",sup:true,act:"اعتمد الخطة",go:`jrGo('${id}','file')`,planId:planWait.id});
+      else st("plan","todo",{info:assessDone?"التقييم خلص وما فيه أهداف للحين":"بعد التقييم",owner:"الأخصائي",act:"اكتب الأهداف",go:`jrGo('${id}','plan')`});
       if(consent.st==="active")st("consent","done",{date:jrDay(consent.c&&(consent.c.signedAt||consent.c.at||consent.c.date)),info:"موافقة العلاج سارية",owner:"الاستقبال"});
-      else st("consent","todo",{info:consent.st==="expired"?"الموافقة انتهت":consent.st==="withdrawn"?"الأسرة سحبت الموافقة":"مفيش موافقة علاج موقّعة",owner:"الاستقبال",act:"توقيع موافقة العلاج",go:`jrGo('${id}','consent')`});
-      if(bookDone)st("book","done",{date:jrMin([...therapy.map(a=>a.date),...logs.map(l=>l.date)]),info:upTherapy[0]?`الجاية ${upTherapy[0].date===today?"النهارده":date(upTherapy[0].date)} ${time(upTherapy[0].time)} مع ${upTherapy[0].clinician}`:"مفيش موعد جاي محجوز",owner:"الاستقبال",warn:!upTherapy.length});
-      else st("book","todo",{info:"الخطة جاهزة ومفيش جلسات محجوزة",owner:"الاستقبال",act:"احجز الجلسات",go:`jrGo('${id}','book')`});
+      else st("consent","todo",{info:consent.st==="expired"?"الموافقة انتهت":consent.st==="withdrawn"?"الأسرة سحبت الموافقة":"ما فيه موافقة علاج موقّعة",owner:"الاستقبال",act:"توقيع موافقة العلاج",go:`jrGo('${id}','consent')`});
+      if(bookDone)st("book","done",{date:jrMin([...therapy.map(a=>a.date),...logs.map(l=>l.date)]),info:upTherapy[0]?`الجاية ${upTherapy[0].date===today?"اليوم":date(upTherapy[0].date)} ${time(upTherapy[0].time)} مع ${upTherapy[0].clinician}`:"ما فيه موعد جاي محجوز",owner:"الاستقبال",warn:!upTherapy.length});
+      else st("book","todo",{info:"الخطة جاهزة وما فيه جلسات محجوزة",owner:"الاستقبال",act:"احجز الجلسات",go:`jrGo('${id}','book')`});
       const sessInfo=`${cDone.length||cLogs.length} جلسة في الدورة${att!=null?" · حضور "+att+"%":""}`;
       if(cycleStart)st("sessions",dayN>=JR_CYCLE?"done":"todo",{date:cycleStart,info:sessInfo,owner:"الأخصائي",act:"سجّل أداء جلسة",go:`jrGo('${id}','log')`});
       else st("sessions","todo",{info:"تبدأ بعد اعتماد الخطة",owner:"الأخصائي"});
@@ -593,13 +593,13 @@
     awanNext=function(p){
       const n=_jrNext(p);let J;try{J=jrJourney(p)}catch(e){return n}
       n.stage=J.idx;n.jr=J.cur;
-      const exc=/في جلسة|حزمة النقل|انقطاع|راجع الهدف|اتحقق/.test(n.text);
+      const exc=/في جلسة|حزمة النقل|انقطاع|راجع الهدف|اتحقق|تحقق/.test(n.text);
       if(!exc){const s=J.step;n.text=s.act||JR_STEPS[J.idx].l;n.why=s.info||"";n.owner=s.owner||"—";n.sup=!!s.sup;
         n.urg=J.cur==="sessions"?0:s.late?3:s.sup?2:1;if(J.cur==="sessions"){n.text="ماشي حسب الخطة";n.why=s.info}
         n.go=s.go||n.go}
       return n;
     };
-    // ---- التنقّل: كل زرار في الرحلة بيوديك للتاب الصح والطفل متحدد، وشريط فوق بيفكّرك إنت شغال على مين ----
+    // ---- التنقّل: كل زرار في الرحلة يوديك للتاب الصح والطفل متحدد، وشريط فوق يفكّرك أنت شغال على مين ----
     function jrGo(pid,k){
       const p=state.patients.find(x=>x.id===pid);if(!p)return;
       const J=jrJourney(p);const from=J.cur;
@@ -623,24 +623,24 @@
       if(state.view==="public")return "";
       const p=state.patients.find(x=>x.id===c.pid);if(!p){state.jrCtx=null;return ""}
       const J=jrJourney(p);const moved=J.cur!==c.step;const nx=J.step;
-      return `<div class="jr-ctx ${moved?"ok":""}"><span class="jr-ctx-ic">${ic(moved?"check":"target",16)}</span><div><small>${moved?"تمت الخطوة ✓":"إنت شغال على رحلة"} · ${esc(p.name)}</small><b>${moved?`الخطوة الجاية: ${esc(JR_STEPS[J.idx].l)} — ${esc(nx.info||"")}`:`الخطوة: ${esc(c.label||JR_STEPS[J.idx].l)}`}</b></div>
+      return `<div class="jr-ctx ${moved?"ok":""}"><span class="jr-ctx-ic">${ic(moved?"check":"target",16)}</span><div><small>${moved?"تمت الخطوة ✓":"أنت شغال على رحلة"} · ${esc(p.name)}</small><b>${moved?`الخطوة الجاية: ${esc(JR_STEPS[J.idx].l)} — ${esc(nx.info||"")}`:`الخطوة: ${esc(c.label||JR_STEPS[J.idx].l)}`}</b></div>
         <div class="jr-ctx-a">${moved&&nx.go?`<button class="btn btn-primary" onclick="state_jrNoop();${nx.go}">${esc(nx.act||"كمّل")}</button>`:""}<button class="btn btn-outline" onclick="jrGo('${p.id}','file')">ارجع لملف الطفل</button><button class="jr-x" onclick="jrCtxClose()" aria-label="إغلاق">×</button></div></div>`;
     }
     function state_jrNoop(){}
     const _jrShell=shell;shell=function(body){return _jrShell(jrBanner()+body)};
-    // ---- كارت الرحلة في ملف الطفل (بدل كارت «أوان يعرف إيه التالي» — نفس الفكرة بس متوصلة بكل التابات) ----
+    // ---- كارت الرحلة في ملف الطفل (بدل كارت «أوان يعرف وش التالي» — نفس الفكرة بس متوصلة بكل التابات) ----
     function jrStepper(J,small){
       return `<ol class="jr-steps ${small?"sm":""}">${JR_STEPS.map((s,i)=>{const x=J.S[s.k];const cls=i===J.idx?"on":x.status==="done"?"done":x.status==="miss"?"miss":"";
-        return `<li class="${cls}" title="${esc(s.l+(x.info?" — "+x.info:""))}">${small?"":`<button type="button" onclick="${x.go&&x.status!=="done"?x.go:`jrGo('${J.p.id}','file')`}">`}<i>${x.status==="done"?"✓":i+1}</i>${small?"":`<span>${esc(s.l)}</span><em>${x.status==="done"&&x.date?date(x.date):x.status==="miss"?"ناقص":i===J.idx?"دلوقتي":""}</em></button>`}</li>`}).join("")}</ol>`;
+        return `<li class="${cls}" title="${esc(s.l+(x.info?" — "+x.info:""))}">${small?"":`<button type="button" onclick="${x.go&&x.status!=="done"?x.go:`jrGo('${J.p.id}','file')`}">`}<i>${x.status==="done"?"✓":i+1}</i>${small?"":`<span>${esc(s.l)}</span><em>${x.status==="done"&&x.date?date(x.date):x.status==="miss"?"ناقص":i===J.idx?"الحين":""}</em></button>`}</li>`}).join("")}</ol>`;
     }
     function jrCycleBar(J){
-      if(!J.cycleStart)return `<div class="jr-cyc muted">الدورة العلاجية (٩٠ يوم) بتبدأ أول ما الخطة تتعتمد.</div>`;
+      if(!J.cycleStart)return `<div class="jr-cyc muted">الدورة العلاجية (٩٠ يوم) تبدأ أول ما الخطة تتعتمد.</div>`;
       const pct=Math.min(100,Math.round(J.dayN/JR_CYCLE*100));
       return `<div class="jr-cyc"><div class="jr-cyc-h"><b>الدورة ${J.cycleNo} · اليوم ${Math.min(J.dayN,999)} من ${JR_CYCLE}</b><span>${date(J.cycleStart)} ← ${date(J.due)}</span></div><div class="jr-bar"><i style="width:${pct}%"></i><s style="right:${30/JR_CYCLE*100}%"></s><s style="right:${60/JR_CYCLE*100}%"></s><s class="q" style="right:${JR_QDUE/JR_CYCLE*100}%"></s></div><div class="jr-cyc-l"><span>بداية الخطة</span><span>مراجعة ١</span><span>مراجعة ٢</span><span>تقرير ٣ شهور</span></div></div>`;
     }
     function jrCard(p){
       const J=jrJourney(p);const n=_jrNext(p);const s=J.step;
-      const alert=/انقطاع|راجع الهدف|حزمة النقل|اتحقق/.test(n.text)?`<div class="jr-alert u${n.urg}"><b>${esc(n.text)}</b><span>${esc(n.why)}</span>${n.sup?`<em>يحتاج تدخل مشرف</em>`:""}</div>`:"";
+      const alert=/انقطاع|راجع الهدف|حزمة النقل|اتحقق|تحقق/.test(n.text)?`<div class="jr-alert u${n.urg}"><b>${esc(n.text)}</b><span>${esc(n.why)}</span>${n.sup?`<em>يحتاج تدخل مشرف</em>`:""}</div>`:"";
       const misses=JR_STEPS.filter(x=>J.S[x.k].status==="miss").map(x=>`<button class="jr-miss" onclick="${J.S[x.k].go}">${ic("bell",12)} ${esc(x.l)}: ${esc(J.S[x.k].info)}</button>`).join("");
       return `<section class="card jr-card"><div class="card-head"><h2>${ic("target",18)} رحلة الطفل</h2><div style="display:flex;gap:6px;flex-wrap:wrap">${J.Q.length?`<button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="jrQuarterView('${J.Q[J.Q.length-1].id}')">آخر تقرير ٣ شهور</button>`:""}<button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="setView('journey')">كل الأطفال</button></div></div>
         ${jrStepper(J)}
@@ -657,17 +657,17 @@
     function jrProgress(p){
       const goals=goalsOf(p).filter(g=>g.status==="معتمد");const logs=(state.sessionLogs||[]).filter(l=>l.patientId===p.id).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
       const sc={"نجاح كامل":2,"نجاح جزئي":1,"لم ينجح بعد":0};const recent=logs.slice(0,8);
-      if(!recent.length)return {pct:null,label:"لسه مفيش جلسات مسجلة"};
+      if(!recent.length)return {pct:null,label:"للحين ما فيه جلسات مسجلة"};
       const pct=Math.round(recent.reduce((s,l)=>s+(sc[l.result]??1),0)/(recent.length*2)*100);
       return {pct,label:`من آخر ${recent.length} نتيجة جلسة${goals.length?" · "+goals.length+" أهداف معتمدة":""}`};
     }
     function jrPlanPill(p){const J=jrJourney(p);return pill(J.cycleStart?`الدورة ${J.cycleNo} · يوم ${Math.min(J.dayN,999)}`:JR_STEPS[J.idx].l)}
     function jrNextHtml(p){const today=jrToday();const a=state.appointments.filter(x=>x.patient===p.name&&x.status!=="ملغي"&&x.status!=="مكتمل"&&x.date>=today).sort((x,y)=>(x.date+x.time).localeCompare(y.date+y.time))[0];
-      if(!a)return `<div style="font-size:16px;font-weight:800;color:var(--muted);margin-top:4px">مفيش موعد محجوز</div><button class="btn btn-outline" style="margin-top:8px;padding:6px 10px;font-size:11px" onclick="jrGo('${p.id}','book')">احجز موعد</button>`;
+      if(!a)return `<div style="font-size:16px;font-weight:800;color:var(--muted);margin-top:4px">ما فيه موعد محجوز</div><button class="btn btn-outline" style="margin-top:8px;padding:6px 10px;font-size:11px" onclick="jrGo('${p.id}','book')">احجز موعد</button>`;
       return `<div style="font-size:22px;font-weight:800;color:var(--navy);margin-top:4px">${date(a.date)}</div><div class="muted">${time(a.time)} · ${esc(a.service||"")} · ${esc(a.clinician||"")}</div>`}
     function jrProgHtml(p){const g=jrProgress(p);if(g.pct==null)return `<div class="muted" style="font-size:12px;margin-top:7px">${esc(g.label)}</div>`;
       return `<div style="height:9px;border-radius:99px;background:#ece4d8;margin-top:7px"><div style="height:100%;width:${g.pct}%;background:var(--navy);border-radius:99px"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px"><span>${esc(g.label)}</span><b>${g.pct}%</b></div>`}
-    // ---- صفحة «رحلة الأطفال»: كل الأطفال على المسار، مين واقف فين، وإيه المطلوب ----
+    // ---- صفحة «رحلة الأطفال»: كل الأطفال على المسار، مين واقف وين، ووش المطلوب ----
     function jrList(){const vis=typeof ptVisible==="function"?ptVisible:()=>true;return state.patients.filter(p=>!p.archived&&vis(p)).map(p=>{try{return jrJourney(p)}catch(e){return null}}).filter(Boolean)}
     function jrSet(k,v){state[k]=v;render()}
     function journeyView(){
@@ -680,19 +680,19 @@
       list.sort((a,b)=>(b.S.quarter.late?1:0)-(a.S.quarter.late?1:0)||(b.step.sup?1:0)-(a.step.sup?1:0)||a.idx-b.idx);
       const row=J=>{const s=J.step;return `<article class="jr-row ${s.sup?"sup":""} ${J.S.quarter.late?"late":""}"><button class="jr-row-id" onclick="jrGo('${J.p.id}','file')"><b>${esc(J.p.name)}</b><small>${esc(J.p.file||"")} · ${esc(J.p.need||"")}</small></button>${jrStepper(J,true)}
         <div class="jr-row-s"><small>${esc(JR_STEPS[J.idx].l)} · ${esc(s.owner||"")}</small><b>${esc(J.cur==="sessions"?"ماشي حسب الخطة":s.act||"")}</b><span>${esc(s.info||"")}</span></div>
-        <div class="jr-row-c">${J.cycleStart?`<div class="jr-bar sm"><i style="width:${Math.min(100,Math.round(J.dayN/JR_CYCLE*100))}%"></i></div><small>الدورة ${J.cycleNo} · يوم ${Math.min(J.dayN,999)}/${JR_CYCLE}</small>`:`<small class="muted">الدورة لسه ما بدأتش</small>`}</div>
+        <div class="jr-row-c">${J.cycleStart?`<div class="jr-bar sm"><i style="width:${Math.min(100,Math.round(J.dayN/JR_CYCLE*100))}%"></i></div><small>الدورة ${J.cycleNo} · يوم ${Math.min(J.dayN,999)}/${JR_CYCLE}</small>`:`<small class="muted">الدورة للحين ما بدأت</small>`}</div>
         <div class="jr-row-a">${s.go&&J.cur!=="sessions"?`<button class="btn btn-primary" onclick="${s.go}">${esc(s.act||"نفّذ")}</button>`:`<button class="btn btn-outline" onclick="jrGo('${J.p.id}','file')">افتح الملف</button>`}</div></article>`};
-      return head("من الاستقبال لحد تقرير ٣ شهور","رحلة الطفل","كل طفل في المركز على مسار واحد متوصل: كل خطوة بتتقفل في التاب بتاعها، والرحلة بتنقله للي بعدها لوحدها.",`<button class="btn btn-outline" onclick="setView('patients')">${ic("patients",14)} الملفات</button>`)
+      return head("من الاستقبال لين تقرير ٣ شهور","رحلة الطفل","كل طفل في المركز على مسار واحد متوصل: كل خطوة تتقفل في التاب حقها، والرحلة تنقله للي بعدها لوحدها.",`<button class="btn btn-outline" onclick="setView('patients')">${ic("patients",14)} الملفات</button>`)
         +`<section class="jr-flow">${JR_STEPS.map((s,i)=>`<button class="jr-flow-i ${f===s.k?"on":""}" onclick="jrSet('jrFilter','${f===s.k?"all":s.k}')"><span class="jr-flow-n">${i+1}</span><span class="jr-flow-ic">${ic(s.ic,16)}</span><b>${counts[i]}</b><small>${esc(s.l)}</small></button>`).join("")}</section>
-        <section class="jr-kpis"><button class="jr-kpi ${f==="all"?"on":""}" onclick="jrSet('jrFilter','all')"><b>${all.length}</b><small>كل الأطفال</small></button><button class="jr-kpi gold ${f==="sup"?"on":""}" onclick="jrSet('jrFilter','sup')"><b>${sup}</b><small>مستني قرار مشرف</small></button><button class="jr-kpi ${f==="quarter"?"on":""}" onclick="jrSet('jrFilter','quarter')"><b>${dueQ.length}</b><small>تقرير ٣ شهور مستحق</small></button><button class="jr-kpi red" onclick="jrSet('jrFilter','quarter')"><b>${late}</b><small>تقرير متأخر</small></button><button class="jr-kpi ${f==="miss"?"on":""}" onclick="jrSet('jrFilter','miss')"><b>${missing}</b><small>ملف فيه خطوة ناقصة</small></button></section>
-        <section class="card" style="margin-top:16px"><div class="card-head"><h2>${ic("target",18)} ${f==="all"?"كل الأطفال":f==="sup"?"مستني قرار مشرف":f==="miss"?"ملفات فيها خطوة ناقصة":esc((JR_STEPS.find(s=>s.k===f)||{}).l||"")} <span class="muted" style="font-weight:600;font-size:13px">(${list.length})</span></h2><input class="input" style="max-width:240px" placeholder="ابحث باسم الطفل أو رقم الملف" value="${esc(q)}" onchange="jrSet('jrQ',this.value)"></div>
-        ${list.length?`<div class="jr-rows">${list.map(row).join("")}</div>`:`<div class="empty">مفيش أطفال في الخطوة دي.</div>`}</section>`;
+        <section class="jr-kpis"><button class="jr-kpi ${f==="all"?"on":""}" onclick="jrSet('jrFilter','all')"><b>${all.length}</b><small>كل الأطفال</small></button><button class="jr-kpi gold ${f==="sup"?"on":""}" onclick="jrSet('jrFilter','sup')"><b>${sup}</b><small>بانتظار قرار مشرف</small></button><button class="jr-kpi ${f==="quarter"?"on":""}" onclick="jrSet('jrFilter','quarter')"><b>${dueQ.length}</b><small>تقرير ٣ شهور مستحق</small></button><button class="jr-kpi red" onclick="jrSet('jrFilter','quarter')"><b>${late}</b><small>تقرير متأخر</small></button><button class="jr-kpi ${f==="miss"?"on":""}" onclick="jrSet('jrFilter','miss')"><b>${missing}</b><small>ملف فيه خطوة ناقصة</small></button></section>
+        <section class="card" style="margin-top:16px"><div class="card-head"><h2>${ic("target",18)} ${f==="all"?"كل الأطفال":f==="sup"?"بانتظار قرار مشرف":f==="miss"?"ملفات فيها خطوة ناقصة":esc((JR_STEPS.find(s=>s.k===f)||{}).l||"")} <span class="muted" style="font-weight:600;font-size:13px">(${list.length})</span></h2><input class="input" style="max-width:240px" placeholder="ابحث باسم الطفل أو رقم الملف" value="${esc(q)}" onchange="jrSet('jrQ',this.value)"></div>
+        ${list.length?`<div class="jr-rows">${list.map(row).join("")}</div>`:`<div class="empty">ما فيه أطفال في الخطوة هذي.</div>`}</section>`;
     }
     // شريط مختصر للرحلة فوق لوحة القيادة
     function jrStrip(){const all=jrList();if(!all.length)return "";const counts=JR_STEPS.map(s=>all.filter(J=>J.cur===s.k).length);const due=all.filter(J=>J.S.quarter.due).length;const sup=all.filter(J=>J.step.sup).length;
-      return `<section class="card jr-strip"><div class="card-head"><h2>${ic("target",18)} رحلة الأطفال — من الاستقبال لتقرير ٣ شهور</h2><button class="btn btn-outline" onclick="setView('journey')">افتح الرحلة</button></div><div class="jr-strip-r">${JR_STEPS.map((s,i)=>`<button onclick="state_jrNoop();jrSet('jrFilter','${s.k}');setView('journey')"><b>${counts[i]}</b><small>${esc(s.l)}</small></button>`).join(`<span class="jr-arrow">‹</span>`)}</div>${due||sup?`<div class="jr-strip-n">${due?`<span class="pill pill-gold">${due} تقرير ٣ شهور مستحق</span>`:""}${sup?`<span class="pill pill-blue">${sup} مستني قرار مشرف</span>`:""}</div>`:""}</section>`}
+      return `<section class="card jr-strip"><div class="card-head"><h2>${ic("target",18)} رحلة الأطفال — من الاستقبال لتقرير ٣ شهور</h2><button class="btn btn-outline" onclick="setView('journey')">افتح الرحلة</button></div><div class="jr-strip-r">${JR_STEPS.map((s,i)=>`<button onclick="state_jrNoop();jrSet('jrFilter','${s.k}');setView('journey')"><b>${counts[i]}</b><small>${esc(s.l)}</small></button>`).join(`<span class="jr-arrow">‹</span>`)}</div>${due||sup?`<div class="jr-strip-n">${due?`<span class="pill pill-gold">${due} تقرير ٣ شهور مستحق</span>`:""}${sup?`<span class="pill pill-blue">${sup} بانتظار قرار مشرف</span>`:""}</div>`:""}</section>`}
         const _jrHome=roleHome;roleHome=function(){if(state.view==="journey")return journeyView();return _jrHome()};
-    // ---- تقرير ٣ شهور: بيتجمع لوحده من كل اللي اتسجل في الدورة ----
+    // ---- تقرير ٣ شهور: يتجمع لوحده من كل اللي انسجل في الدورة ----
     const JR_SC={"نجاح كامل":2,"نجاح جزئي":1,"لم ينجح بعد":0};
     function jrLevel(pct){return pct==null?"جيد":pct>=80?"ممتاز":pct>=65?"جيد جدًا":pct>=45?"جيد":"يحتاج دعمًا إضافيًا"}
     function jrQuarterData(p){
@@ -720,9 +720,9 @@
       const depts=[...(typeof ptDeptsOf==="function"?ptDeptsOf(p):new Set())].map(deptName);
       const gp=goals.filter(g=>g.pct!=null);const overall=gp.length?Math.round(gp.reduce((s,g)=>s+g.pct,0)/gp.length):null;
       const recs=[];
-      goals.filter(g=>g.mastered).forEach(g=>recs.push(`الهدف «${g.text}» اتحقق بثبات (آخر ٣ جلسات نجاح كامل) — يُنقل لمرحلة التعميم في البيت والمدرسة ويُعتمد هدف أعلى منه في الدورة الجاية.`));
+      goals.filter(g=>g.mastered).forEach(g=>recs.push(`الهدف «${g.text}» تحقق بثبات (آخر ٣ جلسات نجاح كامل) — يُنقل لمرحلة التعميم في البيت والمدرسة ويُعتمد هدف أعلى منه في الدورة الجاية.`));
       goals.filter(g=>g.stuck).forEach(g=>recs.push(`الهدف «${g.text}» محتاج مراجعة: تقسيمه لخطوات أصغر أو تغيير مستوى المساعدة.`));
-      goals.filter(g=>!g.n).forEach(g=>recs.push(`الهدف «${g.text}» ما اتسجلش عليه أداء في الدورة — يُراجع مع الأخصائي.`));
+      goals.filter(g=>!g.n).forEach(g=>recs.push(`الهدف «${g.text}» ما انسجل عليه أداء في الدورة — يُراجع مع الأخصائي.`));
       if(att!=null&&att<80)recs.push(`نسبة الحضور ${att}% أقل من المطلوب (٨٠٪) — يُتفق مع الأسرة على انتظام المواعيد.`);
       if(!home.length)recs.push("تفعيل المتابعة المنزلية: تسجيل ولي الأمر لأداء الطفل في البيت من بوابة الأسرة لقياس تعميم المهارات.");
       if(!lat)recs.push("إعادة التقييم القياسي في بداية الدورة الجاية لمقارنة النتائج بخط الأساس.");
@@ -752,8 +752,8 @@
         <h3>١. مسار الرحلة</h3><ol class="jrq-steps">${stepRow}</ol>
         ${d.cs&&d.cs.reason?`<h3>٢. سبب التحويل (من دراسة الحالة)</h3><p class="jrq-p">${esc(d.cs.reason)}${d.cs.primary?` — القسم الأساسي المقترح: ${esc(d.cs.primary)}`:""}</p>`:""}
         <h3>٣. الحضور والالتزام</h3><div class="jrq-kpis"><div><b>${d.att.done}</b><small>جلسة مكتملة</small></div><div><b>${d.att.missed}</b><small>غياب</small></div><div><b>${d.att.canc}</b><small>إلغاء</small></div><div><b>${d.att.pct!=null?d.att.pct+"%":"—"}</b><small>نسبة الحضور</small></div><div><b>${d.logsN}</b><small>نتيجة جلسة مسجلة</small></div><div><b>${d.home.n}</b><small>متابعة منزلية</small></div></div>
-        <h3>٤. التقدم في الأهداف</h3>${d.goals.length?`${jrBars(d.goals.map(g=>({l:g.text,v:g.pct,c:g.mastered?"#629386":g.stuck?"#F5795F":null})))}<table class="jrq-t"><thead><tr><th>الهدف</th><th>جلسات</th><th>نجاح كامل</th><th>جزئي</th><th>لم ينجح</th><th>البيت</th><th>الحالة</th></tr></thead><tbody>${d.goals.map(g=>`<tr><td>${esc(g.text)}${g.dept?`<small>${esc(g.dept)}</small>`:""}</td><td>${g.n}</td><td>${g.full}</td><td>${g.part}</td><td>${g.none}</td><td>${g.home?g.homeFull+"/"+g.home:"—"}</td><td>${g.mastered?'<span class="pill pill-good">تحقق</span>':g.stuck?'<span class="pill pill-red">يحتاج مراجعة</span>':!g.n?'<span class="pill">بدون بيانات</span>':g.trend!=null&&g.trend>0?'<span class="pill pill-blue">في تحسّن</span>':'<span class="pill pill-gold">مستمر</span>'}</td></tr>`).join("")}</tbody></table>`:`<p class="jrq-p muted">مفيش أهداف معتمدة أو نتائج جلسات في الدورة دي.</p>`}
-        <h3>٥. التقييم القياسي</h3>${d.base?`<p class="jrq-p">${esc(d.base.instrument)} · خط الأساس ${date(d.base.date)}: <b>${d.base.pct}%</b>${d.latest?` · إعادة التقييم ${date(d.latest.date)}: <b>${d.latest.pct}%</b>`:" · (إعادة التقييم في الدورة الجاية)"}</p>${domains.length?jrBars(domains):""}`:`<p class="jrq-p muted">مفيش تقييم قياسي مسجّل على الملف.</p>`}
+        <h3>٤. التقدم في الأهداف</h3>${d.goals.length?`${jrBars(d.goals.map(g=>({l:g.text,v:g.pct,c:g.mastered?"#629386":g.stuck?"#F5795F":null})))}<table class="jrq-t"><thead><tr><th>الهدف</th><th>جلسات</th><th>نجاح كامل</th><th>جزئي</th><th>لم ينجح</th><th>البيت</th><th>الحالة</th></tr></thead><tbody>${d.goals.map(g=>`<tr><td>${esc(g.text)}${g.dept?`<small>${esc(g.dept)}</small>`:""}</td><td>${g.n}</td><td>${g.full}</td><td>${g.part}</td><td>${g.none}</td><td>${g.home?g.homeFull+"/"+g.home:"—"}</td><td>${g.mastered?'<span class="pill pill-good">تحقق</span>':g.stuck?'<span class="pill pill-red">يحتاج مراجعة</span>':!g.n?'<span class="pill">بدون بيانات</span>':g.trend!=null&&g.trend>0?'<span class="pill pill-blue">في تحسّن</span>':'<span class="pill pill-gold">مستمر</span>'}</td></tr>`).join("")}</tbody></table>`:`<p class="jrq-p muted">ما فيه أهداف معتمدة أو نتائج جلسات في الدورة هذي.</p>`}
+        <h3>٥. التقييم القياسي</h3>${d.base?`<p class="jrq-p">${esc(d.base.instrument)} · خط الأساس ${date(d.base.date)}: <b>${d.base.pct}%</b>${d.latest?` · إعادة التقييم ${date(d.latest.date)}: <b>${d.latest.pct}%</b>`:" · (إعادة التقييم في الدورة الجاية)"}</p>${domains.length?jrBars(domains):""}`:`<p class="jrq-p muted">ما فيه تقييم قياسي مسجّل على الملف.</p>`}
         ${d.progs.length?`<h3>٦. البرامج العلاجية</h3><div class="chips">${d.progs.map(x=>`<span class="chip checked">${esc(x.program)}</span>`).join("")}</div>`:""}
         ${d.monthly.length?`<h3>المراجعات الشهرية خلال الدورة</h3><p class="jrq-p">${d.monthly.map(m=>`${date(m.date)}: ${esc(m.level||"")}`).join(" · ")}</p>`:""}
         <h3>٧. التوصيات وخطة الدورة الجاية</h3>${canEdit?`<textarea class="textarea" id="jrq-recs" style="min-height:140px">${esc(d.recs.join("\n"))}</textarea>`:`<ul class="jrq-recs">${d.recs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`}
@@ -771,7 +771,7 @@
       const p=state.patients.find(x=>x.id===pid);if(!p)return;const J=jrJourney(p);
       if(!J.cycleStart){notify("لازم الخطة تتعتمد الأول عشان تبدأ الدورة العلاجية");return}
       const d=jrQuarterData(p);state.jrDraft=d;
-      const early=J.dayN<JR_QDUE?`<span class="jr-ov-note">الدورة لسه في يومها ${J.dayN} — تقدر تطلع التقرير بدري لو محتاجه</span>`:"";
+      const early=J.dayN<JR_QDUE?`<span class="jr-ov-note">الدورة للحين في يومها ${J.dayN} — تقدر تطلع التقرير بدري لو محتاجه</span>`:"";
       jrOverlay(jrQuarterHtml(d,"draft"),`${early}<button class="btn btn-primary" onclick="jrQuarterSave(false)">${ic("check",14)} اعتماد وحفظ في الملف</button><button class="btn btn-outline" onclick="jrQuarterSave(true)">اعتماد ومشاركة مع الأسرة</button><button class="btn btn-outline" onclick="jrPrint()">طباعة / PDF</button>`);
     }
     function jrQuarterSave(share){
@@ -783,25 +783,25 @@
       state.progressReports.unshift(r);
       if(share&&typeof cmSendTo==="function")try{cmSendTo("fam:"+p.id,`تقرير الـ٣ شهور لـ ${p.name.split(" ")[0]} جاهز على بوابة الأسرة 🌿 المستوى العام: ${d.level}.`)}catch(e){}
       audit(`إصدار تقرير ٣ شهور (الدورة ${d.cycle})`,p.name);state.jrDraft=null;persist();jrOvClose();render();
-      notify(`اتحفظ تقرير ٣ شهور${share?" واتشارك مع الأسرة":""} · بدأت الدورة ${d.cycle+1} لـ ${p.name.split(" ")[0]}`);
+      notify(`انحفظ تقرير ٣ شهور${share?" انتشارك مع الأسرة":""} · بدأت الدورة ${d.cycle+1} لـ ${p.name.split(" ")[0]}`);
     }
     function jrQuarterView(id){
       const r=(state.progressReports||[]).find(x=>x.id===id);if(!r||!r.qData)return;const staff=state.view!=="public"&&state.role!=="family";
       const canApprove=staff&&(state.role==="supervisor"||state.role==="management")&&!r.approvedBy;
       jrOverlay(jrQuarterHtml(r.qData,"view",id),`${canApprove?`<button class="btn btn-primary" onclick="jrQuarterApprove('${id}')">${ic("check",14)} اعتماد المشرف</button>`:""}${staff?`<button class="btn btn-outline" onclick="toggleReportShare('${id}');jrQuarterView('${id}')">${r.shared?"✓ مُشارَك مع الأسرة":"مشاركة مع الأسرة"}</button>`:""}<button class="btn btn-outline" onclick="jrPrint()">طباعة / PDF</button>`);
     }
-    function jrQuarterApprove(id){const r=(state.progressReports||[]).find(x=>x.id===id);if(!r)return;const me=getCurrentPerson();r.approvedBy=me?me.name:"الإدارة";audit("اعتماد تقرير ٣ شهور",r.patientName);persist();render();jrQuarterView(id);notify("اتعتمد التقرير")}
+    function jrQuarterApprove(id){const r=(state.progressReports||[]).find(x=>x.id===id);if(!r)return;const me=getCurrentPerson();r.approvedBy=me?me.name:"الإدارة";audit("اعتماد تقرير ٣ شهور",r.patientName);persist();render();jrQuarterView(id);notify("اعتُمد التقرير")}
     const _jrVPR=viewProgressReport;viewProgressReport=function(id){const r=(state.progressReports||[]).find(x=>x.id===id);if(r&&r.reportType==="quarterly"&&r.qData)return jrQuarterView(id);return _jrVPR(id)};
-    // ---- ربط الخطوات اللي بتحصل في تابات تانية بالرحلة ----
-    const _jrConv=rfConvert;rfConvert=function(e,id){const before=new Set(state.patients.map(p=>p.id));_jrConv.apply(this,arguments);const np=state.patients.find(p=>!before.has(p.id));if(np){state.jrCtx={pid:np.id,step:"__new",label:"اتفتح الملف",name:np.name};render()}};
-    if(typeof addPatient==="function"){const _jrAdd=addPatient;addPatient=function(e){const before=new Set(state.patients.map(p=>p.id));_jrAdd.apply(this,arguments);const np=state.patients.find(p=>!before.has(p.id));if(np){state.jrCtx={pid:np.id,step:"__new",label:"اتفتح الملف",name:np.name};render()}};window.addPatient=addPatient}
+    // ---- ربط الخطوات اللي تحصل في تابات ثانية بالرحلة ----
+    const _jrConv=rfConvert;rfConvert=function(e,id){const before=new Set(state.patients.map(p=>p.id));_jrConv.apply(this,arguments);const np=state.patients.find(p=>!before.has(p.id));if(np){state.jrCtx={pid:np.id,step:"__new",label:"انفتح الملف",name:np.name};render()}};
+    if(typeof addPatient==="function"){const _jrAdd=addPatient;addPatient=function(e){const before=new Set(state.patients.map(p=>p.id));_jrAdd.apply(this,arguments);const np=state.patients.find(p=>!before.has(p.id));if(np){state.jrCtx={pid:np.id,step:"__new",label:"انفتح الملف",name:np.name};render()}};window.addPatient=addPatient}
     DEVICE_ONLY.add("jrDraft");
     Object.assign(window,{jrGo,jrCtxClose,jrSet,jrQuarterOpen,jrQuarterSave,jrQuarterView,jrQuarterApprove,jrOvClose,jrPrint,state_jrNoop,viewProgressReport,rfConvert});
     ["management","supervisor","reception","staff"].forEach(r=>{const nav=roles[r].nav;if(!nav.includes("journey")){const i=nav.indexOf("patients");nav.splice(i>=0?i:0,0,"journey")}});
     navItems.splice(Math.max(0,navItems.findIndex(n=>n[0]==="patients")),0,["journey","target"]);
     render();
 
-    // =================== تنظيم أوان: قائمة مجمّعة بترتيب الرحلة + ملف طفل بتبويبات + الطفل بيمشي معاك بين التابات + بحث شامل ===================
+    // =================== تنظيم أوان: قائمة مجمّعة بترتيب الرحلة + ملف طفل بتبويبات + الطفل يمشي معك بين التابات + بحث شامل ===================
     // ---- ١) القائمة الجانبية: مجموعات مرتبة بنفس ترتيب رحلة الطفل ----
     const ORG_GROUPS=[
       {k:"today",l:"القيادة اليوم",n:"",keys:["digital","myIpad","staffPage","liveOps","dashboard"]},
@@ -873,9 +873,9 @@
     }
     function pdSet(k){state.pdTab=k;const box=document.querySelector(".content.pd-hub");if(box){box.dataset.pdTab=k;box.querySelectorAll(".pd-tl button").forEach(b=>b.classList.toggle("on",b.getAttribute("onclick")===`pdSet('${k}')`));const bar=box.querySelector(".pd-tabs");if(bar&&bar.getBoundingClientRect().top<0)bar.scrollIntoView({block:"start"})}}
     function pdReveal(sel){const el=document.querySelector(sel);if(!el)return;const k=el.dataset.pdt;if(k&&k!==state.pdTab)pdSet(k)}
-    // أزرار الرحلة اللي بتنزل على كارت معيّن تفتح التبويب بتاعه الأول
+    // أزرار الرحلة اللي تنزل على كارت معيّن تفتح التبويب حقه الأول
     const _orgJrGo=jrGo;jrGo=function(pid,k){const map={file:".jr-card",case:".cs-card",plan:".cs-card",consent:".jr-consents",std:".jr-std",log:".jr-card",monthly:".jr-reports",quarter:".jr-card"};if(map[k]){state.pdTab=PD_SEL[map[k]]||"overview";if(k==="plan"&&evEnsure().some(r=>r.patientId===pid&&r.status==="بانتظار المشرف"))state.pdTab="plan"}return _orgJrGo(pid,k)};
-    // ---- ٤) الطفل «متحدد» بيمشي معاك في كل تاب له علاقة بيه ----
+    // ---- ٤) الطفل «متحدد» يمشي معك في كل تاب له علاقة بيه ----
     const ORG_CHILD_VIEWS=["schedule","assessments","videoLab","scribe","ebnak","claims","invoices","connect","communicationHub","referrals","intakeAI","deptPlan","library","attendance"];
     function focusGo(v){if(!roles[state.role].nav.includes(v))return;state.view=v;persist();render();window.scrollTo({top:0,behavior:"smooth"})}
     function focusClear(){state.focusPid=null;persist();render()}
@@ -887,7 +887,7 @@
       const sa=(state.standardizedAssessments||[]).filter(r=>r.patientId===p.id).length;const inv=(state.invoices||[]).filter(i=>i.patientId===p.id).length;
       const chip=(v,label,n)=>nav.includes(v)?`<button class="fb-chip ${state.view===v?"on":""}" onclick="focusGo('${v}')">${ic(orgIcon(v),13)} ${esc(label)}${n!=null?` <em>${n}</em>`:""}</button>`:"";
       const ctxAct=state.view==="schedule"?`<button class="btn btn-primary" onclick="ptBook('${p.id}')">احجز لـ ${esc(p.name.split(" ")[0])}</button>`:state.view==="assessments"||state.view==="videoLab"?`<button class="btn btn-primary" onclick="jrGo('${p.id}','std')">سجّل تقييم قياسي</button>`:s.go&&J.cur!=="sessions"?`<button class="btn btn-primary" onclick="${s.go}">${esc(s.act||"نفّذ")}</button>`:"";
-      return `<div class="fb"><div class="fb-id"><span class="pd-av">${esc(p.name.trim()[0])}</span><div><small>الطفل المحدد</small><b>${esc(p.name)}</b></div></div>${jrStepper(J,true)}<div class="fb-now"><small>${esc(JR_STEPS[J.idx].l)}</small><b>${esc(J.cur==="sessions"?(up[0]?`الجاية ${up[0].date===today?"النهارده":date(up[0].date)} ${time(up[0].time)}`:"ماشي حسب الخطة"):s.act||"")}</b></div>
+      return `<div class="fb"><div class="fb-id"><span class="pd-av">${esc(p.name.trim()[0])}</span><div><small>الطفل المحدد</small><b>${esc(p.name)}</b></div></div>${jrStepper(J,true)}<div class="fb-now"><small>${esc(JR_STEPS[J.idx].l)}</small><b>${esc(J.cur==="sessions"?(up[0]?`الجاية ${up[0].date===today?"اليوم":date(up[0].date)} ${time(up[0].time)}`:"ماشي حسب الخطة"):s.act||"")}</b></div>
         <div class="fb-chips"><button class="fb-chip" onclick="jrGo('${p.id}','file')">${ic("patients",13)} الملف</button>${chip("schedule","المواعيد",up.length)}${chip("assessments","التقييمات",sa)}${chip("invoices","الفواتير",inv)}${chip("communicationHub","التواصل",null)}${chip("journey","الرحلة",null)}</div>
         <div class="fb-a">${ctxAct}<button class="jr-x" onclick="focusClear()" title="إلغاء تحديد الطفل">×</button></div></div>`;
     }
@@ -900,11 +900,11 @@
       kids.forEach(p=>{let J;try{J=jrJourney(p)}catch(e){}out.push({g:"الأطفال",ic:"patients",t:p.name,s:`${p.file||""}${J?" · "+JR_STEPS[J.idx].l:""}`,run:`jrGo('${p.id}','file')`});
         if(J&&q&&J.step.go&&J.cur!=="sessions")out.push({g:"الأطفال",ic:"target",t:`${J.step.act} — ${p.name.split(" ")[0]}`,s:J.step.info||"",run:J.step.go,sub:true})});
       ORG_GROUPS.forEach(g=>g.keys.filter(k=>nav.includes(k)).forEach(k=>{const l=orgLabel(k);if(!q||l.includes(q)||g.l.includes(q))out.push({g:"الشاشات",ic:orgIcon(k),t:l,s:g.l,run:`setView('${k}')`})}));
-      JR_STEPS.forEach(s=>{if(!q||s.l.includes(q))out.push({g:"خطوات الرحلة",ic:s.ic,t:`أطفال في «${s.l}»`,s:"افتح رحلة الطفل على الخطوة دي",run:`state_jrNoop();jrSet('jrFilter','${s.k}');setView('journey')`})});
+      JR_STEPS.forEach(s=>{if(!q||s.l.includes(q))out.push({g:"خطوات الرحلة",ic:s.ic,t:`أطفال في «${s.l}»`,s:"افتح رحلة الطفل على الخطوة هذي",run:`state_jrNoop();jrSet('jrFilter','${s.k}');setView('journey')`})});
       return out.slice(0,24);
     }
     function cmdkPaint(){const box=document.getElementById("cmdk-list");if(!box)return;CK.items=cmdkItems(CK.q);if(CK.i>=CK.items.length)CK.i=0;let g="";
-      box.innerHTML=CK.items.length?CK.items.map((x,i)=>{const h=x.g!==g?`<div class="ck-g">${esc(x.g)}</div>`:"";g=x.g;return h+`<button class="ck-i ${i===CK.i?"on":""} ${x.sub?"sub":""}" onmouseenter="cmdkHover(${i})" onclick="cmdkRun(${i})">${ic(x.ic,15)}<span><b>${esc(x.t)}</b><small>${esc(x.s||"")}</small></span></button>`}).join(""):`<div class="ck-empty">مفيش نتايج لـ «${esc(CK.q)}»</div>`;
+      box.innerHTML=CK.items.length?CK.items.map((x,i)=>{const h=x.g!==g?`<div class="ck-g">${esc(x.g)}</div>`:"";g=x.g;return h+`<button class="ck-i ${i===CK.i?"on":""} ${x.sub?"sub":""}" onmouseenter="cmdkHover(${i})" onclick="cmdkRun(${i})">${ic(x.ic,15)}<span><b>${esc(x.t)}</b><small>${esc(x.s||"")}</small></span></button>`}).join(""):`<div class="ck-empty">ما فيه نتايج لـ «${esc(CK.q)}»</div>`;
       const on=box.querySelector(".ck-i.on");if(on)on.scrollIntoView({block:"nearest"})}
     function cmdkOpen(){if(state.view==="public")return;CK={q:"",i:0,items:[]};let ov=document.getElementById("cmdk");if(!ov){ov=document.createElement("div");ov.id="cmdk";document.body.appendChild(ov)}
       ov.innerHTML=`<div class="ck-bg" onclick="cmdkClose()"></div><div class="ck-box" role="dialog" aria-label="بحث شامل"><div class="ck-in">${ic("eye",18)}<input id="cmdk-q" placeholder="اكتب اسم طفل، رقم ملف، أو اسم شاشة…" autocomplete="off" oninput="cmdkType(this.value)"><kbd>Esc</kbd></div><div class="ck-list" id="cmdk-list"></div><div class="ck-foot"><span>↑↓ للتنقل</span><span>Enter للفتح</span><span>Ctrl+K من أي مكان</span></div></div>`;
@@ -918,10 +918,10 @@
       const ov=document.getElementById("cmdk");if(!ov||!ov.classList.contains("on"))return;
       if(e.key==="Escape"){e.preventDefault();cmdkClose()}else if(e.key==="ArrowDown"){e.preventDefault();CK.i=Math.min(CK.items.length-1,CK.i+1);cmdkPaint()}else if(e.key==="ArrowUp"){e.preventDefault();CK.i=Math.max(0,CK.i-1);cmdkPaint()}else if(e.key==="Enter"){e.preventDefault();cmdkRun(CK.i)}
     });
-    // ---- ٦) خريطة أوان: كل خطوة في الرحلة بتتعمل في أنهي تاب، ومين مسؤول، وكام طفل واقف عندها ----
+    // ---- ٦) خريطة أوان: كل خطوة في الرحلة تتعمل في أي تاب، ومين مسؤول، وكم طفل واقف عندها ----
     const ORG_MAP={intake:{who:"الاستقبال",tabs:["referrals","calls","intakeAI"]},case:{who:"الاستقبال + الأسرة",tabs:["digital","patients"]},assess:{who:"الأخصائي",tabs:["assessments","videoLab","myIpad"]},plan:{who:"الأخصائي ← المشرف",tabs:["patients","departments"]},consent:{who:"الاستقبال + الأسرة",tabs:["patients","ebnak"]},book:{who:"الاستقبال",tabs:["schedule","deptPlan"]},sessions:{who:"الأخصائي",tabs:["myIpad","scribe","liveOps"]},monthly:{who:"الأخصائي",tabs:["patients","scribe"]},quarter:{who:"الأخصائي ← المشرف ← الأسرة",tabs:["journey","ebnak"]}};
     function orgMap(all){const nav=roles[state.role].nav;
-      return `<details class="card og-map" ${state.ogMapClosed?"":"open"} ontoggle="ogMapToggle(this.open)"><summary><h2>${ic("globe",18)} خريطة أوان — كل خطوة بتتعمل فين ومين مسؤول</h2><span class="muted">اضغط على أي تاب يوديك عليه</span></summary>
+      return `<details class="card og-map" ${state.ogMapClosed?"":"open"} ontoggle="ogMapToggle(this.open)"><summary><h2>${ic("globe",18)} خريطة أوان — كل خطوة تتعمل وين ومين مسؤول</h2><span class="muted">اضغط على أي تاب يوديك عليه</span></summary>
         <ol class="og-metro">${JR_STEPS.map((s,i)=>{const m=ORG_MAP[s.k];const n=all.filter(J=>J.cur===s.k).length;const tabs=m.tabs.filter(k=>nav.includes(k));
           return `<li><div class="og-st"><span class="og-dot">${i+1}</span><b>${esc(s.l)}</b>${n?`<em>${n} طفل</em>`:""}</div><small>${esc(m.who)}</small><div class="og-tabs">${tabs.map(k=>`<button onclick="setView('${k}')">${ic(orgIcon(k),12)} ${esc(orgLabel(k))}</button>`).join("")||`<span class="muted" style="font-size:11px">من ملف الطفل</span>`}</div></li>`}).join("")}</ol></details>`}
     const _orgJV=journeyView;journeyView=function(){const h=_orgJV();const k=h.indexOf('<section class="card" style="margin-top:16px">');return k>0?h.slice(0,k)+orgMap(jrList())+h.slice(k):h};
@@ -933,7 +933,7 @@
     render();
 
     // =================== عقل أوان: الذكاء الاصطناعي في خدمة الإدارة + المنصة متقسمة على ٩ محاور بدل ٣٠ تاب ===================
-    // ---- ١) المحاور: كل مجموعة تابات متكررة/متشابهة بقت محور واحد في القائمة، وجواه شريط تبويبات ----
+    // ---- ١) المحاور: كل مجموعة تابات متكررة/متشابهة صارت محور واحد في القائمة، وجواه شريط تبويبات ----
     const HUBS=[
       {k:"brain",l:"عقل أوان",d:"القيادة بالذكاء الاصطناعي",ic:"idea",views:[["brain","مركز القيادة"],["agents","الإدارة الآلية"],["liveOps","المراقبة الحية"],["digital","لوحة الرقمنة"]]},
       {k:"my",l:"آيبادي",d:"يومي وجلساتي",ic:"tablet",views:[["myIpad","آيبادي"],["staffPage","صفحتي"]]},
@@ -947,7 +947,7 @@
     ];
     ["management","supervisor"].forEach(r=>{const nav=roles[r].nav;if(!nav.includes("brain"))nav.unshift("brain")});
     if(!navItems.some(n=>n[0]==="brain"))navItems.unshift(["brain","idea"]);
-    // البحث الشامل ولون القائمة بيقروا من المحاور الجديدة
+    // البحث الشامل ولون القائمة يقروا من المحاور الجديدة
     ORG_GROUPS.splice(0,ORG_GROUPS.length,...HUBS.map(h=>({k:h.k,l:h.l,n:"",keys:h.views.map(v=>v[0])})));
     function hubOf(v){if(v==="patient-detail")return HUBS.find(h=>h.k==="kids");if(v==="meetingRoom")return HUBS.find(h=>h.k==="family");return HUBS.find(h=>h.views.some(x=>x[0]===v))||null}
     function hubViews(h){const nav=roles[state.role].nav;return h.views.filter(v=>nav.includes(v[0]))}
@@ -974,44 +974,44 @@
     // الإدارة والإشراف يبدأوا من عقل أوان
     const _hbRender=render;render=function(){if(state.role==="management"&&(state.view==="dashboard"||!state.view))state.view="brain";return _hbRender.apply(this,arguments)};
     const _hbHome=roleHome;roleHome=function(){if(state.view==="brain")return brainView();return _hbHome()};
-    // ---- ٢) صندوق القرارات الموحّد: كل حاجة مستنية الإدارة من كل التابات في مكان واحد ----
+    // ---- ٢) صندوق القرارات الموحّد: كل شي بانتظار الإدارة من كل التابات في مكان واحد ----
     function brMe(){return getCurrentPerson()}
     function brDeptOK(dep){if(state.role==="management")return true;const me=brMe();return !me||!me.department||!dep||me.department===dep}
     function brAgents(tab){state.apTab=tab;setView("agents")}
     function brDecisions(){
       const out=[];const add=(o)=>out.push(o);if(!(state.role==="management"||state.role==="supervisor"))return out;
       const A=apEnsure();const AG=k=>(AP_AGENTS.find(a=>a[0]===k)||[0,"الإدارة الآلية","bell"]);
-      A.queue.filter(q=>brDeptOK(q.dept)).forEach(q=>add({cat:/payroll|violations|leaves/.test(q.agent)?"team":/billing/.test(q.agent)?"money":/journey|plans|reports|triage|routing|compensation|reception/.test(q.agent)?"kids":"ops",sev:q.sev||1,ic:AG(q.agent)[2],src:AG(q.agent)[1],t:q.title,d:q.detail||"",acts:[["نفّذ",`apApprove('${q.id}',true)`,1],["ارفض",`apApprove('${q.id}',false)`]]}));
+      A.queue.filter(q=>brDeptOK(q.dept)&&!(state.role==="supervisor"&&/billing|revenue|payroll/.test(q.agent))).forEach(q=>add({cat:/payroll|violations|leaves/.test(q.agent)?"team":/billing/.test(q.agent)?"money":/journey|plans|reports|triage|routing|compensation|reception/.test(q.agent)?"kids":"ops",sev:q.sev||1,ic:AG(q.agent)[2],src:AG(q.agent)[1],t:q.title,d:q.detail||"",acts:[["نفّذ",`apApprove('${q.id}',true)`,1],["ارفض",`apApprove('${q.id}',false)`]]}));
       (state.plans||[]).filter(p=>p.status==="معلقة"&&brDeptOK(p.department)).forEach(p=>add({cat:"kids",sev:2,ic:"target",src:"الخطط العلاجية",t:`اعتماد خطة: ${p.patient}`,d:`${p.title} · ${date(p.date)}`,acts:[["اعتمد",`reviewPlan('${p.id}','approve')`,1],["رجّعها بملاحظات",`reviewPlan('${p.id}','return')`]]}));
-      (typeof evEnsure==="function"?evEnsure():[]).filter(r=>r.status==="بانتظار المشرف"&&brDeptOK(r.dept)).forEach(r=>add({cat:"kids",sev:2,ic:"clipboardCheck",src:"تقييم من الآيباد",t:`تقييم ${r.patientName} مستني اعتمادك`,d:`${r.staffName||""} · ${(r.goals||[]).filter(g=>g.on).length} أهداف مقترحة`,acts:[["راجع واعتمد",`jrGo('${r.patientId}','plan')`,1]]}));
+      (typeof evEnsure==="function"?evEnsure():[]).filter(r=>r.status==="بانتظار المشرف"&&brDeptOK(r.dept)).forEach(r=>add({cat:"kids",sev:2,ic:"clipboardCheck",src:"تقييم من الآيباد",t:`تقييم ${r.patientName} بانتظار اعتمادك`,d:`${r.staffName||""} · ${(r.goals||[]).filter(g=>g.on).length} أهداف مقترحة`,acts:[["راجع واعتمد",`jrGo('${r.patientId}','plan')`,1]]}));
       state.patients.filter(p=>!p.archived&&(p.goals||[]).some(g=>g.status==="مقترح")&&!(typeof evEnsure==="function"&&evEnsure().some(r=>r.patientId===p.id&&r.status==="بانتظار المشرف"))).forEach(p=>{const n=p.goals.filter(g=>g.status==="مقترح").length;add({cat:"kids",sev:2,ic:"target",src:"الأهداف",t:`${n} أهداف مقترحة لـ ${p.name}`,d:"من دراسة الحالة / الذكاء الاصطناعي",acts:[["اعتمد الكل",`csApproveAll('${p.id}')`,1],["راجع",`jrGo('${p.id}','plan')`]]})});
       (state.progressReports||[]).filter(r=>r.reportType==="quarterly"&&!r.approvedBy).forEach(r=>add({cat:"kids",sev:1,ic:"star",src:"تقرير ٣ شهور",t:`اعتماد تقرير ٣ شهور: ${r.patientName}`,d:`${date(r.date)} · ${r.staffName||""}`,acts:[["راجع واعتمد",`jrQuarterView('${r.id}')`,1]]}));
       (state.smartIntakes||[]).filter(r=>r.submittedAt&&r.patientId&&!["approved","info","rejected"].includes(r.status)).forEach(r=>add({cat:"kids",sev:2,ic:"idea",src:"الاستقبال الذكي",t:`دراسة حالة جديدة: ${(r.fields&&r.fields.child)||""}`,d:"المسودة والأهداف جاهزين من التحليل الذكي",acts:[["افتح واعتمد",`setView('intakeAI')`,1]]}));
       if(typeof decisionsScopedToCurrent==="function")decisionsScopedToCurrent().filter(d=>d.status==="قيد المراجعة").forEach(d=>add({cat:"ops",sev:1,ic:"video",src:"قرارات الاجتماعات",t:d.text,d:`${d.ownerName||""}${d.dueDate?" · قبل "+date(d.dueDate):""}`,acts:[["اعتمد",`advanceDecision('${d.id}','معتمدة')`,1],["افتح",`setView('connect')`]]}));
       if(state.role==="management"||state.role==="reception"){const nb=(state.sessionBookings||[]).filter(b=>!b.seen&&b.status!=="ملغي");if(nb.length)add({cat:"family",sev:2,ic:"bell",src:"بوابة الأسرة",t:`${nb.length} حجز جديد من الأسر`,d:nb.slice(0,3).map(b=>b.childName||b.patientName||b.child||"").filter(Boolean).join("، "),acts:[["افتح المواعيد",`setView('schedule')`,1]]})}
-      if(state.hr){const lv=(state.hr.leaves||[]).filter(l=>l.status==="مقدمة");if(lv.length&&state.role==="management")add({cat:"team",sev:1,ic:"schedule",src:"الإجازات",t:`${lv.length} طلب إجازة مستني`,d:lv.slice(0,3).map(l=>l.name||"").join("، "),acts:[["راجع",`brAgents('leaves')`,1]]});
-        const vi=(state.hr.violations||[]).filter(v=>v.status==="مقترحة");if(vi.length&&state.role==="management")add({cat:"team",sev:1,ic:"shield",src:"المخالفات",t:`${vi.length} مخالفة مقترحة محتاجة قرار`,d:"المخالفة ما بتتخصمش غير بعد اعتمادك",acts:[["راجع",`brAgents('violations')`,1]]});
+      if(state.hr){const lv=(state.hr.leaves||[]).filter(l=>l.status==="مقدمة");if(lv.length&&state.role==="management")add({cat:"team",sev:1,ic:"schedule",src:"الإجازات",t:`${lv.length} طلب إجازة بانتظار`,d:lv.slice(0,3).map(l=>l.name||"").join("، "),acts:[["راجع",`brAgents('leaves')`,1]]});
+        const vi=(state.hr.violations||[]).filter(v=>v.status==="مقترحة");if(vi.length&&state.role==="management")add({cat:"team",sev:1,ic:"shield",src:"المخالفات",t:`${vi.length} مخالفة مقترحة محتاجة قرار`,d:"المخالفة ما تتخصم غير بعد اعتمادك",acts:[["راجع",`brAgents('violations')`,1]]});
         const m=apToday().slice(0,7);const P=state.hr.payrolls&&state.hr.payrolls[m];if(P&&P.status==="مسودة"&&state.role==="management")add({cat:"money",sev:2,ic:"chart",src:"الرواتب",t:`اعتماد مسير ${m}`,d:`صافي ${(P.total||0).toLocaleString("en")} ريال`,acts:[["راجع واعتمد",`brAgents('payroll')`,1]]})}
       return out.sort((a,b)=>b.sev-a.sev);
     }
-    // ---- ٣) رادار المخاطر: الذكاء بيتوقع المشكلة قبل ما تحصل ----
+    // ---- ٣) رادار المخاطر: الذكاء يتوقع المشكلة قبل ما تحصل ----
     function brRisks(){
       apEnsure();const out=[];const day=apToday();const R=apEnsure().rules;const nx=awanNextAll();const add=(o)=>out.push(o);
-      const gap=nx.filter(n=>/انقطاع/.test(n.text));if(gap.length)add({lvl:gap.some(n=>n.sup)?3:2,ic:"patients",t:"أطفال معرضين للانقطاع",n:gap.length,who:gap.slice(0,3).map(n=>n.name.split(" ").slice(0,2).join(" ")),why:"آخر جلسة من أكتر من أسبوعين ومفيش موعد جاي",act:["احجز لهم تلقائيًا","brAutoBook()"],go:`state_jrNoop();jrSet('jrFilter','all');setView('journey')`});
+      const gap=nx.filter(n=>/انقطاع/.test(n.text));if(gap.length)add({lvl:gap.some(n=>n.sup)?3:2,ic:"patients",t:"أطفال معرضين للانقطاع",n:gap.length,who:gap.slice(0,3).map(n=>n.name.split(" ").slice(0,2).join(" ")),why:"آخر جلسة من أكثر من أسبوعين وما فيه موعد جاي",act:["احجز لهم تلقائيًا","brAutoBook()"],go:`state_jrNoop();jrSet('jrFilter','all');setView('journey')`});
       const stuck=nx.filter(n=>/راجع الهدف/.test(n.text));if(stuck.length)add({lvl:2,ic:"target",t:"أهداف واقفة",n:stuck.length,who:stuck.slice(0,3).map(n=>n.name.split(" ").slice(0,2).join(" ")),why:"٣ جلسات ورا بعض «لم ينجح بعد» — محتاجة تعديل الخطة",act:["افتح أول حالة",stuck[0].go],go:`setView('journey')`});
       const weak=state.patients.filter(p=>!p.archived).map(p=>{const L=state.appointments.filter(a=>a.patient===p.name&&a.date<day&&a.date>=agDay(-30)&&!/تقييم/.test(a.service||""));const done=L.filter(a=>a.status==="مكتمل").length;return {p,n:L.length,pct:L.length?Math.round(done/L.length*100):100}}).filter(x=>x.n>=3&&x.pct<70);
       if(weak.length)add({lvl:2,ic:"heart",t:"التزام أسر ضعيف",n:weak.length,who:weak.slice(0,3).map(x=>`${x.p.name.split(" ")[0]} ${x.pct}%`),why:"حضور أقل من ٧٠٪ آخر ٣٠ يوم — احتمال انسحاب",act:["رسالة للأسر",`setView('communicationHub')`],go:`setView('journey')`});
-      const T=agClin();const over=T.filter(s=>!agAbsent(s,day)&&agLoad(s,day).pct>=R.loadHigh);if(over.length)add({lvl:2,ic:"team",t:"أخصائيين فوق طاقتهم النهارده",n:over.length,who:over.slice(0,3).map(s=>`${s.name.replace(/^(أ\.|د\.)\s*/,"").split(" ")[0]} ${agLoad(s,day).pct}%`),why:`الحمل فوق ${R.loadHigh}% — خطر إرهاق وجودة أقل`,act:["وازن الجداول",`agCommand('وازن جداول الأخصائيين النهارده');brToast()`],go:`brAgents('sched')`});
-      const abs=T.filter(s=>agAbsent(s,day)).map(s=>({s,n:state.appointments.filter(a=>a.clinician===s.name&&a.date===day&&a.status==="مجدول").length})).filter(x=>x.n);if(abs.length)add({lvl:3,ic:"idcard",t:"جلسات النهارده من غير أخصائي",n:abs.reduce((a,x)=>a+x.n,0),who:abs.slice(0,3).map(x=>`${x.s.name.replace(/^(أ\.|د\.)\s*/,"").split(" ")[0]} (${x.n})`),why:"الأخصائي غايب أو في إجازة",act:["وزّعها تلقائيًا",`agCommand('${abs[0].s.name.replace(/^(أ\.|د\.)\s*/,"").split(" ")[0]} غايب النهارده وزّع جلساته');brToast()`],go:`setView('deptPlan')`});
-      const price=+state.sessionPrice||150;const unb=state.appointments.filter(a=>a.status==="مكتمل"&&!a.invoiced&&a.date>=agDay(-30));if(unb.length&&state.role==="management")add({lvl:unb.length>10?3:2,ic:"invoice",t:"إيراد مش متفوتر",n:unb.length,who:[`≈ ${(unb.length*price).toLocaleString("en")} ريال`],why:"جلسات خلصت آخر ٣٠ يوم ومتعملهاش فاتورة",act:["فوتر الكل",`brAgents('billing')`],go:`setView('invoices')`});
-      const owed=(state.invoices||[]).filter(i=>(i.status==="مُصدرة"||i.status==="مسدد جزئياً")&&(Date.now()-Date.parse(i.date))/864e5>=R.invoiceDue);if(owed.length&&state.role==="management"){const sum=owed.reduce((a,i)=>a+invoiceBalance(i),0);add({lvl:2,ic:"chart",t:"تحصيل متأخر",n:owed.length,who:[`${Math.round(sum).toLocaleString("en")} ريال`],why:`فواتير عدّى عليها أكتر من ${R.invoiceDue} أيام`,act:["ذكّر الأسر",`brAgents('billing')`],go:`setView('invoices')`})}
-      const L=typeof jrList==="function"?jrList():[];const late=L.filter(J=>J.S.quarter.late);if(late.length)add({lvl:2,ic:"star",t:"تقارير ٣ شهور متأخرة",n:late.length,who:late.slice(0,3).map(J=>J.p.name.split(" ").slice(0,2).join(" ")),why:"الأسرة مستنية تقرير الدورة",act:["افتح أول تقرير",`jrQuarterOpen('${late[0].p.id}')`],go:`state_jrNoop();jrSet('jrFilter','quarter');setView('journey')`});
-      const noC=L.filter(J=>J.S.consent.status!=="done"&&J.S.book.status==="done");if(noC.length)add({lvl:noC.length>3?3:2,ic:"shield",t:"جلسات من غير موافقة علاج",n:noC.length,who:noC.slice(0,3).map(J=>J.p.name.split(" ").slice(0,2).join(" ")),why:"مخالفة امتثال لو جه تفتيش",act:["ابعت للأسر يوقّعوا",`brAgents('cockpit')`],go:`state_jrNoop();jrSet('jrFilter','consent');setView('journey')`});
+      const T=agClin();const over=T.filter(s=>!agAbsent(s,day)&&agLoad(s,day).pct>=R.loadHigh);if(over.length)add({lvl:2,ic:"team",t:"أخصائيين فوق طاقتهم اليوم",n:over.length,who:over.slice(0,3).map(s=>`${s.name.replace(/^(أ\.|د\.)\s*/,"").split(" ")[0]} ${agLoad(s,day).pct}%`),why:`الحمل فوق ${R.loadHigh}% — خطر إرهاق وجودة أقل`,act:["وازن الجداول",`agCommand('وازن جداول الأخصائيين اليوم');brToast()`],go:`brAgents('sched')`});
+      const abs=T.filter(s=>agAbsent(s,day)).map(s=>({s,n:state.appointments.filter(a=>a.clinician===s.name&&a.date===day&&a.status==="مجدول").length})).filter(x=>x.n);if(abs.length)add({lvl:3,ic:"idcard",t:"جلسات اليوم من غير أخصائي",n:abs.reduce((a,x)=>a+x.n,0),who:abs.slice(0,3).map(x=>`${x.s.name.replace(/^(أ\.|د\.)\s*/,"").split(" ")[0]} (${x.n})`),why:"الأخصائي غايب أو في إجازة",act:["وزّعها تلقائيًا",`agCommand('${abs[0].s.name.replace(/^(أ\.|د\.)\s*/,"").split(" ")[0]} غايب اليوم وزّع جلساته');brToast()`],go:`setView('deptPlan')`});
+      const price=+state.sessionPrice||150;const unb=state.appointments.filter(a=>a.status==="مكتمل"&&!a.invoiced&&a.date>=agDay(-30));if(unb.length&&state.role==="management")add({lvl:unb.length>10?3:2,ic:"invoice",t:"إيراد مو متفوتر",n:unb.length,who:[`≈ ${(unb.length*price).toLocaleString("en")} ريال`],why:"جلسات خلصت آخر ٣٠ يوم ولا تسويها فاتورة",act:["فوتر الكل",`brAgents('billing')`],go:`setView('invoices')`});
+      const owed=(state.invoices||[]).filter(i=>(i.status==="مُصدرة"||i.status==="مسدد جزئياً")&&(Date.now()-Date.parse(i.date))/864e5>=R.invoiceDue);if(owed.length&&state.role==="management"){const sum=owed.reduce((a,i)=>a+invoiceBalance(i),0);add({lvl:2,ic:"chart",t:"تحصيل متأخر",n:owed.length,who:[`${Math.round(sum).toLocaleString("en")} ريال`],why:`فواتير عدّى عليها أكثر من ${R.invoiceDue} أيام`,act:["ذكّر الأسر",`brAgents('billing')`],go:`setView('invoices')`})}
+      const L=typeof jrList==="function"?jrList():[];const late=L.filter(J=>J.S.quarter.late);if(late.length)add({lvl:2,ic:"star",t:"تقارير ٣ شهور متأخرة",n:late.length,who:late.slice(0,3).map(J=>J.p.name.split(" ").slice(0,2).join(" ")),why:"الأسرة بانتظار تقرير الدورة",act:["افتح أول تقرير",`jrQuarterOpen('${late[0].p.id}')`],go:`state_jrNoop();jrSet('jrFilter','quarter');setView('journey')`});
+      const noC=L.filter(J=>J.S.consent.status!=="done"&&J.S.book.status==="done");if(noC.length)add({lvl:noC.length>3?3:2,ic:"shield",t:"جلسات من غير موافقة علاج",n:noC.length,who:noC.slice(0,3).map(J=>J.p.name.split(" ").slice(0,2).join(" ")),why:"مخالفة امتثال لو جه تفتيش",act:["أرسل للأسر يوقّعوا",`brAgents('cockpit')`],go:`state_jrNoop();jrSet('jrFilter','consent');setView('journey')`});
       try{if(state.role==="management")gdRisks().filter(r=>r.sev>=3).slice(0,2).forEach(r=>add({lvl:3,ic:"shield",t:r.t,n:null,who:[r.impact],why:r.fix,act:["افتح",String(r.go||"").replace(/apTab\(/g,"brAgents(")],go:String(r.go||"").replace(/apTab\(/g,"brAgents(")}))}catch(e){}
       return out.sort((a,b)=>b.lvl-a.lvl);
     }
-    function brAutoBook(){const L=awanNextAll().filter(n=>/انقطاع/.test(n.text));let k=0;L.forEach(n=>{const before=state.appointments.length;try{APX.autoBook(n.pid)}catch(e){}if(state.appointments.length>before)k++});audit(`حجز تلقائي لـ ${k} طفل منقطع`,"");persist();render();notify(k?`اتحجز لـ ${k} طفل وابتعتت رسالة للأسرة`:"مقدرتش ألاقي أخصائي سابق للأطفال دول — احجز يدوي من المواعيد")}
-    function brToast(){notify("أوان بيشتغل على الأمر — تابعه في «أوامرك»")}
+    function brAutoBook(){const L=awanNextAll().filter(n=>/انقطاع/.test(n.text));let k=0;L.forEach(n=>{const before=state.appointments.length;try{APX.autoBook(n.pid)}catch(e){}if(state.appointments.length>before)k++});audit(`حجز تلقائي لـ ${k} طفل منقطع`,"");persist();render();notify(k?`انحجز لـ ${k} طفل وابتعتت رسالة للأسرة`:"ما قدرت ألاقي أخصائي سابق للأطفال هذول — احجز يدوي من المواعيد")}
+    function brToast(){notify("أوان يشتغل على الأمر — تابعه في «أوامرك»")}
     // ---- ٤) الملخص الذكي لليوم: بالقواعد، أو بصياغة OpenAI لو متفعّل ----
     function brFacts(){apEnsure();
       const day=apToday();const ap=state.appointments.filter(a=>a.date===day&&a.status!=="ملغي");const done=ap.filter(a=>a.status==="مكتمل").length;
@@ -1021,9 +1021,9 @@
     }
     function brBriefLocal(F){
       const top=F.risks[0];const parts=[];
-      parts.push(`النهارده عندنا ${F.ap} جلسة${F.ap?` — خلص منهم ${F.done}${F.live?` و${F.live} شغالين دلوقتي`:""}`:""}، والفريق حاضر ${F.pres} من ${F.T} أخصائي.`);
-      parts.push(F.dec?`في ${F.dec} قرار مستنيك في صندوق القرارات${F.dq?`، و${F.dq} تقرير ٣ شهور مستحق`:""}.`:`مفيش قرارات مستنياك — الإدارة الآلية ماشية لوحدها${F.dq?`، بس في ${F.dq} تقرير ٣ شهور مستحق`:""}.`);
-      if(top)parts.push(`أهم حاجة تاخد بالك منها: ${top.t}${top.n!=null?` (${top.n})`:""} — ${top.why}.`);
+      parts.push(`اليوم عندنا ${F.ap} جلسة${F.ap?` — خلص منهم ${F.done}${F.live?` و${F.live} شغالين الحين`:""}`:""}، والفريق حاضر ${F.pres} من ${F.T} أخصائي.`);
+      parts.push(F.dec?`في ${F.dec} قرار مستنيك في صندوق القرارات${F.dq?`، و${F.dq} تقرير ٣ شهور مستحق`:""}.`:`ما فيه قرارات مستنياك — الإدارة الآلية ماشية لوحدها${F.dq?`، بس في ${F.dq} تقرير ٣ شهور مستحق`:""}.`);
+      if(top)parts.push(`أهم شي تاخذ بالك منها: ${top.t}${top.n!=null?` (${top.n})`:""} — ${top.why}.`);
       parts.push(F.health.score>=80?`صحة المركز ${F.health.score}٪ — يوم مستقر.`:`صحة المركز ${F.health.score}٪ — أضعف نقطة: ${F.health.parts.slice().sort((a,b)=>a[1]-b[1])[0][0]} (${F.health.parts.slice().sort((a,b)=>a[1]-b[1])[0][1]}٪).`);
       return parts.join(" ");
     }
@@ -1032,9 +1032,9 @@
       const F=brFacts();state.brBusy=true;render();
       try{
         const data={date:F.day,sessions_today:F.ap,done:F.done,live:F.live,staff_present:`${F.pres}/${F.T}`,active_children:F.kids,decisions_waiting:F.dec,quarterly_due:F.dq,health:F.health,risks:F.risks.map(r=>({title:r.t,count:r.n,why:r.why}))};
-        const out=await openaiJSON("أنت مستشار تشغيل لمدير مركز تأهيل أطفال في السعودية. اكتب ملخص صباحي قصير (٣–٤ جمل) باللهجة المصرية المهذبة للمدير، وبعده ٣ أولويات مرتبة ينفذها النهارده. من غير أي أسماء أطفال ومن غير تشخيص. رجّع JSON: {\"brief\":\"...\",\"priorities\":[\"...\",\"...\",\"...\"]}",JSON.stringify(data));
+        const out=await openaiJSON("أنت مستشار تشغيل لمدير مركز تأهيل أطفال في السعودية. اكتب ملخص صباحي قصير (٣–٤ جمل) باللهجة المصرية المهذبة للمدير، وبعده ٣ أولويات مرتبة ينفذها اليوم. من غير أي أسماء أطفال ومن غير تشخيص. رجّع JSON: {\"brief\":\"...\",\"priorities\":[\"...\",\"...\",\"...\"]}",JSON.stringify(data));
         state.brAI={at:Date.now(),text:String(out.brief||"").slice(0,700),pri:(out.priorities||[]).slice(0,3).map(x=>String(x).slice(0,160))};audit("ملخص اليوم بالذكاء الاصطناعي","");
-      }catch(err){notify("ما قدرتش أوصل لـ OpenAI: "+String(err.message||err).slice(0,80))}
+      }catch(err){notify("ما قدرت أوصل لـ OpenAI: "+String(err.message||err).slice(0,80))}
       state.brBusy=false;persist();render();
     }
     function brCmd(e){e.preventDefault();const v=e.target.cmd.value;e.target.cmd.value="";if(String(v).trim()){agCommand(v)}}
@@ -1050,10 +1050,10 @@
       const sel=state.role==="management";
       const tiles=[
         ["kids","patients","الأطفال",F.kids,`${jrList().filter(J=>J.step.sup).length} محتاجين قرار · ${F.dq} تقرير مستحق`,"journey"],
-        ["sessions","schedule","جلسات النهارده",F.ap,`${F.done} خلصت${F.live?` · ${F.live} شغالة`:""}`,"schedule"],
+        ["sessions","schedule","جلسات اليوم",F.ap,`${F.done} خلصت${F.live?` · ${F.live} شغالة`:""}`,"schedule"],
         ["team","team","الفريق الحاضر",`${F.pres}/${F.T}`,`${F.T-F.pres?F.T-F.pres+" غايب":"الكل موجود"}`,"attendance"],
         ["family","heart","الأسر",pendingCommCount()+((state.role==="management"||state.role==="reception")?newBookingsCount():0),"رسائل وحجوزات جديدة","communicationHub"],
-        sel?["money","invoice","مش متفوتر",state.appointments.filter(a=>a.status==="مكتمل"&&!a.invoiced&&a.date>=agDay(-30)).length,"جلسة آخر ٣٠ يوم","invoices"]:null,
+        sel?["money","invoice","مو متفوتر",state.appointments.filter(a=>a.status==="مكتمل"&&!a.invoiced&&a.date>=agDay(-30)).length,"جلسة آخر ٣٠ يوم","invoices"]:null,
         ["gov","shield","الامتثال",jrList().filter(J=>J.S.consent.status!=="done").length,"ملف من غير موافقة علاج","journey"]
       ].filter(Boolean).filter(x=>roles[state.role].nav.includes(x[5]));
       return `<div class="br">
@@ -1062,29 +1062,29 @@
             <h1>${esc(hello)}</h1>
             <p class="br-brief">${esc(ai?ai.text:brBriefLocal(F))}</p>
             ${ai&&ai.pri.length?`<ol class="br-pri">${ai.pri.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:""}
-            <div class="br-src">${ai?`<span class="br-tag ai">✨ صاغه OpenAI ${cmTime(ai.at)}</span>`:`<span class="br-tag">ملخص تلقائي من بيانات المركز</span>`}<button class="br-ghost" onclick="brBriefAI()" ${state.brBusy?"disabled":""}>${state.brBusy?"بيكتب…":aiReady()?"✨ صياغة بالذكاء الاصطناعي":"✨ فعّل OpenAI للصياغة الذكية"}</button></div>
+            <div class="br-src">${ai?`<span class="br-tag ai">✨ صاغه OpenAI ${cmTime(ai.at)}</span>`:`<span class="br-tag">ملخص تلقائي من بيانات المركز</span>`}<button class="br-ghost" onclick="brBriefAI()" ${state.brBusy?"disabled":""}>${state.brBusy?"يكتب…":aiReady()?"✨ صياغة بالذكاء الاصطناعي":"✨ فعّل OpenAI للصياغة الذكية"}</button></div>
           </div>
           <div class="br-hero-s"><div class="br-ring">${apRing(F.health.score)}<div><b>${F.health.score}</b><small>صحة المركز</small></div></div>
             <div class="br-parts">${F.health.parts.map(p=>`<div><small>${esc(p[0])}</small><i><s style="width:${p[1]}%"></s></i><b>${p[1]}%</b></div>`).join("")}</div>
             ${sel?`<div class="br-mode"><small>الإدارة الآلية</small><div>${[["off","إيقاف"],["assist","تقترح"],["auto","تنفّذ"]].map(([k,l])=>`<button class="${A.mode===k?"on m-"+k:""}" onclick="apMode('${k}')">${l}</button>`).join("")}</div></div>`:""}</div>
         </section>
         <form class="br-cmd" onsubmit="brCmd(event)"><span class="br-cmd-ic">${ic("idea",18)}</span><input class="input" name="cmd" autocomplete="off" placeholder="اؤمر أوان… مثال: ريم غايبة بكرة وزّع جلساتها · احجز لخالد تخاطب الأحد الساعة 10 · عوّض الجلسات اللي فاتت"><button class="btn btn-primary">${ic("pulse",14)} نفّذ</button></form>
-        <div class="br-chips">${["أدِر المركز كله دلوقتي","وازن جداول الأخصائيين النهارده","عوّض كل الجلسات اللي فاتت","افرز الإحالات الجديدة وحوّلها"].map(x=>`<button type="button" onclick="agChip('${x}')">${esc(x)}</button>`).join("")}<span class="br-chips-n">${aiReady()?"بيفهم أي صياغة (OpenAI)":"بالقواعد المحلية — OpenAI بيوسّع الفهم"}</span></div>
+        <div class="br-chips">${["أدِر المركز كله الحين","وازن جداول الأخصائيين اليوم","عوّض كل الجلسات اللي فاتت","افرز الإحالات الجديدة وحوّلها"].map(x=>`<button type="button" onclick="agChip('${x}')">${esc(x)}</button>`).join("")}<span class="br-chips-n">${aiReady()?"يفهم أي صياغة (OpenAI)":"بالقواعد المحلية — OpenAI يوسّع الفهم"}</span></div>
         ${A.plans.filter(p=>p.status!=="dropped").slice(0,2).length?`<section class="br-plans"><div class="br-sh"><h2>${ic("chat",16)} أوامرك</h2><button class="br-link" onclick="brAgents('hq')">كل الأوامر</button></div>${A.plans.filter(p=>p.status!=="dropped").slice(0,2).map(agPlanCard).join("")}</section>`:""}
         <section class="br-tiles">${tiles.map(([k,icn,l,v,s,go])=>`<button class="br-tile t-${k}" onclick="setView('${go}')"><span class="br-tile-ic">${ic(icn,18)}</span><b>${esc(String(v))}</b><span>${esc(l)}</span><small>${esc(s)}</small></button>`).join("")}</section>
         <div class="br-grid">
           <section class="card br-dec"><div class="card-head"><h2>${ic("check",18)} صندوق القرارات <span class="br-count">${D.length}</span></h2>${A.queue.filter(q=>!q.forced&&brDeptOK(q.dept)).length>1?`<button class="btn btn-outline" style="font-size:12px;padding:7px 12px" onclick="apApproveAll()">نفّذ كل اقتراحات الوكلاء</button>`:""}</div>
-            <p class="muted br-sub">كل حاجة مستنية قرار من كل التابات — الخطط، التقييمات، الأهداف، الوكلاء، الاجتماعات، الحجوزات، الإجازات والرواتب — في مكان واحد.</p>
+            <p class="muted br-sub">كل شي بانتظار قرار من كل التابات — الخطط، التقييمات، الأهداف، الوكلاء، الاجتماعات، الحجوزات، الإجازات والرواتب — في مكان واحد.</p>
             ${cats.length>2?`<div class="br-cats">${cats.map(([k,l])=>`<button class="${cat===k?"on":""}" onclick="brFilter('${k}')">${l} <em>${k==="all"?D.length:D.filter(x=>x.cat===k).length}</em></button>`).join("")}</div>`:""}
-            ${DC.length?`<div class="br-dl">${DC.slice(0,state.brAll?99:8).map(x=>`<div class="br-di s${x.sev}"><span class="br-di-ic">${ic(x.ic,16)}</span><div class="br-di-b"><small>${esc(x.src)}</small><b>${esc(x.t)}</b>${x.d?`<span>${esc(x.d)}</span>`:""}</div><div class="br-di-a">${x.acts.map(([l,run,p])=>`<button class="btn ${p?"btn-primary":"btn-outline"}" onclick="${run}">${esc(l)}</button>`).join("")}</div></div>`).join("")}</div>${DC.length>8&&!state.brAll?`<button class="br-more" onclick="state_jrNoop();brShowAll()">عرض الكل (${DC.length})</button>`:""}`:`<div class="br-empty">${ic("check",22)}<b>مفيش قرارات مستنياك</b><span>أي حاجة جديدة من أي تاب هتظهر هنا لوحدها.</span></div>`}
+            ${DC.length?`<div class="br-dl">${DC.slice(0,state.brAll?99:8).map(x=>`<div class="br-di s${x.sev}"><span class="br-di-ic">${ic(x.ic,16)}</span><div class="br-di-b"><small>${esc(x.src)}</small><b>${esc(x.t)}</b>${x.d?`<span>${esc(x.d)}</span>`:""}</div><div class="br-di-a">${x.acts.map(([l,run,p])=>`<button class="btn ${p?"btn-primary":"btn-outline"}" onclick="${run}">${esc(l)}</button>`).join("")}</div></div>`).join("")}</div>${DC.length>8&&!state.brAll?`<button class="br-more" onclick="state_jrNoop();brShowAll()">عرض الكل (${DC.length})</button>`:""}`:`<div class="br-empty">${ic("check",22)}<b>ما فيه قرارات مستنياك</b><span>أي شي جديدة من أي تاب بتظهر هنا لوحدها.</span></div>`}
           </section>
           <section class="card br-radar"><div class="card-head"><h2>${ic("pulse",18)} رادار المخاطر</h2><span class="muted" style="font-size:11px">توقّع قبل ما المشكلة تحصل</span></div>
-            ${F.risks.length?F.risks.slice(0,7).map(r=>`<div class="br-r l${r.lvl}"><div class="br-r-h"><span class="br-r-ic">${ic(r.ic,15)}</span><b>${esc(r.t)}</b>${r.n!=null?`<em>${r.n}</em>`:""}</div><small>${esc(r.why)}</small>${r.who&&r.who.length?`<div class="br-r-w">${r.who.map(w=>`<span>${esc(w)}</span>`).join("")}</div>`:""}<div class="br-r-a">${r.act?`<button class="btn btn-primary" onclick="${r.act[1]}">${esc(r.act[0])}</button>`:""}<button class="btn btn-outline" onclick="${r.go}">التفاصيل</button></div></div>`).join(""):`<div class="br-empty">${ic("shield",22)}<b>مفيش مخاطر واضحة</b><span>المركز ماشي في السليم.</span></div>`}
+            ${F.risks.length?F.risks.slice(0,7).map(r=>`<div class="br-r l${r.lvl}"><div class="br-r-h"><span class="br-r-ic">${ic(r.ic,15)}</span><b>${esc(r.t)}</b>${r.n!=null?`<em>${r.n}</em>`:""}</div><small>${esc(r.why)}</small>${r.who&&r.who.length?`<div class="br-r-w">${r.who.map(w=>`<span>${esc(w)}</span>`).join("")}</div>`:""}<div class="br-r-a">${r.act?`<button class="btn btn-primary" onclick="${r.act[1]}">${esc(r.act[0])}</button>`:""}<button class="btn btn-outline" onclick="${r.go}">التفاصيل</button></div></div>`).join(""):`<div class="br-empty">${ic("shield",22)}<b>ما فيه مخاطر واضحة</b><span>المركز ماشي في السليم.</span></div>`}
           </section>
         </div>
         <section class="card br-agents"><div class="card-head"><h2>${ic("tablet",18)} وكلاء أوان الشغالين</h2><button class="br-link" onclick="brAgents('cockpit')">إعدادات الوكلاء</button></div>
-          <div class="br-ag">${AP_AGENTS.slice(0,state.brAgAll?99:10).map(([k,l,icn,d])=>{const m=A.agents[k]||"auto";const n=todayLog.filter(x=>x.agent===k&&x.done).length;const q=A.queue.filter(x=>x.agent===k).length;return `<button class="br-a m-${A.mode==="off"?"off":m}" onclick="brAgents('cockpit')" title="${esc(d)}"><span>${ic(icn,15)}</span><b>${esc(l)}</b><small>${A.mode==="off"?"متوقف":m==="auto"?"بينفذ":"بيقترح"} · ${n} النهارده${q?` · ${q} مستني`:""}</small></button>`}).join("")}</div>${AP_AGENTS.length>10&&!state.brAgAll?`<button class="br-more" onclick="brAgAllShow()">كل الوكلاء (${AP_AGENTS.length})</button>`:""}
-          ${todayLog.length?`<div class="br-log"><b>آخر اللي اتعمل لوحده النهارده</b>${todayLog.slice(0,5).map(l=>`<div><span>${cmTime(l.at)}</span>${esc(l.title)}</div>`).join("")}</div>`:""}
+          <div class="br-ag">${AP_AGENTS.slice(0,state.brAgAll?99:10).map(([k,l,icn,d])=>{const m=A.agents[k]||"auto";const n=todayLog.filter(x=>x.agent===k&&x.done).length;const q=A.queue.filter(x=>x.agent===k).length;return `<button class="br-a m-${A.mode==="off"?"off":m}" onclick="brAgents('cockpit')" title="${esc(d)}"><span>${ic(icn,15)}</span><b>${esc(l)}</b><small>${A.mode==="off"?"متوقف":m==="auto"?"ينفذ":"يقترح"} · ${n} اليوم${q?` · ${q} بانتظار`:""}</small></button>`}).join("")}</div>${AP_AGENTS.length>10&&!state.brAgAll?`<button class="br-more" onclick="brAgAllShow()">كل الوكلاء (${AP_AGENTS.length})</button>`:""}
+          ${todayLog.length?`<div class="br-log"><b>آخر اللي انعمل لوحده اليوم</b>${todayLog.slice(0,5).map(l=>`<div><span>${cmTime(l.at)}</span>${esc(l.title)}</div>`).join("")}</div>`:""}
         </section>
       </div>`;
     }

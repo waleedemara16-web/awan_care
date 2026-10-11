@@ -1,6 +1,6 @@
 "use strict";
 // أوان — الجزء 4 من 16: 04-connect-comm-library
-// كل ملفات js/ دي بتشتغل كأنها ملف واحد بالترتيب — ما تغيّرش ترتيبها في index.html
+// كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
     // ==================== أوان كونكت — Oan Connect & Decision Hub ====================
     function meetingKindLabel(kind){return kind==="family"?"اجتماع مع أسرة":"اجتماع بين الأقسام"}
     function meetingStatusPill(status){const cls=status==="جارية"?"pill-blue":(status==="منتهية"?"pill-good":"pill-gold");return `<span class="pill ${cls}">${esc(status)}</span>`}
@@ -419,7 +419,7 @@ ${state.center.name}`;
       m.status="معتمدة"; m.read=true;
       persist();notify("تم اعتماد القرار");render();
     }
-    // ↪ الدالة migrateLibrary اتنقلت لملف js/01-core-seed.js عشان تكون جاهزة وقت التحميل
+    // ↪ الدالة migrateLibrary انتقلت لملف js/01-core-seed.js عشان تكون جاهزة وقت التحميل
     function communicationHubView(){
       const feed=[...commMessagesScopedToCurrent()].sort((a,b)=>(b.date||"").localeCompare(a.date||"")||String(b.id||"").localeCompare(String(a.id||"")));
       const pendingCount=feed.filter(m=>m.status==="مُرسلة").length;

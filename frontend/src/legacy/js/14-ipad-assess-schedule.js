@@ -1,10 +1,10 @@
 "use strict";
 // أوان — الجزء 14 من 16: 14-ipad-assess-schedule
-// كل ملفات js/ دي بتشتغل كأنها ملف واحد بالترتيب — ما تغيّرش ترتيبها في index.html
+// كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
     // =================== تقييم جديد من آيباد الأخصائي ===================
-    // الطفل الجديد بيتقيّم ويطلع بخطة ومواعيد من على آيباد أخصائي واحد:
+    // الطفل الجديد يتقيّم ويطلع بخطة ومواعيد من على آيباد أخصائي واحد:
     // دراسة الحالة ← التقييم ← الخطة (أهداف تلقائية) ← حجز مبدئي تلقائي ← مراجعة المشرف بضغطة ← الجدول يوصل للأسرة.
-    // مفيش مشرف بيتفرّغ يقيّم، ولا أخصائي تاني يكتب، ولا استقبال يدوّر على مواعيد.
+    // ما فيه مشرف يتفرّغ يقيّم، ولا أخصائي ثاني يكتب، ولا استقبال يدوّر على مواعيد.
     const EV_STEPS=["الطفل ودراسة الحالة","التقييم","الخطة والأهداف","المواعيد","المراجعة والإرسال"];
     const EV_LV=["لم يبدأ","ناشئ","جزئي","متذبذب","مكتسب"];
     const EV_LV_COL=["#e57373","#f0a35e","#ECAE4A","#7fbfa8","#4caf7a"];
@@ -49,7 +49,7 @@
     };
     const EV_SERVICE={speech:"جلسة نطق ولغة",aba:"تأهيل سلوكي",ot:"علاج وظيفي",skills:"جلسة تنمية مهارات",inclusion:"جلسة دمج مدرسي",psych:"جلسة نفسية",vocational:"تأهيل مهني",classrooms:"جلسة فصل"};
     const EV_DOW=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-    // حالة واجهة الآيباد المحلية (مش في state عشان مزامنة التابات ما تطلّعش الأخصائي من التقييم)
+    // حالة واجهة الآيباد المحلية (مو في state عشان مزامنة التابات ما تطلّع الأخصائي من التقييم)
     const EVUI={w:null,walk:false,rv:null,rvNote:"",mic:null};
     try{EVUI.w=sessionStorage.getItem("awan-evw")||null}catch(_e){}
     function evSetW(id){EVUI.w=id;try{id?sessionStorage.setItem("awan-evw",id):sessionStorage.removeItem("awan-evw")}catch(_e){}}
@@ -84,14 +84,14 @@
     function evNewPatient(f){
       const id="p-"+Date.now();const num=1000+state.patients.length+1;
       const pt={id,name:(f.child||"").trim(),file:"AWN-"+num,age:f.age||"—",need:f.reason?String(f.reason).slice(0,60):"قيد التقييم",program:"قيد التقييم",school:"",status:"قيد التقييم",
-        notes:"ملف اتفتح من آيباد الأخصائي وقت التقييم."+(f.reason?" سبب الزيارة: "+f.reason:""),goal:"يُحدَّد بعد التقييم الأولي",next:evToday()+"T09:00",
+        notes:"ملف انفتح من آيباد الأخصائي وقت التقييم."+(f.reason?" سبب الزيارة: "+f.reason:""),goal:"يُحدَّد بعد التقييم الأولي",next:evToday()+"T09:00",
         code:"AWN-"+num,schoolCode:"",guardian:f.guardian||"",phone:f.phone||"",archived:false,assignedPrograms:[],consents:[],goals:[]};
       pt.health=typeof defaultHealth==="function"?defaultHealth(pt):undefined;
       state.patients.unshift(pt);return pt;
     }
     function evOpen(id){const r=evById(id);if(!r)return;if(r.status==="معادة"&&r.step>3)r.step=2;evSetW(id);EVUI.rv=null;render();window.scrollTo(0,0)}
     function evClose(){evSetW(null);EVUI.walk=false;state.csEditFor=null;state.consentSignFor=null;render();window.scrollTo(0,0)}
-    function evDiscard(id){const r=evById(id);if(!r)return;if(!EVUI.discArm||Date.now()-EVUI.discArm>4000){EVUI.discArm=Date.now();notify("اضغطي «إلغاء التقييم» تاني للتأكيد");return}
+    function evDiscard(id){const r=evById(id);if(!r)return;if(!EVUI.discArm||Date.now()-EVUI.discArm>4000){EVUI.discArm=Date.now();notify("اضغطي «إلغاء التقييم» ثاني للتأكيد");return}
       EVUI.discArm=0;evReleaseHolds(r);state.newEvals=state.newEvals.filter(x=>x.id!==id);audit("إلغاء مسودة تقييم",r.patientName);evSetW(null);persist();render()}
 
     // ---- طفل وصل من غير موعد ----
@@ -109,19 +109,19 @@
       state.appointments.push(apt);
       if(isNew)state.registrations.unshift({child:p.name,guardian:f.guardian||"",phone:f.phone||"",reason:f.reason||"",status:"دخل تقييم مباشرة",date:evToday()});
       const sup=evSupOf(s.department);
-      state.staff.filter(x=>x.roleCategory==="reception").slice(0,2).forEach(x=>state.messages.unshift({id:"msg-"+Date.now()+"-"+x.id,fromId:s.id,fromName:s.name,toId:x.id,toName:x.name,text:`${p.name} دخل تقييم دلوقتي مع ${s.name}${isNew?" · اتفتح له ملف تلقائي":""}. مش مطلوب منك حاجة — المواعيد هتتحجز من الآيباد.`,date:todayISO(),read:false}));
+      state.staff.filter(x=>x.roleCategory==="reception").slice(0,2).forEach(x=>state.messages.unshift({id:"msg-"+Date.now()+"-"+x.id,fromId:s.id,fromName:s.name,toId:x.id,toName:x.name,text:`${p.name} دخل تقييم الحين مع ${s.name}${isNew?" · انفتح له ملف تلقائي":""}. مو مطلوب منك شي — المواعيد بتتحجز من الآيباد.`,date:todayISO(),read:false}));
       if(clash&&sup)state.messages.unshift({id:"msg-"+Date.now()+"-c",fromId:null,fromName:"محرك أوان",toId:sup.id,toName:sup.name,text:`⚠️ ${s.name} بدأ تقييم طارئ لـ ${p.name} وعنده جلسة ${clash.patient} ${clash.time} — محتاجة تغطية أو تأجيل.`,date:todayISO(),read:false});
       audit("طفل بدون موعد ← تقييم مباشر من الآيباد",p.name);EVUI.walk=false;
       evStartApt(apt.id);
     }
     function evWalkHtml(){
-      return `<section class="ev-card ev-walk"><h2>${ic("clipboardCheck",18)} طفل جديد وصل دلوقتي</h2><p class="muted" style="margin-top:0">٣٠ ثانية: الملف بيتفتح والموعد بيتسجل وتبدأي التقييم على طول. لو الطفل له ملف قبل كده المنصة بتلاقيه بالاسم أو الجوال.</p>
+      return `<section class="ev-card ev-walk"><h2>${ic("clipboardCheck",18)} طفل جديد وصل الحين</h2><p class="muted" style="margin-top:0">٣٠ ثانية: الملف يتفتح والموعد يتسجل وتبدأي التقييم على طول. لو الطفل له ملف قبل كذا المنصة تلاقيه بالاسم أو الجوال.</p>
         <form onsubmit="evWalkSubmit(event)" autocomplete="off"><div class="form-grid">
           <div class="field"><label>اسم الطفل</label><input class="input" id="ev-walk-name" name="child" required></div>
           <div class="field"><label>العمر</label><input class="input" name="age" placeholder="مثال: 4 سنوات"></div>
           <div class="field"><label>ولي الأمر</label><input class="input" name="guardian"></div>
           <div class="field"><label>الجوال</label><input class="input" name="phone" inputmode="tel" placeholder="05xxxxxxxx"></div>
-          <div class="field full"><label>سبب الزيارة بكلام الأسرة</label><textarea class="textarea" name="reason" placeholder="مثال: ما بيتكلمش غير كلمتين وعصبي"></textarea></div></div>
+          <div class="field full"><label>سبب الزيارة بكلام الأسرة</label><textarea class="textarea" name="reason" placeholder="مثال: ما يتكلم غير كلمتين وعصبي"></textarea></div></div>
           <div class="ev-quick" style="margin-top:14px"><button class="btn btn-primary" type="submit">ابدأ التقييم</button><button class="btn btn-outline" type="button" onclick="evWalkCancel()">رجوع</button></div></form></section>`;
     }
 
@@ -140,15 +140,15 @@
     function evScore(i,v){const r=evById(EVUI.w);if(!r||!r.domains[i])return;r.domains[i].score=r.domains[i].score===v?null:v;r.goalsStale=true;persist();
       const row=document.querySelector(`[data-ev-row="${i}"]`);if(row)row.querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.v===r.domains[i].score));
       const n=evScored(r).length;const lab=document.getElementById("ev-scored");if(lab)lab.textContent=`${n} من ${r.domains.length}`;const bar=document.getElementById("ev-scored-bar");if(bar)bar.style.width=Math.round(n/r.domains.length*100)+"%"}
-    function evAddDomain(){const r=evById(EVUI.w);const i=document.getElementById("ev-newdom");const n=(i&&i.value||"").trim();if(!r||!n)return;if(r.domains.some(d=>d.name===n)){notify("المجال ده موجود");return}r.domains.push({name:n,score:null,custom:true});persist();render()}
+    function evAddDomain(){const r=evById(EVUI.w);const i=document.getElementById("ev-newdom");const n=(i&&i.value||"").trim();if(!r||!n)return;if(r.domains.some(d=>d.name===n)){notify("المجال هذا موجود");return}r.domains.push({name:n,score:null,custom:true});persist();render()}
     function evObs(v){const r=evById(EVUI.w);if(!r)return;r.obs=v;persist()}
     function evDictate(){
-      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notify("الإملاء الصوتي مش مدعوم على المتصفح ده");return}
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notify("الإملاء الصوتي مو مدعوم على المتصفح هذا");return}
       if(EVUI.mic){try{EVUI.mic.stop()}catch(_e){}EVUI.mic=null;const b=document.getElementById("ev-mic");if(b){b.classList.remove("rec");b.textContent="🎙️ إملاء"}return}
       const rec=new SR();rec.lang="ar-SA";rec.continuous=true;rec.interimResults=false;
       rec.onresult=ev=>{const t=[...ev.results].slice(ev.resultIndex).filter(x=>x.isFinal).map(x=>x[0].transcript).join(" ");const ta=document.getElementById("ev-obs");if(ta&&t){ta.value=(ta.value?ta.value+" ":"")+t;evObs(ta.value)}};
       rec.onend=()=>{EVUI.mic=null;const b=document.getElementById("ev-mic");if(b){b.classList.remove("rec");b.textContent="🎙️ إملاء"}};
-      try{rec.start();EVUI.mic=rec;const b=document.getElementById("ev-mic");if(b){b.classList.add("rec");b.textContent="⏹ إيقاف"}}catch(_e){notify("مقدرتش أشغل المايك")}
+      try{rec.start();EVUI.mic=rec;const b=document.getElementById("ev-mic");if(b){b.classList.add("rec");b.textContent="⏹ إيقاف"}}catch(_e){notify("ما قدرت أشغل المايك")}
     }
     function evGoalFor(d){const t=EV_GOALS[d.name];if(t)return t[d.score<=1?0:1];
       return `يرتقي في «${d.name.replace(/\s*\(.*?\)/,"")}» من مستوى «${EV_LV[d.score]}» إلى «${EV_LV[Math.min(4,d.score+2)]}» خلال مدة الخطة`}
@@ -166,7 +166,7 @@
       r.progs=[...new Set([...fromCs,...active])].map((prog,i)=>({prog,on:fromCs.includes(prog)||(!fromCs.length&&i===0)}));
       r.slots=[];
     }
-    function evRegen(){const r=evById(EVUI.w);if(!r)return;evBuildGoals(r,true);evReleaseHolds(r);r.slots=[];persist();render();notify("اتولدت الأهداف من جديد من التقييم")}
+    function evRegen(){const r=evById(EVUI.w);if(!r)return;evBuildGoals(r,true);evReleaseHolds(r);r.slots=[];persist();render();notify("انولدت الأهداف من جديد من التقييم")}
     function evByGoal(gid){return evEnsure().find(x=>(x.goals||[]).some(g=>g.id===gid))}
     function evGoalToggle(gid){const r=evByGoal(gid);if(!r)return;const g=r.goals.find(x=>x.id===gid);if(!g)return;g.on=!g.on;persist();render()}
     function evGoalText(gid,v){const r=evByGoal(gid);if(!r)return;const g=r.goals.find(x=>x.id===gid);if(g&&v.trim()){g.text=v.trim();g.edited=true;persist()}}
@@ -198,13 +198,13 @@
       slots.sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
       r.pattern=pattern;r.slots=slots;
     }
-    function evReslot(){const r=evById(EVUI.w);if(!r)return;evAutoSlots(r);persist();render();notify("اتعمل اقتراح جديد للمواعيد")}
+    function evReslot(){const r=evById(EVUI.w);if(!r)return;evAutoSlots(r);persist();render();notify("انعمل اقتراح جديد للمواعيد")}
     function evSlotNext(i){const r=evById(EVUI.w);if(!r)return;const sl=r.slots[i];const p=evPatient(r);if(!sl||!p)return;const dur=+r.dur||45;
       const a=sl.aptId&&state.appointments.find(x=>x.id===sl.aptId);const c=personById(sl.staffId);if(!c)return;
       const after=sl.time?sipadMin(sl.time)+10:0;if(a)state.appointments=state.appointments.filter(x=>x.id!==a.id);
       let t=agFree(c,sl.date,dur,p.name,after),d=sl.date;
       if(!t){for(let k=1;k<=4&&!t;k++){const dd=localDateOf(new Date(Date.parse(sl.date+"T12:00")+k*864e5));if(!apWorkday(dd)||apOnLeave(c.id,dd))continue;const tt=agFree(c,dd,dur,p.name);if(tt){t=tt;d=dd}}}
-      if(!t){if(a)state.appointments.push(a);notify("مفيش وقت تاني فاضي قريب");return}
+      if(!t){if(a)state.appointments.push(a);notify("ما فيه وقت ثاني فاضي قريب");return}
       sl.date=d;sl.time=t;sl.bad=false;sl.moved=true;evHold(r,sl,p);r.slots.sort((x,y)=>(x.date+(x.time||"")).localeCompare(y.date+(y.time||"")));persist();render()}
     function evSlotDrop(i){const r=evById(EVUI.w);if(!r)return;const sl=r.slots[i];if(!sl)return;if(sl.aptId)state.appointments=state.appointments.filter(x=>x.id!==sl.aptId);r.slots.splice(i,1);persist();render()}
     function evPatternText(r){if(!r.pattern||!r.pattern.length)return "—";const by={};r.pattern.forEach(x=>{const n=(personById(x.staffId)||{}).name||"";(by[n]=by[n]||[]).push(x)});
@@ -227,7 +227,7 @@
       r.status="بانتظار المشرف";r.submittedAt=new Date().toISOString();r.step=4;r.reviewNote="";
       const held=r.slots.filter(x=>x.aptId).length;
       audit(`تقييم ← خطة (${goals.length} أهداف) + حجز مبدئي ${held} جلسة`,p.name);
-      state.staff.filter(x=>x.roleCategory==="reception").slice(0,2).forEach(x=>state.messages.unshift({id:"msg-"+Date.now()+"-"+x.id,fromId:null,fromName:"محرك أوان",toId:x.id,toName:x.name,text:`اتحجز مبدئيًا ${held} جلسة لـ ${p.name} (${evPatternText(r)}). مش مطلوب منك حاجة — الجدول بيتبعت للأسرة تلقائي بعد اعتماد الخطة.`,date:todayISO(),read:false}));
+      state.staff.filter(x=>x.roleCategory==="reception").slice(0,2).forEach(x=>state.messages.unshift({id:"msg-"+Date.now()+"-"+x.id,fromId:null,fromName:"محرك أوان",toId:x.id,toName:x.name,text:`انحجز مبدئيًا ${held} جلسة لـ ${p.name} (${evPatternText(r)}). مو مطلوب منك شي — الجدول ينرسل للأسرة تلقائي بعد اعتماد الخطة.`,date:todayISO(),read:false}));
       const sup=evSupOf(r.dept);
       if(evIsReviewer(s,r)||!sup){persist();evApprove(r.id,true);return}
       state.messages.unshift({id:"msg-"+Date.now()+"-ev",fromId:s.id,fromName:s.name,toId:sup.id,toName:sup.name,text:`📋 خطة ${p.name} بعد التقييم جاهزة لمراجعتك: ${goals.length} أهداف · ${r.freq} جلسات أسبوعيًا · ${held} موعد محجوز مبدئيًا. الاعتماد بضغطة من آيبادك أو لوحة الإشراف.`,date:todayISO(),read:false,evId:r.id});
@@ -246,12 +246,12 @@
       r.status="معتمدة";r.reviewedBy=who;r.reviewedAt=now;
       const fut=apts.filter(a=>a.date>=evToday()).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
       const firstA=fut[0];
-      const famText=`تم اعتماد خطة ${p.name} العلاجية ✓\nعدد الأهداف: ${on.length}\nالجلسات: ${evPatternText(r)}\n${firstA?`أول جلسة: ${evDow(firstA.date)} ${date(firstA.date)} الساعة ${time(firstA.time)}`:""}\nتقدروا تتابعوا كل حاجة من «متابعة طفلي» بالكود ${p.code||""}.`;
+      const famText=`تم اعتماد خطة ${p.name} العلاجية ✓\nعدد الأهداف: ${on.length}\nالجلسات: ${evPatternText(r)}\n${firstA?`أول جلسة: ${evDow(firstA.date)} ${date(firstA.date)} الساعة ${time(firstA.time)}`:""}\nتقدروا تتابعوا كل شي من «متابعة طفلي» بالكود ${p.code||""}.`;
       state.messages.unshift({id:"msg-"+Date.now()+"-fam",fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:p.id,text:famText,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
       r.famText=famText;
-      if(!self){const st=personById(r.staffId);if(st)state.messages.unshift({id:"msg-"+Date.now()+"-ok",fromId:null,fromName:who,toId:st.id,toName:st.name,text:`✓ ${who} اعتمد خطة ${p.name} · الجدول اتبعت للأسرة`,date:todayISO(),read:false})}
+      if(!self){const st=personById(r.staffId);if(st)state.messages.unshift({id:"msg-"+Date.now()+"-ok",fromId:null,fromName:who,toId:st.id,toName:st.name,text:`✓ ${who} اعتمد خطة ${p.name} · الجدول انرسل للأسرة`,date:todayISO(),read:false})}
       audit(self?"اعتماد مباشر للخطة بعد التقييم":"اعتماد خطة التقييم من المشرف",p.name);
-      EVUI.rv=null;persist();notify(self?`اتعتمدت الخطة واتبعت الجدول للأسرة`:`اتعتمدت خطة ${p.name} · الجدول اتبعت للأسرة`);render();
+      EVUI.rv=null;persist();notify(self?`اعتُمدت الخطة انتبعت الجدول للأسرة`:`اعتُمدت خطة ${p.name} · الجدول انرسل للأسرة`);render();
     }
     function evMarkReturned(id,note){const r=evById(id);if(!r)return;r.status="معادة";r.reviewNote=note||"";r.step=2;
       const st=personById(r.staffId);if(st)state.messages.unshift({id:"msg-"+Date.now()+"-rt",fromId:null,fromName:"المشرف",toId:st.id,toName:st.name,text:`↩️ خطة ${r.patientName} رجعت لك${note?": "+note:""}`,date:todayISO(),read:false});
@@ -262,7 +262,7 @@
     function evReviewClose(){EVUI.rv=null;render()}
 
     // ---- واجهات ----
-    function evBars(r){const sc=evScored(r);if(!sc.length)return `<div class="muted">مفيش مجالات اتقيّمت.</div>`;
+    function evBars(r){const sc=evScored(r);if(!sc.length)return `<div class="muted">ما فيه مجالات تقيّمت.</div>`;
       return `<div class="ev-bars">${sc.map(d=>`<div class="ev-bar"><span>${esc(d.name)}</span><div><i style="width:${Math.max(6,d.score/4*100)}%;background:${EV_LV_COL[d.score]}"></i></div><em>${EV_LV[d.score]}</em></div>`).join("")}</div>`}
     function evStepsHtml(r){const done=r.status!=="draft"&&r.status!=="معادة";
       return `<nav class="ev-steps">${EV_STEPS.map((t,i)=>`<button class="${i===r.step?"on":i<r.step?"done":""}" ${done||i>r.step?"disabled":""} onclick="evGo(${i})"><i>${i<r.step?"✓":i+1}</i>${t}</button>`).join("")}</nav>`}
@@ -281,12 +281,12 @@
       const cs=caseStudyOf(p);const editing=state.csEditFor===p.id;const tr=consentStatus(p,"treatment");
       let h=`<section class="ev-card"><h2>${ic("idcard",18)} بيانات الطفل</h2><div class="ev-kv"><div><small>الاسم</small><b>${esc(p.name)}</b></div><div><small>العمر</small><b>${esc(p.age||"—")}</b></div><div><small>ولي الأمر</small><b>${esc(p.guardian||"—")}</b></div><div><small>الجوال</small><b style="direction:ltr;unicode-bidi:isolate">${esc(p.phone||"—")}</b></div><div><small>كود المتابعة</small><b>${esc(p.code||"—")}</b></div></div></section>`;
       h+=`<section class="ev-card"><h2>${ic("clipboardCheck",18)} دراسة الحالة</h2>`;
-      if(editing)h+=`<p class="muted" style="margin-top:0">املّيها مع ولي الأمر دلوقتي — الأهداف المقترحة بتطلع لوحدها.</p>${csFieldsHtml(p.id,cs?cs.fields:{},"staff")}`;
+      if(editing)h+=`<p class="muted" style="margin-top:0">املّيها مع ولي الأمر الحين — الأهداف المقترحة تطلع لوحدها.</p>${csFieldsHtml(p.id,cs?cs.fields:{},"staff")}`;
       else if(cs){const an=cs.analysis||{};h+=`<p class="muted" style="margin-top:0">${esc(cs.source||"")} · ${esc(cs.by||"")} · اكتمال ${an.progress||0}%</p>${cs.fields&&cs.fields.reason?`<div class="ev-kv"><div style="grid-column:1/-1"><small>وصف ولي الأمر</small><b>${esc(cs.fields.reason)}</b></div></div>`:""}
         ${(an.flags||[]).length?`<h3>مؤشرات من دراسة الحالة</h3><div class="ev-chips">${[...new Set(an.flags.map(f=>f.area))].map(a=>`<span class="ev-chip flag">${esc(a)}</span>`).join("")}</div>`:""}
         ${(an.red||[]).length?`<div class="ev-red"><b>قبل البدء:</b><br>${an.red.map(x=>(x.urgent?"🔴 ":"")+esc(x.text)).join("<br>")}</div>`:""}
         <div class="ev-quick" style="margin-top:12px"><button class="btn btn-outline" onclick="csCaseEdit('${p.id}')">تعديل مع ولي الأمر</button></div>`}
-      else h+=`<p class="muted" style="margin-top:0">مفيش دراسة حالة على الملف. لو ولي الأمر معاكي املّوها سوا في ٥ دقايق، أو ابعتيها له يكملها من جواله وإنتي ابدئي التقييم.</p><div class="ev-quick"><button class="btn btn-primary" onclick="csCaseEdit('${p.id}')">املّيها مع ولي الأمر دلوقتي</button><button class="btn btn-outline" onclick="csRequestFamily('${p.id}')">${p.caseStudyRequested?"اتبعتت ✓ · ابعتي تذكير":"ابعتيها لولي الأمر على البوابة"}</button></div>`;
+      else h+=`<p class="muted" style="margin-top:0">ما فيه دراسة حالة على الملف. لو ولي الأمر معك املّوها سوا في ٥ دقايق، أو أرسليها له يكملها من جواله وأنتِ ابدئي التقييم.</p><div class="ev-quick"><button class="btn btn-primary" onclick="csCaseEdit('${p.id}')">املّيها مع ولي الأمر الحين</button><button class="btn btn-outline" onclick="csRequestFamily('${p.id}')">${p.caseStudyRequested?"انرسلت ✓ · أرسلي تذكير":"أرسليها لولي الأمر على البوابة"}</button></div>`;
       h+=`</section>`;
       if(state.consentSignFor===p.id)h+=consentsCard(p);
       else h+=`<section class="ev-card"><h2>${ic("check",18)} موافقة ولي الأمر على التقييم والعلاج</h2>${tr.st==="active"?`<div class="ev-check"><div class="ok"><i>✓</i>موافقة سارية · ${esc(tr.c.by||"")}</div></div>`:`<p class="muted" style="margin-top:0">وقّعها ولي الأمر بصباعه على الآيباد — من غير ورق ومن غير الاستقبال.</p><div class="ev-quick"><button class="btn btn-primary" onclick="csOpen('${p.id}')">توقيع ولي الأمر الآن</button></div>`}</section>`;
@@ -295,7 +295,7 @@
     function evStep1(r,p){
       const n=evScored(r).length;const keys=["سريع",...Object.keys(ASSESSMENT_INSTRUMENTS).filter(k=>k!=="تقييم داخلي مخصص")];
       let h=`<section class="ev-card"><h2>${ic("target",18)} أداة التقييم</h2><div class="ev-chips">${keys.map(k=>`<button class="ev-chip ${r.instrument===k?"on":""}" onclick="evInstr('${esc(k)}')">${k==="سريع"?"تقييم "+esc(deptName(r.dept))+" السريع":esc(k)}</button>`).join("")}</div>
-        <p class="muted" style="margin:10px 0 0;font-size:12.5px">الأدوات القياسية هنا بأسماء مجالاتها العامة فقط؛ الدرجات التفصيلية بتفضل في كراسة الأداة المرخصة.</p></section>`;
+        <p class="muted" style="margin:10px 0 0;font-size:12.5px">الأدوات القياسية هنا بأسماء مجالاتها العامة فقط؛ الدرجات التفصيلية تفضل في كراسة الأداة المرخصة.</p></section>`;
       h+=`<section class="ev-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">${ic("pulse",18)} مستوى الطفل في كل مجال</h2><span class="muted">قيّمتي <b id="ev-scored">${n} من ${r.domains.length}</b></span></div><div class="ev-prog"><i id="ev-scored-bar" style="width:${Math.round(n/Math.max(1,r.domains.length)*100)}%"></i></div>`;
       h+=r.domains.map((d,i)=>{const fl=evFlagsFor(p,d.name);return `<div class="ev-dom"><div><b>${esc(d.name)}</b>${fl.length?`<small>من دراسة الحالة: ${esc(fl[0].from)} ← ${esc(fl[0].answer)}</small>`:""}</div><div class="ev-seg" data-ev-row="${i}">${EV_LV.map((l,v)=>`<button class="${d.score===v?"on":""}" data-v="${v}" onclick="evScore(${i},${v})"><span>${v}</span>${l}</button>`).join("")}</div></div>`}).join("");
       h+=`<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><input class="input" id="ev-newdom" placeholder="مجال إضافي…" style="flex:1;min-width:180px"><button class="btn btn-outline" onclick="evAddDomain()">＋ إضافة مجال</button></div></section>`;
@@ -308,8 +308,8 @@
       let h=`<section class="ev-card"><h2>${ic("pulse",18)} نتيجة التقييم</h2>${evBars(r)}
         <div class="ev-reco">${ic("idea",22)}<div>التوصية: <b>${r.freq} جلسات أسبوعيًا × ${r.dur} دقيقة لمدة ${r.weeks} أسابيع</b><br><span class="muted" style="font-size:12.5px">متوسط المستوى ${avg==null?"—":avg.toFixed(1)} من 4${r.goalsStale?" · غيّرتي درجات بعد توليد الأهداف":""}</span></div></div>
         ${r.goalsStale?`<button class="btn btn-outline" onclick="evRegen()">إعادة توليد الأهداف من الدرجات الجديدة</button>`:""}</section>`;
-      h+=`<section class="ev-card"><h2>${ic("target",18)} أهداف الخطة <span class="muted" style="font-weight:600;font-size:13px">(${on} مختار)</span></h2><p class="muted" style="margin-top:0;font-size:12.5px">اتولدت تلقائي من المجالات الضعيفة ودراسة الحالة. اضغطي ✓ لإضافة أو شيل هدف، واكتبي على الهدف نفسه لو عايزة تعدّليه.</p>
-        ${r.goals.map(g=>`<div class="ev-goal ${g.on?"on":"off"}"><button class="ev-tick" onclick="evGoalToggle('${g.id}')" aria-label="اختيار الهدف">${g.on?"✓":""}</button><div style="flex:1"><textarea rows="1" onchange="evGoalText('${g.id}',this.value)">${esc(g.text)}</textarea><small>${esc(g.domain||"")} · ${esc(g.src||"")}</small></div></div>`).join("")||`<div class="muted">مفيش أهداف — كل المجالات مكتسبة. أضيفي هدف يدوي.</div>`}
+      h+=`<section class="ev-card"><h2>${ic("target",18)} أهداف الخطة <span class="muted" style="font-weight:600;font-size:13px">(${on} مختار)</span></h2><p class="muted" style="margin-top:0;font-size:12.5px">انولدت تلقائي من المجالات الضعيفة ودراسة الحالة. اضغطي ✓ لإضافة أو شيل هدف، واكتبي على الهدف نفسه لو تبي تعدّليه.</p>
+        ${r.goals.map(g=>`<div class="ev-goal ${g.on?"on":"off"}"><button class="ev-tick" onclick="evGoalToggle('${g.id}')" aria-label="اختيار الهدف">${g.on?"✓":""}</button><div style="flex:1"><textarea rows="1" onchange="evGoalText('${g.id}',this.value)">${esc(g.text)}</textarea><small>${esc(g.domain||"")} · ${esc(g.src||"")}</small></div></div>`).join("")||`<div class="muted">ما فيه أهداف — كل المجالات مكتسبة. أضيفي هدف يدوي.</div>`}
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input class="input" id="ev-newgoal" placeholder="هدف إضافي…" style="flex:1;min-width:200px"><button class="btn btn-outline" onclick="evAddGoal()">＋ هدف</button></div></section>`;
       if((r.progs||[]).length)h+=`<section class="ev-card"><h2>${ic("book",18)} البرامج العلاجية</h2><div class="ev-chips">${r.progs.map((x,i)=>`<button class="ev-chip ${x.on?"on":""}" onclick="evProgToggle(${i})">${esc(x.prog)}</button>`).join("")}</div></section>`;
       const seg=(k,vals,suf)=>`<div class="ev-chips">${vals.map(v=>`<button class="ev-chip ${+r[k]===v?"on":""}" onclick="evSet('${k}',${v})">${v} ${suf}</button>`).join("")}</div>`;
@@ -318,30 +318,30 @@
     }
     function evStep3(r,p){
       const ok=r.slots.filter(x=>x.time).length,bad=r.slots.filter(x=>!x.time).length;let wk=null;
-      let h=`<section class="ev-card"><h2>${ic("schedule",18)} المواعيد اتحجزت مبدئيًا لوحدها</h2>
-        <div class="ev-reco">${ic("check",22)}<div><b>${esc(evPatternText(r))}</b><br><span class="muted" style="font-size:12.5px">${ok} جلسة على ${r.weeks} أسابيع · من غير تعارض مع جدولك أو جدول الطفل · محجوزة باسم الطفل لحد اعتماد المشرف${bad?` · <b class="sp-warn">${bad} موعد مالقيناش له وقت</b>`:""}</span></div></div>
-        <div class="ev-quick"><button class="btn btn-outline" onclick="evReslot()">↻ اقتراح تاني</button></div>`;
+      let h=`<section class="ev-card"><h2>${ic("schedule",18)} المواعيد انحجزت مبدئيًا لوحدها</h2>
+        <div class="ev-reco">${ic("check",22)}<div><b>${esc(evPatternText(r))}</b><br><span class="muted" style="font-size:12.5px">${ok} جلسة على ${r.weeks} أسابيع · من غير تعارض مع جدولك أو جدول الطفل · محجوزة باسم الطفل لين اعتماد المشرف${bad?` · <b class="sp-warn">${bad} موعد ما لقينا له وقت</b>`:""}</span></div></div>
+        <div class="ev-quick"><button class="btn btn-outline" onclick="evReslot()">↻ اقتراح ثاني</button></div>`;
       h+=r.slots.map((sl,i)=>{const w=Math.floor((Date.parse(sl.date)-Date.parse(r.slots[0].date))/(7*864e5))+1;const head=w!==wk?`<div class="ev-week">الأسبوع ${w}</div>`:"";wk=w;const c=personById(sl.staffId);
-        return head+`<div class="ev-slot ${sl.bad?"bad":""}"><span class="ev-sd">${evDow(sl.date)} ${date(sl.date)}</span><span class="ev-st">${sl.time||"—"}</span><span class="ev-sw">${c?esc(c.name):""}${sl.moved?" · وقت بديل":""}${sl.bad?" · مفيش وقت فاضي":""}</span><span style="display:flex;gap:6px"><button class="btn btn-outline" onclick="evSlotNext(${i})">تبديل</button><button class="btn btn-outline" onclick="evSlotDrop(${i})">شيل</button></span></div>`}).join("");
+        return head+`<div class="ev-slot ${sl.bad?"bad":""}"><span class="ev-sd">${evDow(sl.date)} ${date(sl.date)}</span><span class="ev-st">${sl.time||"—"}</span><span class="ev-sw">${c?esc(c.name):""}${sl.moved?" · وقت بديل":""}${sl.bad?" · ما فيه وقت فاضي":""}</span><span style="display:flex;gap:6px"><button class="btn btn-outline" onclick="evSlotNext(${i})">تبديل</button><button class="btn btn-outline" onclick="evSlotDrop(${i})">شيل</button></span></div>`}).join("");
       return h+`</section>`;
     }
     function evStep4(r,p,s){
       const cs=caseStudyOf(p);const tr=consentStatus(p,"treatment").st==="active";const sup=evSupOf(r.dept);const self=evIsReviewer(s,r)||!sup;
       const row=(ok,t)=>`<div class="${ok?"ok":"no"}"><i>${ok?"✓":"!"}</i>${t}</div>`;
       return `<section class="ev-card"><h2>${ic("clipboardCheck",18)} مراجعة قبل الإرسال</h2><div class="ev-check">
-        ${row(!!cs,cs?"دراسة الحالة موجودة":"مفيش دراسة حالة — اتبعت طلب للأسرة أو كمليها بعدين")}
-        ${row(tr,tr?"موافقة العلاج موقّعة":"موافقة العلاج لسه — ممكن ولي الأمر يوقع من البوابة")}
-        ${row(true,`${evScored(r).length} مجال اتقيّم`)}
+        ${row(!!cs,cs?"دراسة الحالة موجودة":"ما فيه دراسة حالة — انرسل طلب للأسرة أو كمليها بعدين")}
+        ${row(tr,tr?"موافقة العلاج موقّعة":"موافقة العلاج للحين — ممكن ولي الأمر يوقع من البوابة")}
+        ${row(true,`${evScored(r).length} مجال تقيّم`)}
         ${row(true,`${r.goals.filter(g=>g.on).length} أهداف في الخطة · ${(r.progs||[]).filter(x=>x.on).length} برامج`)}
         ${row(r.slots.some(x=>x.time),`${r.slots.filter(x=>x.time).length} جلسة محجوزة: ${esc(evPatternText(r))}`)}</div>
-        <div class="ev-reco" style="margin-top:14px">${ic("team",22)}<div>${self?`<b>إنتي ${s.roleCategory==="management"?"من الإدارة":"مشرف القسم"}</b> — الإرسال = اعتماد مباشر، والجدول بيروح للأسرة على طول.`:`الخطة هتروح لـ <b>${esc(sup.name)}</b> يعتمدها بضغطة من آيباده أو لوحة الإشراف، وأول ما يعتمد الجدول بيوصل للأسرة تلقائي. الاستقبال مش محتاج يعمل حاجة.`}</div></div></section>
+        <div class="ev-reco" style="margin-top:14px">${ic("team",22)}<div>${self?`<b>أنتِ ${s.roleCategory==="management"?"من الإدارة":"مشرف القسم"}</b> — الإرسال = اعتماد مباشر، والجدول يروح للأسرة على طول.`:`الخطة بتروح لـ <b>${esc(sup.name)}</b> يعتمدها بضغطة من آيباده أو لوحة الإشراف، وأول ما يعتمد الجدول يوصل للأسرة تلقائي. الاستقبال مو محتاج يعمل شي.`}</div></div></section>
         <section class="ev-card"><h2>${ic("pulse",18)} ملخص التقييم</h2>${evBars(r)}${r.obs?`<p style="margin-top:12px;white-space:pre-wrap">${esc(r.obs)}</p>`:""}</section>`;
     }
     function evDoneHtml(r,p){
       const ok=r.status==="معتمدة";const held=r.slots.filter(x=>x.aptId).length;
-      const wa=p.phone?`https://wa.me/${toIntlWhatsapp(p.phone)}?text=${encodeURIComponent(r.famText||`تم تقييم ${p.name} اليوم ✓ والخطة عند المشرف للاعتماد، وهيوصلكم الجدول أول ما تتعتمد.`)}`:null;
-      return `<section class="ev-card ev-done"><div class="ev-big">✓</div><h1 style="margin:0">${ok?"الخطة اتعتمدت":"اتبعتت للمشرف"}</h1><p class="muted">${ok?`اعتمدها ${esc(r.reviewedBy||"")}`:"مستنية اعتماد مشرف القسم"}</p>
-        <ul><li>✓ التقييم اتحفظ في ملف ${esc(p.name)} (${evScored(r).length} مجال)</li><li>✓ ${r.goals.filter(g=>g.on).length} أهداف ${ok?"اتعتمدت وظهرت في شاشة الجلسة":"وصلت للمشرف"}</li><li>✓ ${held} جلسة ${ok?"اتثبتت في الجدول":"محجوزة مبدئيًا"}: ${esc(evPatternText(r))}</li><li>✓ الاستقبال اتبلغ — مش مطلوب منه حاجة</li><li>${ok?"✓ الجدول اتبعت للأسرة على البوابة":"⏳ أول ما المشرف يعتمد: الجدول يتبعت للأسرة تلقائي"}</li></ul>
+      const wa=p.phone?`https://wa.me/${toIntlWhatsapp(p.phone)}?text=${encodeURIComponent(r.famText||`تم تقييم ${p.name} اليوم ✓ والخطة عند المشرف للاعتماد، بهيوصلكم الجدول أول ما تتعتمد.`)}`:null;
+      return `<section class="ev-card ev-done"><div class="ev-big">✓</div><h1 style="margin:0">${ok?"الخطة اعتُمدت":"انرسلت للمشرف"}</h1><p class="muted">${ok?`اعتمدها ${esc(r.reviewedBy||"")}`:"بانتظار اعتماد مشرف القسم"}</p>
+        <ul><li>✓ التقييم انحفظ في ملف ${esc(p.name)} (${evScored(r).length} مجال)</li><li>✓ ${r.goals.filter(g=>g.on).length} أهداف ${ok?"اعتُمدت وظهرت في شاشة الجلسة":"وصلت للمشرف"}</li><li>✓ ${held} جلسة ${ok?"تثبتت في الجدول":"محجوزة مبدئيًا"}: ${esc(evPatternText(r))}</li><li>✓ الاستقبال تبلّغ — مو مطلوب منه شي</li><li>${ok?"✓ الجدول انرسل للأسرة على البوابة":"⏳ أول ما المشرف يعتمد: الجدول ينرسل للأسرة تلقائي"}</li></ul>
         ${r.status==="معادة"?"":""}<div class="ev-quick" style="justify-content:center">${wa?`<a class="btn btn-outline" target="_blank" rel="noopener" href="${wa}">واتساب لولي الأمر</a>`:""}<button class="btn btn-primary" onclick="evClose()">رجوع لجدول اليوم</button></div></section>`;
     }
     function evReviewBody(r,inIpad){
@@ -351,17 +351,17 @@
         <h3>المستوى</h3>${evBars(r)}${r.obs?`<p class="muted" style="white-space:pre-wrap">${esc(r.obs)}</p>`:""}
         <h3>الأهداف</h3>${r.goals.map(g=>`<div class="ev-goal ${g.on?"on":"off"}"><button class="ev-tick" onclick="evGoalToggle('${g.id}')">${g.on?"✓":""}</button><div style="flex:1"><textarea rows="1" onchange="evGoalText('${g.id}',this.value)">${esc(g.text)}</textarea><small>${esc(g.domain||"")} · ${esc(g.src||"")}</small></div></div>`).join("")}
         <h3>المواعيد المحجوزة مبدئيًا</h3><p style="margin:0"><b>${esc(evPatternText(r))}</b> · ${r.slots.filter(x=>x.aptId).length} جلسة</p>
-        <div class="ev-rv-note"><input class="input" id="ev-rv-note-${r.id}" placeholder="ملاحظة لو هترجعها للأخصائي…"><button class="btn btn-outline" onclick="evReturn('${r.id}')">إرجاع بملاحظة</button><button class="btn btn-primary" onclick="evApprove('${r.id}')">اعتماد + إرسال الجدول للأسرة ✓</button></div>`;
+        <div class="ev-rv-note"><input class="input" id="ev-rv-note-${r.id}" placeholder="ملاحظة لو بترجعها للأخصائي…"><button class="btn btn-outline" onclick="evReturn('${r.id}')">إرجاع بملاحظة</button><button class="btn btn-primary" onclick="evApprove('${r.id}')">اعتماد + إرسال الجدول للأسرة ✓</button></div>`;
     }
     function evReviewScreen(s){const r=evById(EVUI.rv);if(!r||r.status!=="بانتظار المشرف"){EVUI.rv=null;return sipadHome(s)}
-      return `<div class="ev-head"><div><h1>مراجعة خطة · ${esc(r.patientName)}</h1><small>اتبعتت ${date(localDateOf(r.submittedAt))} ${localTimeOf(r.submittedAt)}</small></div><button class="btn btn-outline" onclick="evReviewClose()">← رجوع</button></div><section class="ev-card">${evReviewBody(r,true)}</section>`}
+      return `<div class="ev-head"><div><h1>مراجعة خطة · ${esc(r.patientName)}</h1><small>انرسلت ${date(localDateOf(r.submittedAt))} ${localTimeOf(r.submittedAt)}</small></div><button class="btn btn-outline" onclick="evReviewClose()">← رجوع</button></div><section class="ev-card">${evReviewBody(r,true)}</section>`}
     function evPendingFor(s){return evEnsure().filter(r=>r.status==="بانتظار المشرف"&&evIsReviewer(s,r))}
     function evIpadCards(s){
-      let h=`<div class="ev-quick"><button class="btn btn-primary" onclick="evWalkOpen()">＋ طفل تقييم جديد وصل دلوقتي</button></div>`;
+      let h=`<div class="ev-quick"><button class="btn btn-primary" onclick="evWalkOpen()">＋ طفل تقييم جديد وصل الحين</button></div>`;
       const pend=evPendingFor(s);
       if(pend.length)h+=`<section class="card ev-pendsup" style="margin-bottom:16px;border:2px solid var(--gold)"><div class="card-head"><h2>${ic("clipboardCheck",18)} خطط بانتظار اعتمادك</h2><span class="pill pill-gold">${pend.length}</span></div><div class="list">${pend.map(r=>`<div class="list-row"><div class="list-main"><strong>${esc(r.patientName)}</strong><small>${esc(r.staffName)} · ${r.goals.filter(g=>g.on).length} أهداف · ${esc(evPatternText(r))}</small></div><div class="list-end"><button class="btn btn-primary sp-big" onclick="evReview('${r.id}')">مراجعة</button></div></div>`).join("")}</div></section>`;
       const mine=evEnsure().filter(r=>r.staffId===s.id&&(r.status==="draft"||r.status==="معادة"||(r.status==="بانتظار المشرف")||(r.status==="معتمدة"&&localDateOf(r.reviewedAt||r.startedAt)===evToday())));
-      if(mine.length)h+=`<section class="card ev-mine" style="margin-bottom:16px"><div class="card-head"><h2>${ic("target",18)} تقييماتي</h2></div><div class="list">${mine.map(r=>{const lab=r.status==="draft"?`<span class="pill pill-blue">مسودة · خطوة ${r.step+1}/5</span>`:r.status==="معادة"?`<span class="pill pill-red">رجعت بملاحظة</span>`:r.status==="بانتظار المشرف"?`<span class="pill pill-gold">عند المشرف</span>`:`<span class="pill pill-good">اتعتمدت ✓</span>`;
+      if(mine.length)h+=`<section class="card ev-mine" style="margin-bottom:16px"><div class="card-head"><h2>${ic("target",18)} تقييماتي</h2></div><div class="list">${mine.map(r=>{const lab=r.status==="draft"?`<span class="pill pill-blue">مسودة · خطوة ${r.step+1}/5</span>`:r.status==="معادة"?`<span class="pill pill-red">رجعت بملاحظة</span>`:r.status==="بانتظار المشرف"?`<span class="pill pill-gold">عند المشرف</span>`:`<span class="pill pill-good">اعتُمدت ✓</span>`;
         return `<div class="list-row" onclick="evOpen('${r.id}')"><div class="list-main"><strong>${esc(r.patientName)}</strong><small>${r.status==="معادة"&&r.reviewNote?"ملاحظة: "+esc(r.reviewNote):esc(deptName(r.dept))}</small></div><div class="list-end">${lab}</div></div>`}).join("")}</div></section>`;
       return h;
     }
@@ -400,7 +400,7 @@
       sipadOpen,sipadLock,reviewPlan,confirmReturnPlan,csOpen,csCaseEdit,csCaseCancel,csCaseSubmit,csRequestFamily,csSave,csCancel,csClear,csStart,csMove,csEnd});
 
     // =================== جدول الآيباد بفترات ٤٠ دقيقة + مهام صاحب الآيباد + محاكي الآيباد ===================
-    // اليوم كله من بداية الدوام لنهايته متقسم فترات ٤٠ دقيقة: المحجوز بيظهر باسم الطفل، والفاضي «فترة متاحة».
+    // اليوم كله من بداية الدوام لنهايته متقسم فترات ٤٠ دقيقة: المحجوز يظهر باسم الطفل، والفاضي «فترة متاحة».
     function sipadRowsFull(s,dayOverride){
       const base=sipadRows(s,dayOverride);const sh=sipadShift(s);
       if(!sh){const td=localDateOf(new Date());return base.day?base:{day:td,rows:[],apts:[]}}
@@ -431,7 +431,7 @@
     function sipadTasks(s){
       const today=localDateOf(new Date());const out=[];
       (state.dailyTasks||[]).filter(t=>t.staffId===s.id&&(!t.date||t.date<=today)&&(!t.done||t.date===today||!t.date)).forEach(t=>out.push({k:"task",id:t.id,done:!!t.done,text:t.text,sub:t.from?`من ${t.from}`:"مهمة يومية",act:`toggleStaffTask('${t.id}')`}));
-      (state.evaluations||[]).filter(e=>e.staffId===s.id&&e.status!=="مكتمل"&&e.date&&e.date<=localDateOf(new Date(Date.now()+2*864e5))).forEach(e=>out.push({k:"eval",text:`${e.type}: ${e.patient}`,sub:e.date===today?"النهارده":date(e.date)}));
+      (state.evaluations||[]).filter(e=>e.staffId===s.id&&e.status!=="مكتمل"&&e.date&&e.date<=localDateOf(new Date(Date.now()+2*864e5))).forEach(e=>out.push({k:"eval",text:`${e.type}: ${e.patient}`,sub:e.date===today?"اليوم":date(e.date)}));
       (state.plans||[]).filter(p=>p.staffId===s.id&&p.status==="معادة للتعديل"&&!p.evId).forEach(p=>out.push({k:"plan",text:`عدّل «${p.title}» — ${p.patient}`,sub:p.note?"ملاحظة المشرف: "+p.note:"رجعت من المشرف"}));
       (state.messages||[]).filter(m=>m.toId===s.id&&!m.read).slice(0,6).forEach(m=>out.push({k:"msg",id:m.id,text:m.text,sub:`رسالة من ${m.fromName||"الإدارة"}`,act:`markMessageRead('${m.id}')`}));
       const mine=new Set(state.appointments.filter(a=>a.clinician===s.name&&a.status!=="ملغي").map(a=>a.patient));
@@ -441,13 +441,13 @@
     function sipadTasksHtml(s){
       const L=sipadTasks(s);const open=L.filter(x=>!x.done).length;
       const ICN={task:"check",eval:"target",plan:"book",msg:"chat",next:"idea"};
-      return `<section class="card sp-tasks"><div class="card-head"><h2>${ic("check",18)} مهامي النهارده</h2><span class="pill ${open?"pill-gold":"pill-good"}">${open?open+" مفتوحة":"خلصت كله ✓"}</span></div>
-        ${L.length?`<div class="sp-tlist">${L.map(x=>`<div class="sp-task k-${x.k} ${x.done?"done":""}">${x.k==="task"?`<button class="sp-chk" onclick="${x.act}" aria-label="تم">${x.done?"✓":""}</button>`:`<span class="sp-ti">${ic(ICN[x.k]||"check",16)}</span>`}<div><b>${esc(x.text)}</b><small>${esc(x.sub||"")}</small></div>${x.k==="msg"?`<button class="btn btn-outline" onclick="${x.act}">تمام</button>`:""}</div>`).join("")}</div>`:`<div class="empty">مفيش مهام موكلة لك النهارده.</div>`}</section>`;
+      return `<section class="card sp-tasks"><div class="card-head"><h2>${ic("check",18)} مهامي اليوم</h2><span class="pill ${open?"pill-gold":"pill-good"}">${open?open+" مفتوحة":"خلصت كله ✓"}</span></div>
+        ${L.length?`<div class="sp-tlist">${L.map(x=>`<div class="sp-task k-${x.k} ${x.done?"done":""}">${x.k==="task"?`<button class="sp-chk" onclick="${x.act}" aria-label="تم">${x.done?"✓":""}</button>`:`<span class="sp-ti">${ic(ICN[x.k]||"check",16)}</span>`}<div><b>${esc(x.text)}</b><small>${esc(x.sub||"")}</small></div>${x.k==="msg"?`<button class="btn btn-outline" onclick="${x.act}">تمام</button>`:""}</div>`).join("")}</div>`:`<div class="empty">ما فيه مهام موكلة لك اليوم.</div>`}</section>`;
     }
     const _simHome=sipadHome;
     sipadHome=function(s){let h=_simHome(s);const k=h.indexOf('<section class="card sp-tl">');const add=sipadTasksHtml(s);return k>=0?h.slice(0,k)+add+h.slice(k):h+add};
 
-    // ---- محاكي الآيباد (بيفتح المنصة نفسها جوه إطار آيباد ومتزامن معاها لحظيًا) ----
+    // ---- محاكي الآيباد (يفتح المنصة نفسها جوه إطار آيباد ومتزامن معها لحظيًا) ----
     const SIM={staffId:null,devId:null,land:false,t:null};
     function simDevFor(staffId){ensureDevices();const s=personById(staffId);if(!s)return null;
       let d=state.devices.find(x=>x.mode==="personal"&&x.staffId===staffId&&!x.disabled);
@@ -457,7 +457,7 @@
     function simClinical(){return state.staff.filter(x=>x.clinical||x.roleCategory==="staff")}
     function simOpen(staffId){
       const list=simClinical();staffId=staffId||SIM.staffId||((getCurrentPerson()&&list.some(x=>x.id===getCurrentPerson().id))?getCurrentPerson().id:(list[0]||{}).id);
-      if(!staffId){notify("مفيش أخصائيين مسجلين");return}
+      if(!staffId){notify("ما فيه أخصائيين مسجلين");return}
       const d=simDevFor(staffId);if(!d)return;SIM.staffId=staffId;SIM.devId=d.id;
       let ov=document.getElementById("sim-ov");if(!ov){ov=document.createElement("div");ov.id="sim-ov";ov.className="sim-ov";document.body.appendChild(ov);document.documentElement.classList.add("sim-open")}
       ov.innerHTML=simShell();simLoadFrame();simFit();simSide();
@@ -476,7 +476,7 @@
       const dd=document.getElementById("sim-date");if(dd)dd.textContent=d.toLocaleDateString("ar-SA-u-nu-latn",{weekday:"short",day:"numeric",month:"short"})}
     function simShell(){
       const list=simClinical();
-      return `<div class="sim-bar"><div class="sim-brand">${ic("tablet",18)} <b>محاكي آيباد الأخصائي</b><small>نفس المنصة ونفس البيانات — أي حاجة تحصل هنا بتوصل للمنصة لحظتها والعكس</small></div>
+      return `<div class="sim-bar"><div class="sim-brand">${ic("tablet",18)} <b>محاكي آيباد الأخصائي</b><small>نفس المنصة ونفس البيانات — أي شي تحصل هنا توصل للمنصة لحظتها والعكس</small></div>
         <div class="sim-ctl"><label>صاحب الآيباد <select class="select" onchange="simPick(this.value)">${list.map(x=>`<option value="${x.id}" ${x.id===SIM.staffId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></label>
         <button class="btn btn-outline" onclick="simRotate()" title="تدوير">⟲ تدوير</button><button class="btn btn-outline" onclick="simReload()" title="إعادة تشغيل">↻</button><button class="btn btn-primary" onclick="simClose()">✕ قفل المحاكي</button></div></div>
         <div class="sim-body"><div class="sim-stage" id="sim-stage"><div class="sim-wrap" id="sim-wrap"><div class="sim-ipad ${SIM.land?"land":""}" id="sim-ipad"><span class="sim-btn-top"></span><span class="sim-btn-vol"></span><div class="sim-cam"></div>
@@ -490,20 +490,20 @@
       const st=devStatus(d);const R=sipadRowsFull(s);const inS=R.rows.filter(r=>r.n);const busy=inS.filter(r=>r.kind==="session").length;
       const tasks=sipadTasks(s).filter(x=>!x.done).length;const link=devLink(d);const qr=kxQR(link,150);
       const pts=state.patients.filter(p=>!p.archived);
-      box.innerHTML=`<section class="sim-card"><div class="sim-own"><span class="sp-av">${esc((s.name.replace(/^(أ\.|د\.)\s*/,"")||"?").charAt(0))}</span><div><b>${esc(s.name)}</b><small>${esc(s.role||"")} · الدوام ${R.shift?sipadHM(R.shift[0])+" – "+sipadHM(R.shift[1]):"مش محدد"}</small></div></div>
+      box.innerHTML=`<section class="sim-card"><div class="sim-own"><span class="sp-av">${esc((s.name.replace(/^(أ\.|د\.)\s*/,"")||"?").charAt(0))}</span><div><b>${esc(s.name)}</b><small>${esc(s.role||"")} · الدوام ${R.shift?sipadHM(R.shift[0])+" – "+sipadHM(R.shift[1]):"مو محدد"}</small></div></div>
           <div class="sim-kv"><div><small>كود الدخول</small><b>${esc(codeLabel(s))}</b></div><div><small>حالة الجهاز</small><b class="st-${st.k}">${esc(st.t)}</b></div><div><small>فترات اليوم</small><b>${inS.length} × ${SIPAD_SLOT}د</b></div><div><small>محجوز / متاح</small><b>${busy} / ${inS.length-busy}</b></div><div><small>مهام مفتوحة</small><b>${tasks}</b></div></div></section>
-        <section class="sim-card"><h3>${ic("pulse",16)} جرّب التزامن من هنا</h3><p class="muted">اعمل أي حاجة وبص على الآيباد — بتظهر في ثانية.</p>
+        <section class="sim-card"><h3>${ic("pulse",16)} جرّب التزامن من هنا</h3><p class="muted">اعمل أي شي وبص على الآيباد — تظهر في ثانية.</p>
           <form class="sim-row" onsubmit="simSendTask(event)"><input class="input" name="t" placeholder="مهمة لـ ${esc(s.name.split(" ").slice(-1)[0])}…" required><button class="btn btn-primary">إرسال مهمة</button></form>
           <form class="sim-row" onsubmit="simSendMsg(event)"><input class="input" name="t" placeholder="رسالة تظهر على الشاشة…" required><button class="btn btn-outline">على الشاشة</button></form>
           <form class="sim-row" onsubmit="simBook(event)"><select class="select" name="p">${pts.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select><button class="btn btn-outline">احجز أول فترة فاضية</button></form>
           <div class="sim-row"><button class="btn btn-outline" onclick="simLock()">${ic("lock",14)} قفل الآيباد عن بعد</button></div></section>
-        <section class="sim-card"><h3>${ic("tablet",16)} إزاي الآيباد الحقيقي بيتوصل بأوان</h3>
-          <ol class="sim-steps"><li><b>سجّل الجهاز</b> من «آيبادات الفريق ← إدارة الأجهزة»: شخصي لأخصائي واحد أو مشترك، وحدد الصلاحيات ووقت القفل التلقائي. (الجهاز ده اتسجل لوحده باسم «${esc(d.name)}».)</li>
-          <li><b>اربطه</b>: امسح الكود ده بكاميرا الآيباد أو افتح رابط الربط في Safari.</li>
-          <li><b>خليه تطبيق</b>: في Safari زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية» — بيفتح ملء الشاشة زي أي تطبيق.</li>
-          <li><b>اقفله على أوان</b>: الإعدادات ← تسهيلات الاستخدام ← «الوصول الموجّه» (Guided Access) عشان محدش يخرج منه.</li>
-          <li><b>الدخول</b>: الأخصائي يكتب كوده (نفس كود كيوسك الحضور) ← حضوره بيتسجل وجدوله ومهامه يظهروا.</li>
-          <li><b>التزامن</b>: ${SV.on?`<span class="sim-ok">متصل بسيرفر أوان ✓</span> — كل الأجهزة شغالة على نفس البيانات لحظيًا.`:`لما أوان يشتغل على سيرفر المركز («السيرفر والحسابات») كل آيباد بيتزامن مع المنصة لحظيًا. <span class="sim-warn">النسخة دي شغالة من غير سيرفر</span>، فالتزامن اللحظي شغال بين الشاشات المفتوحة على نفس الجهاز بس — زي المحاكي ده.`}</li></ol>
+        <section class="sim-card"><h3>${ic("tablet",16)} كيف الآيباد الحقيقي يتوصل بأوان</h3>
+          <ol class="sim-steps"><li><b>سجّل الجهاز</b> من «آيبادات الفريق ← إدارة الأجهزة»: شخصي لأخصائي واحد أو مشترك، وحدد الصلاحيات ووقت القفل التلقائي. (الجهاز هذا انسجل لوحده باسم «${esc(d.name)}».)</li>
+          <li><b>اربطه</b>: امسح الكود هذا بكاميرا الآيباد أو افتح رابط الربط في Safari.</li>
+          <li><b>خليه تطبيق</b>: في Safari زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية» — يفتح ملء الشاشة زي أي تطبيق.</li>
+          <li><b>اقفله على أوان</b>: الإعدادات ← تسهيلات الاستخدام ← «الوصول الموجّه» (Guided Access) عشان محد يخرج منه.</li>
+          <li><b>الدخول</b>: الأخصائي يكتب كوده (نفس كود كيوسك الحضور) ← حضوره يتسجل وجدوله ومهامه يظهروا.</li>
+          <li><b>التزامن</b>: ${SV.on?`<span class="sim-ok">متصل بسيرفر أوان ✓</span> — كل الأجهزة شغالة على نفس البيانات لحظيًا.`:`لما أوان يشتغل على سيرفر المركز («السيرفر والحسابات») كل آيباد يتزامن مع المنصة لحظيًا. <span class="sim-warn">النسخة هذي شغالة من غير سيرفر</span>، فالتزامن اللحظي شغال بين الشاشات المفتوحة على نفس الجهاز بس — زي المحاكي هذا.`}</li></ol>
           <div class="sim-link">${qr?`<div class="sim-qr">${qr}</div>`:""}<div><small>رابط ربط الجهاز</small><code>${esc(link)}</code><button class="btn btn-outline" onclick="ipDevCopy('${d.id}')">نسخ الرابط</button></div></div></section>`;
     }
     function simSendTask(e){e.preventDefault();const t=(new FormData(e.target).get("t")||"").trim();const s=personById(SIM.staffId);if(!t||!s)return;const me=getCurrentPerson();
@@ -513,14 +513,14 @@
     function simLock(){ipDevCmd(SIM.devId,"lock");simSide()}
     function simBook(e){e.preventDefault();const pid=new FormData(e.target).get("p");const p=state.patients.find(x=>x.id===pid);const s=personById(SIM.staffId);if(!p||!s)return;
       const d=localDateOf(new Date());const nm=new Date().getHours()*60+new Date().getMinutes();const t=agFree(s,d,SIPAD_SLOT,p.name,nm);
-      if(!t){notify("مفيش فترة فاضية باقية النهارده في جدول "+s.name);return}
+      if(!t){notify("ما فيه فترة فاضية باقية اليوم في جدول "+s.name);return}
       const dep=s.department||"speech";state.appointments.push({id:"apt-"+Date.now(),date:d,time:t,duration:SIPAD_SLOT,patient:p.name,service:(typeof EV_SERVICE!=="undefined"&&EV_SERVICE[dep])||"جلسة",clinician:s.name,room:typeof evRoomOf==="function"?evRoomOf(s.name):"غرفة العلاج",status:"مجدول",newForStaff:true});
-      audit("حجز جلسة من محاكي الآيباد",p.name+" "+t);persist();notify(`اتحجزت ${p.name} الساعة ${t} — بص على الآيباد`);simSide()}
-    // الآيباد الشخصي: شاشة القفل بتفتح على صاحبه مباشرة (يكتب كوده بس)
+      audit("حجز جلسة من محاكي الآيباد",p.name+" "+t);persist();notify(`انحجزت ${p.name} الساعة ${t} — بص على الآيباد`);simSide()}
+    // الآيباد الشخصي: شاشة القفل تفتح على صاحبه مباشرة (يكتب كوده بس)
     const _simScr=staffIpadScreen;staffIpadScreen=function(){document.documentElement.classList.add("sp-mode");return _simScr()};
     const _simCloseIp=closeStaffIpad;closeStaffIpad=function(){const r=_simCloseIp.apply(this,arguments);if(!state.sipadMode)document.documentElement.classList.remove("sp-mode");return r};
     const _simLock=sipadLockScreen;sipadLockScreen=function(){const L=sipadAllowedStaff();if(!state.sipadPick&&L.length===1){state.sipadPick=L[0].id;setTimeout(()=>{const i=document.getElementById("sp-code");if(i&&document.activeElement!==i)i.focus()},40)}return _simLock()};
-    // إشعارات الإدارة الآلية ما تظهرش على آيباد الأخصائي — بس رسايل التأكيد بتاعته
+    // إشعارات الإدارة الآلية ما تظهر على آيباد الأخصائي — بس رسايل التأكيد حقه
     const _simNt=ntPush;ntPush=function(kind,...a){if(state.sipadMode&&kind!=="ok"&&kind!=="warn")return;return _simNt(kind,...a)};
     // أزرار الدخول على المحاكي من آيبادات الفريق
     const _simSeg=ipSeg;ipSeg=function(){return _simSeg().replace(/<\/div>$/,`<button class="sim-cta" onclick="simOpen()">${ic("tablet",14)} ادخل على الآيباد (محاكي)</button></div>`)};
@@ -531,7 +531,7 @@
 
     // =================== الآيباد = يوم الموظف: الدوام + البريك + الجلسات مربعات + عداد الـ٤٠ دقيقة ===================
     const SPUI={tab:null,done:null,warned:{}};
-    // البريك: لو الإدارة حددته بيتاخد، وإلا الفترة اللي فيها الساعة ١٢ الظهر (فترة ٤٠ دقيقة من شبكة الدوام)
+    // البريك: لو الإدارة حددته ينأخذ، وإلا الفترة اللي فيها الساعة ١٢ الظهر (فترة ٤٠ دقيقة من شبكة الدوام)
     function sipadBreak(s){if(!s)return null;
       if(s.breakFrom&&s.breakTo){const f=sipadMin(s.breakFrom),t=sipadMin(s.breakTo);return f!=null&&t>f?[f,t]:null}
       if(s.breakFrom==="none")return null;
@@ -558,17 +558,17 @@
       return {...R,rows:out,brk:b};
     };
     function sipadBrkRow(r,tm,isToday,nowM){const nowIn=isToday&&nowM>=r.from&&nowM<r.to;const past=isToday&&nowM>=r.to;
-      return `<div class="sp-row brkx ${nowIn?"now":""} ${past?"past":""}">${tm}<div class="sp-main"><strong>☕ البريك</strong><span>صلاة وغدا · ${r.to-r.from} دقيقة${nowIn?` · <b>باقي ${r.to-nowM} د</b>`:""}</span></div><div class="sp-end">${nowIn?`<span class="pill pill-gold">إنتي في البريك</span>`:""}</div></div>`}
+      return `<div class="sp-row brkx ${nowIn?"now":""} ${past?"past":""}">${tm}<div class="sp-main"><strong>☕ البريك</strong><span>صلاة وغدا · ${r.to-r.from} دقيقة${nowIn?` · <b>باقي ${r.to-nowM} د</b>`:""}</span></div><div class="sp-end">${nowIn?`<span class="pill pill-gold">أنتِ في البريك</span>`:""}</div></div>`}
     function dayFmt(min){min=Math.max(0,Math.round(min));const h=Math.floor(min/60),m=min%60;return h?`${h} س${m?" و"+m+" د":""}`:`${m} د`}
-    // شريط يوم العمل: الدوام، الحضور، دلوقتي إيه، الجاي إيه، باقي قد إيه
+    // شريط يوم العمل: الدوام، الحضور، الحين وش، الجاي وش، باقي قد وش
     function sipadDayBar(s){
       const R=sipadRowsFull(s);if(!R.shift)return "";const today=localDateOf(new Date());if(R.day!==today)return "";
       const [a,b]=R.shift;const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
       const pct=Math.max(0,Math.min(100,(nowM-a)/(b-a)*100));
       const cur=R.rows.find(r=>nowM>=r.from&&nowM<r.to);const nxt=R.rows.find(r=>r.from>nowM&&(r.kind==="session"||r.kind==="brk"));
       const lab=r=>!r?"":r.kind==="session"?`جلسة ${r.a.patient}`:r.kind==="brk"?"البريك":r.kind==="free"?"فترة متاحة":r.kind==="block"?r.label:"";
-      const state0=nowM<a?`الدوام بيبدأ بعد ${dayFmt(a-nowM)}`:nowM>=b?"الدوام خلص — يومك اتقفل":cur?`دلوقتي: ${lab(cur)}`:"دلوقتي: مفيش حاجة";
-      const ci=s.present&&s.checkInAt&&localDateOf(s.checkInAt)===today?`حضورك ${localTimeOf(s.checkInAt)} ✓`:s.present?"حاضر ✓":"الحضور بيتسجل مع أول دخول";
+      const state0=nowM<a?`الدوام يبدأ بعد ${dayFmt(a-nowM)}`:nowM>=b?"الدوام خلص — يومك انقفل":cur?`الحين: ${lab(cur)}`:"الحين: ما فيه شي";
+      const ci=s.present&&s.checkInAt&&localDateOf(s.checkInAt)===today?`حضورك ${localTimeOf(s.checkInAt)} ✓`:s.present?"حاضر ✓":"الحضور يتسجل مع أول دخول";
       const seg=R.rows.filter(r=>r.to>a&&r.from<b&&(r.kind==="session"||r.kind==="brk"||r.kind==="block")).map(r=>{const l=(Math.max(r.from,a)-a)/(b-a)*100,w=(Math.min(r.to,b)-Math.max(r.from,a))/(b-a)*100;return `<i class="k-${r.kind} ${r.kind==="session"&&r.a.status==="مكتمل"?"ok":""}" style="right:${l}%;width:${w}%"></i>`}).join("");
       return `<section class="card sp-day"><div class="sp-day-top"><div><small>يوم العمل</small><b>${sipadHM(a)} – ${sipadHM(b)}</b></div><div><small>الحضور</small><b>${esc(ci)}</b></div><div><small>البريك</small><b>${R.brk?sipadHM(R.brk[0])+" – "+sipadHM(R.brk[1]):"—"}</b></div><div><small>باقي على نهاية الدوام</small><b>${nowM>=b?"—":dayFmt(b-Math.max(nowM,a))}</b></div></div>
         <div class="sp-day-bar">${seg}<em style="right:${pct}%"></em></div><div class="sp-day-axis"><span>${sipadHM(a)}</span><span>${sipadHM(b)}</span></div>
@@ -584,13 +584,13 @@
       const next=apts.find(a=>a.status!=="مكتمل");
       const title=SPUI.tab==="done"?"الجلسات اللي خلصت":SPUI.tab==="left"?"الجلسات الباقية":"كل جلسات اليوم";
       let h=`<section class="card sp-gridcard" id="sp-grid"><div class="card-head"><h2>${ic("schedule",18)} ${title} <span class="muted" style="font-weight:600">(${list.length})</span></h2><button class="btn btn-outline" onclick="sipadTab(null)">رجوع للتايم لاين</button></div>`;
-      if(!list.length)return h+`<div class="empty">${SPUI.tab==="done"?"لسه مفيش جلسات خلصت النهارده.":SPUI.tab==="left"?"مفيش جلسات باقية — شغل عظيم ✓":"مفيش جلسات النهارده."}</div></section>`;
+      if(!list.length)return h+`<div class="empty">${SPUI.tab==="done"?"للحين ما فيه جلسات خلصت اليوم.":SPUI.tab==="left"?"ما فيه جلسات باقية — شغل عظيم ✓":"ما فيه جلسات اليوم."}</div></section>`;
       h+=`<div class="sp-grid">${list.map(a=>{const f=sipadMin(a.time),dur=+a.duration||SIPAD_SLOT;const done=a.status==="مكتمل";const live=L&&L.aptId===a.id&&!L.locked;const late=!done&&R.day===today&&f+dur<=nowM;const isEval=/تقييم/.test(a.service||"");
-        const st=done?`<span class="pill pill-good">تمت ✓</span>`:live?`<span class="pill pill-gold">شغالة دلوقتي</span>`:late?`<span class="pill pill-red">عدّى وقتها</span>`:next&&next.id===a.id?`<span class="pill pill-blue">الجاية</span>`:"";
+        const st=done?`<span class="pill pill-good">تمت ✓</span>`:live?`<span class="pill pill-gold">شغالة الحين</span>`:late?`<span class="pill pill-red">عدّى وقتها</span>`:next&&next.id===a.id?`<span class="pill pill-blue">الجاية</span>`:"";
         return `<button class="sp-tile ${done?"done":""} ${live?"live":""} ${next&&next.id===a.id?"next":""} ${late?"late":""} ${SPUI.done===a.id?"open":""}" onclick="sipadTileOpen('${a.id}')"><span class="sp-tile-t">${sipadHM(f)} – ${sipadHM(f+dur)}</span><span class="sp-tile-av">${esc((a.patient||"?").charAt(0))}</span><b>${esc(a.patient)}</b><small>${esc(a.service||"")}${a.room?" · "+esc(a.room):""}</small><span class="sp-tile-f">${st}<em>${dur} د${isEval?" · تقييم":""}</em></span><span class="sp-tile-go">${done?"عرض النتيجة":live?"كمّلي الجلسة ←":isEval?"ابدأ التقييم ←":"افتح الجلسة ←"}</span></button>`}).join("")}</div>`;
       if(SPUI.done){const a=state.appointments.find(x=>x.id===SPUI.done);const p=a&&state.patients.find(x=>x.name===a.patient);
         const logs=p?(state.sessionLogs||[]).filter(l=>l.patientId===p.id&&l.date===a.date&&(!l.staffName||l.staffName===s.name)):[];
-        if(a)h+=`<div class="sp-res"><h3>نتيجة جلسة ${esc(a.patient)} · ${sipadHM(sipadMin(a.time))}</h3>${logs.length?logs.map(l=>`<div class="sp-res-row"><b>${esc(l.goalText)}</b><span class="pill ${l.result==="نجاح كامل"?"pill-good":l.result==="نجاح جزئي"?"pill-gold":"pill-red"}">${esc(l.result)}</span><small>${esc(l.notes||"")}</small></div>`).join(""):`<div class="muted">الجلسة اتقفلت من غير نتائج أهداف مسجلة.</div>`}</div>`}
+        if(a)h+=`<div class="sp-res"><h3>نتيجة جلسة ${esc(a.patient)} · ${sipadHM(sipadMin(a.time))}</h3>${logs.length?logs.map(l=>`<div class="sp-res-row"><b>${esc(l.goalText)}</b><span class="pill ${l.result==="نجاح كامل"?"pill-good":l.result==="نجاح جزئي"?"pill-gold":"pill-red"}">${esc(l.result)}</span><small>${esc(l.notes||"")}</small></div>`).join(""):`<div class="muted">الجلسة انقفلت من غير نتائج أهداف مسجلة.</div>`}</div>`}
       return h+`</section>`;
     }
     const _dayHome=sipadHome;
@@ -600,7 +600,7 @@
       h=h.replace(/<div class="sp-stats">[\s\S]*?<small>باقي<\/small><\/div><\/div>/,`<div class="sp-stats">${btn("all",apts.length,"جلسات")}${btn("done",done,"خلصت")}${btn("left",Math.max(0,apts.length-done),"باقي")}</div>`);
       const k=h.indexOf("</section>");const day=sipadDayBar(s);
       if(k>=0)h=h.slice(0,k+10)+day+(SPUI.tab?sipadGrid(s):"")+h.slice(k+10);
-      if(SPUI.tab){const t=h.indexOf('<section class="card sp-tl">');if(t>=0){const e=h.indexOf("</section>",t);/* التايم لاين بيفضل موجود تحت المربعات */}}
+      if(SPUI.tab){const t=h.indexOf('<section class="card sp-tl">');if(t>=0){const e=h.indexOf("</section>",t);/* التايم لاين يفضل موجود تحت المربعات */}}
       return h;
     };
     // عداد الـ٤٠ دقيقة جوه الجلسة
@@ -610,7 +610,7 @@
     setInterval(()=>{const L=dttLive();const el=document.getElementById("dt-left");if(!L||!el||L.locked)return;el.outerHTML=dayLeftHtml(L);
       const a=state.appointments.find(x=>x.id===L.aptId);const dur=(a&&+a.duration)||SIPAD_SLOT;const left=dur-Math.floor((Date.now()-L.startedAt)/60000);
       if(left===5&&!SPUI.warned[L.aptId]){SPUI.warned[L.aptId]=1;notify("باقي ٥ دقايق على نهاية الجلسة");try{dttBuzz(200)}catch(_e){}}},15000);
-    // الشاشة الرئيسية للآيباد بتتحدث كل دقيقة لوحدها (الساعة، دلوقتي، الجاي)
+    // الشاشة الرئيسية للآيباد تتحدث كل دقيقة لوحدها (الساعة، الحين، الجاي)
     setInterval(()=>{if(!state.sipadMode||!state.sipad||state.staffSection==="session"||(typeof EVUI!=="undefined"&&(EVUI.w||EVUI.walk||EVUI.rv)))return;const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))return;const y=window.scrollY;render();window.scrollTo(0,y)},60000);
     // تعديل البريك من جدول الآيباد في الإدارة
     const _dayHours=ipTlHours;ipTlHours=function(e){const s=ipTlStaff();const fd=new FormData(e.target);if(s){const bf=fd.get("bf"),bt=fd.get("bt");if(bf&&bt){s.breakFrom=bf;s.breakTo=bt}else if(fd.has("bf")){s.breakFrom="none";s.breakTo=""}}return _dayHours(e)};
@@ -624,8 +624,8 @@
       if(!s.code){s.code=devNewCode(s.name);n++}});if(n)persist();return n}
     try{ensureAllIpads()}catch(_e){}
     function ipadOf(s){ensureDevices();return s?state.devices.find(d=>d.mode==="personal"&&d.staffId===s.id):null}
-    // مين يقدر يتحكم في آيباد الموظف ده: الإدارة دايمًا، ومشرف نفس القسم لآيبادات أخصائيين قسمه بس.
-    // آيباد المشرف نفسه بتتحكم فيه الإدارة بس، والموظف ما بيتحكمش في آيباده.
+    // مين يقدر يتحكم في آيباد الموظف هذا: الإدارة دايمًا، ومشرف نفس القسم لآيبادات أخصائيين قسمه بس.
+    // آيباد المشرف نفسه تتحكم فيه الإدارة بس، والموظف ما يتحكم في آيباده.
     function ipCanCtl(s){
       if(state.role==="management")return true;
       if(state.role!=="supervisor"||!s)return false;
@@ -636,7 +636,7 @@
     }
     function ipCanDev(d){if(!d)return state.role==="management"||state.role==="supervisor";if(d.mode==="personal")return ipCanCtl(personById(d.staffId));return state.role==="management"||state.role==="supervisor"}
     function ipCanView(s){if(!s)return false;if(state.role==="management")return true;const me=getCurrentPerson();if(me&&me.id===s.id)return true;if(state.role==="supervisor")return !me||!me.department||me.department===s.department||ipCanCtl(s);return false}
-    function ipDenied(){notify("🛡 التحكم في الآيباد ده لمشرف القسم والإدارة بس")}
+    function ipDenied(){notify("🛡 التحكم في الآيباد هذا لمشرف القسم والإدارة بس")}
     const _gCmd=ipDevCmd;ipDevCmd=function(id,...a){if(!ipCanDev(devById(id)))return ipDenied();return _gCmd(id,...a)};
     const _gTog=ipDevToggle;ipDevToggle=function(id){if(!ipCanDev(devById(id)))return ipDenied();return _gTog(id)};
     const _gDel=ipDevDel;ipDevDel=function(id){if(!ipCanDev(devById(id)))return ipDenied();return _gDel(id)};
@@ -656,9 +656,9 @@
     function sipadTlGrid(s){
       const R=sipadRowsFull(s);const today=localDateOf(new Date());const isT=R.day===today;const nowM=new Date().getHours()*60+new Date().getMinutes();const L=dttLive();
       const apts=R.apts||[];const late=isT?apts.filter(a=>a.status!=="مكتمل"&&sipadMin(a.time)+(+a.duration||SIPAD_SLOT)<=nowM).length:0;
-      let h=`<section class="card sp-tl sp-tlg"><div class="card-head"><h2>${ic("schedule",18)} Timeline اليوم</h2><span class="muted">${isT?`الساعة دلوقتي <b id="sp-clock">${sipadHM(nowM)}</b>`:date(R.day)}</span></div>${sipadSlotSummary(s)}`;
-      if(late)h+=`<p class="sp-warn" style="margin:4px 0 8px;font-weight:700">${late} جلسة عدّى وقتها ولسه ما اتقفلتش</p>`;
-      if(!R.rows.length)return h+`<div class="empty">مفيش دوام محدد النهارده.</div></section>`;
+      let h=`<section class="card sp-tl sp-tlg"><div class="card-head"><h2>${ic("schedule",18)} Timeline اليوم</h2><span class="muted">${isT?`الساعة الحين <b id="sp-clock">${sipadHM(nowM)}</b>`:date(R.day)}</span></div>${sipadSlotSummary(s)}`;
+      if(late)h+=`<p class="sp-warn" style="margin:4px 0 8px;font-weight:700">${late} جلسة عدّى وقتها وللحين ما انقفلت</p>`;
+      if(!R.rows.length)return h+`<div class="empty">ما فيه دوام محدد اليوم.</div></section>`;
       h+=`<div class="sp-tg">${R.rows.map(r=>{
         const nowIn=isT&&nowM>=r.from&&nowM<r.to;const past=isT&&nowM>=r.to;const t=`<span class="tg-t">${sipadHM(r.from)}</span>`;const no=r.n?`<i class="tg-n">${r.n}</i>`:"";
         if(r.kind==="session"){const a=r.a;const done=a.status==="مكتمل";const live=L&&L.aptId===a.id&&!L.locked;const isEval=/تقييم/.test(a.service||"");const lt=!done&&past;
@@ -667,7 +667,7 @@
         if(r.kind==="block")return `<div class="tg tg-k ${nowIn?"now":""}">${t}<b>${esc(r.label)}</b><small>من الإدارة</small></div>`;
         if(r.kind==="free"){const can=isT&&!past;return `<${can?"button":"div"} class="tg tg-f ${nowIn?"now":""} ${past?"past":""}" ${can?`onclick="evWalkOpen()"`:""}>${no}${t}<b>متاح</b><small>${r.late?"توثيق":can?"＋ تقييم":"—"}</small></${can?"button":"div"}>`}
         return ""}).join("")}</div>
-        <div class="tg-leg"><span class="l-s">جلسة</span><span class="l-d">خلصت</span><span class="l-b">بريك</span><span class="l-f">متاح</span><span class="l-n">دلوقتي</span></div></section>`;
+        <div class="tg-leg"><span class="l-s">جلسة</span><span class="l-d">خلصت</span><span class="l-b">بريك</span><span class="l-f">متاح</span><span class="l-n">الحين</span></div></section>`;
       return h;
     }
     const _pgHome=sipadHome;
@@ -679,24 +679,24 @@
       supervisor:["كل صلاحيات الأخصائي على آيباده","اعتماد خطط وتقييمات القسم من الآيباد","متابعة آيبادات أخصائيين القسم والتحكم فيها","إسناد مهام ورسايل لفريق القسم","تعديل جداول ودوام أخصائيين القسم"]};
     function ipPreview(s){
       const d=ipadOf(s);const prevSipad=state.sipad,prevMode=state.sipadMode;let body="";
-      try{state.sipad=s.id;body=sipadHome(s)}catch(_e){body=`<div class="empty">مقدرتش أعرض الآيباد.</div>`}finally{state.sipad=prevSipad;state.sipadMode=prevMode}
+      try{state.sipad=s.id;body=sipadHome(s)}catch(_e){body=`<div class="empty">ما قدرت أعرض الآيباد.</div>`}finally{state.sipad=prevSipad;state.sipadMode=prevMode}
       const st=d?devStatus(d):null;
       return `<div class="pg-ipad"><div class="pg-ipad-scale"><div class="pg-ipad-dev ${d&&d.disabled?"off":""}"><div class="sim-cam"></div><div class="pg-ipad-scr" inert>
         <div class="pg-status"><span>${sipadHM(new Date().getHours()*60+new Date().getMinutes())}</span><span>📶 100%</span></div>
         <div class="ki sp"><header class="ki-top"><div class="ki-brand"><span class="ki-mark">${typeof mark==="function"?mark(26,"#a7c2b3","#e4aa54"):""}</span><div><b>${esc(state.center.name)}</b><small>${esc(s.name)} · ${esc(d?d.name:"آيباد")}</small></div></div><span class="ki-exit">${ic("idcard",14)} قفل الآيباد</span></header><main class="ki-main">${body}</main></div>
         ${d&&d.disabled?`<div class="pg-off">${ic("lock",30)}<b>الجهاز موقوف من الإدارة</b></div>`:""}</div></div></div>
-        <div class="pg-ipad-cap">${st?`<span class="dot st-${st.k}"></span>${esc(st.t)}`:"مفيش آيباد مسجل"} · صورة حية من آيباده</div></div>`;
+        <div class="pg-ipad-cap">${st?`<span class="dot st-${st.k}"></span>${esc(st.t)}`:"ما فيه آيباد مسجل"} · صورة حية من آيباده</div></div>`;
     }
     function staffPageHtml(s,self){
-      if(!s)return `<div class="empty">الموظف مش موجود.</div>`;
+      if(!s)return `<div class="empty">الموظف مو موجود.</div>`;
       const d=ipadOf(s);const canC=ipCanCtl(s);const dep=state.departments.find(x=>x.id===s.department);const sup=s.department?agSup(s.department):null;
       const R=sipadRowsFull(s);const apts=R.apts||[];const done=apts.filter(a=>a.status==="مكتمل").length;const tasks=sipadTasks(s).filter(x=>!x.done).length;
       const caps=ROLE_CAPS[s.roleCategory==="supervisor"?"supervisor":"staff"];
       const who=s.roleCategory==="supervisor"?"الإدارة بس":`${sup&&sup.id!==s.id?esc(sup.name)+" (مشرف القسم)":"مشرف القسم"} والإدارة`;
       let h=(self?"":backBtn("pgBack()","رجوع للفريق"))+`<section class="card pg-head"><div class="pg-av">${esc((s.name.replace(/^(أ\.|د\.)\s*/,"")||"?").charAt(0))}</div><div class="pg-id"><small>${self?"صفحتي":"صفحة الموظف"}</small><h1>${esc(s.name)}</h1><span>${esc(s.role||"")}${dep?" · "+esc(dep.name):""}${s.roleCategory==="supervisor"?` · <b class="pill pill-gold">مشرف القسم</b>`:""}</span></div>
-        <div class="pg-kpis"><div><small>الدوام</small><b>${esc(s.schedule||"—")}</b></div><div><small>الحضور</small><b>${s.present?"حاضر ✓":"مش حاضر"}</b></div><div><small>جلسات النهارده</small><b>${done}/${apts.length}</b></div><div><small>مهام مفتوحة</small><b>${tasks}</b></div>${self||canC?`<div><small>كود الدخول</small><b>${esc(self?codeLabel(s,true):codeLabel(s))}</b></div>`:""}</div></section>`;
+        <div class="pg-kpis"><div><small>الدوام</small><b>${esc(s.schedule||"—")}</b></div><div><small>الحضور</small><b>${s.present?"حاضر ✓":"مو حاضر"}</b></div><div><small>جلسات اليوم</small><b>${done}/${apts.length}</b></div><div><small>مهام مفتوحة</small><b>${tasks}</b></div>${self||canC?`<div><small>كود الدخول</small><b>${esc(self?codeLabel(s,true):codeLabel(s))}</b></div>`:""}</div></section>`;
       h+=`<div class="pg-grid"><div>${ipPreview(s)}<div class="pg-open"><button class="btn btn-primary" onclick="simOpen('${s.id}')">${ic("tablet",16)} ${self?"افتح آيبادي":"ادخل على آيباده"}</button></div></div><div class="pg-side">`;
-      h+=`<section class="card"><div class="card-head"><h2>${ic("shield",18)} مين بيتحكم في الآيباد ده</h2>${canC?`<span class="pill pill-good">إنت تقدر تتحكم</span>`:`<span class="pill pill-grey">${ic("lock",12)} عرض بس</span>`}</div><p class="muted" style="margin:0">التحكم (القفل، الرسايل، الجدول، الصلاحيات، الإيقاف) لـ <b>${who}</b>.${self?" إنت بتستخدم الآيباد وبتشوف كل حاجة عليه، بس ما بتغيرش إعداداته.":""}</p></section>`;
+      h+=`<section class="card"><div class="card-head"><h2>${ic("shield",18)} مين يتحكم في الآيباد هذا</h2>${canC?`<span class="pill pill-good">أنت تقدر تتحكم</span>`:`<span class="pill pill-grey">${ic("lock",12)} عرض بس</span>`}</div><p class="muted" style="margin:0">التحكم (القفل، الرسايل، الجدول، الصلاحيات، الإيقاف) لـ <b>${who}</b>.${self?" أنت تستخدم الآيباد بتشوف كل شي عليه، بس ما تغير إعداداته.":""}</p></section>`;
       h+=`<section class="card"><div class="card-head"><h2>${ic("check",18)} صلاحيات الآيباد</h2><span class="muted">${d?esc(d.name):""}</span></div><div class="pg-perms">${DEV_PERMS.map(([k,l])=>{const on=!d||!d.perms||d.perms[k]!==false;return `<div class="pg-perm ${on?"on":""}"><span>${esc(l)}</span>${canC&&d?`<button class="pg-sw ${on?"on":""}" onclick="ipPermSet('${d.id}','${k}',${!on})" aria-label="${esc(l)}"><i></i></button>`:`<em>${on?"مسموح":"مقفول"}</em>`}</div>`}).join("")}
         <div class="pg-perm on"><span>القفل التلقائي بعد عدم الاستخدام</span>${canC&&d?`<select class="select" onchange="ipAutolockSet('${d.id}',this.value)">${[5,10,15,30,0].map(v=>`<option value="${v}" ${+d.autolock===v?"selected":""}>${v?v+" دقايق":"من غير قفل"}</option>`).join("")}</select>`:`<em>${d&&+d.autolock?d.autolock+" دقايق":"—"}</em>`}</div></div></section>`;
       h+=`<section class="card"><div class="card-head"><h2>${ic("idcard",18)} صلاحيات الدور على الآيباد</h2><span class="muted">${s.roleCategory==="supervisor"?"مشرف قسم":"أخصائي"}</span></div><ul class="pg-caps">${caps.map(c=>`<li>${esc(c)}</li>`).join("")}</ul></section>`;
@@ -712,7 +712,7 @@
     function staffPageView(){const s=personById(state.staffPageId);if(!s||!ipCanView(s)){state.view="team";return roleHome()}ensureAllIpads();return staffPageHtml(s,false)}
     function myIpadView(){ensureAllIpads();const me=getCurrentPerson();
       if(!me)return head("آيبادي","صفحتي","سجّل دخولك بكودك عشان تشوف آيبادك وجدولك.","")+`<section class="card" style="max-width:460px"><form onsubmit="staffCodeLogin(event)" style="display:flex;gap:8px"><input class="input" name="code" placeholder="كود الموظف" required><button class="btn btn-primary">دخول</button></form></section>`;
-      if(!ipOwnerEligible(me))return head("آيبادي","صفحتي","الآيبادات للأخصائيين ومشرفين الأقسام.","")+`<div class="empty">مفيش آيباد مخصص لدورك.</div>`;
+      if(!ipOwnerEligible(me))return head("آيبادي","صفحتي","الآيبادات للأخصائيين ومشرفين الأقسام.","")+`<div class="empty">ما فيه آيباد مخصص لدورك.</div>`;
       return staffPageHtml(me,true)}
     function pgOpen(id){state.staffPageId=id;state.view="staffPage";render();window.scrollTo(0,0)}
     function pgBack(){state.staffPageId=null;setView("team")}
@@ -722,5 +722,5 @@
     simClinical=function(){return state.staff.filter(s=>ipOwnerEligible(s)&&ipCanView(s))};
     const _pgSimOpen=simOpen;simOpen=function(id){const L=simClinical();if(id&&!L.some(x=>x.id===id)){const me=getCurrentPerson();if(!(me&&me.id===id))return ipDenied()}if(!id&&!L.length){const me=getCurrentPerson();if(me&&ipOwnerEligible(me))id=me.id;else return notify("سجّل دخولك بكودك الأول")}return _pgSimOpen(id)};
     const _pgSide=simSide;simSide=function(soft){_pgSide(soft);const s=personById(SIM.staffId);const box=document.getElementById("sim-side");if(!box||!s||ipCanCtl(s))return;
-      const cards=box.querySelectorAll(".sim-card");if(cards[1])cards[1].outerHTML=`<section class="sim-card"><h3>${ic("lock",16)} التحكم في الآيباد ده</h3><p class="muted" style="margin:0">القفل والرسايل والمهام والجدول والصلاحيات لـ ${s.roleCategory==="supervisor"?"الإدارة بس":"مشرف القسم والإدارة بس"}.</p></section>`};
+      const cards=box.querySelectorAll(".sim-card");if(cards[1])cards[1].outerHTML=`<section class="sim-card"><h3>${ic("lock",16)} التحكم في الآيباد هذا</h3><p class="muted" style="margin:0">القفل والرسايل والمهام والجدول والصلاحيات لـ ${s.roleCategory==="supervisor"?"الإدارة بس":"مشرف القسم والإدارة بس"}.</p></section>`};
     Object.assign(window,{ipDevCmd,ipDevToggle,ipDevDel,ipDevEdit,ipDevSave,ipTlSaveApt,ipTlCancelApt,ipTlAddApt,ipTlAddBlock,ipTlDelBlock,ipTlHours,ipPermSet,ipAutolockSet,pgTask,pgMsg,pgOpen,pgBack,simOpen,staffCodeLogin,ipTlOpen,ipDevMsgSend});

@@ -43,8 +43,8 @@ async function submit(e) {
   } catch (e) {
     const msg = String((e && (e.messages?.[0] || e.message)) || '')
     err.textContent = /Too Many|429|rate/i.test(msg)
-      ? 'محاولات كتير — استنى دقيقة وجرّب تاني'
-      : 'البريد أو كلمة المرور غلط — جرّب تاني'
+      ? 'محاولات كثير — انتظر دقيقة وجرّب ثاني'
+      : 'البريد أو كلمة المرور غلط — جرّب ثاني'
     err.style.display = 'block'
     btn.disabled = false
     btn.textContent = 'دخول'
@@ -77,7 +77,7 @@ export function installLogin() {
       if (first) {
         first.insertAdjacentHTML(
           'beforebegin',
-          `<div class="role-card" onclick="awanLoginOpen()" style="cursor:pointer;border-color:var(--teal)"><span class="role-icon">🔐</span><b>دخول فريق المركز</b><small>بحسابك في المركز — البيانات بتتحفظ على السيرفر</small></div>`,
+          `<div class="role-card" onclick="awanLoginOpen()" style="cursor:pointer;border-color:var(--teal)"><span class="role-icon">🔐</span><b>دخول فريق المركز</b><small>بحسابك في المركز — البيانات تتحفظ على السيرفر</small></div>`,
         )
       }
     }

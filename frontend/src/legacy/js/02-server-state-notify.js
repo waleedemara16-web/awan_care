@@ -1,7 +1,7 @@
 "use strict";
 // أوان — الجزء 2 من 16: 02-server-state-notify
-// كل ملفات js/ دي بتشتغل كأنها ملف واحد بالترتيب — ما تغيّرش ترتيبها في index.html
-    // ===== وضع السيرفر (طبقة الشبكة): أي طلب لـ OpenAI أو جوجل بيعدّي على السيرفر، والمفاتيح ما بتوصلش للأجهزة =====
+// كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
+    // ===== وضع السيرفر (طبقة الشبكة): أي طلب لـ OpenAI أو جوجل يعدّي على السيرفر، والمفاتيح ما توصل للأجهزة =====
     const SV={on:false,health:null,user:null,v:0,client:"c-"+Math.random().toString(36).slice(2,10),leader:false,holder:"",snap:{},online:true,es:null,busy:false,again:false,timer:null,lastErr:"",deferRender:false};
     window.__awanSv=SV;
     const _svNative=window.fetch.bind(window);
@@ -332,8 +332,8 @@
     function pill(s){return `<span class="pill ${statusClass(s)}">${esc(s)}</span>`}
     function date(s){if(!s)return"—"; const d=new Date(s+"T00:00:00");return isNaN(d) ? esc(s) : new Intl.DateTimeFormat(state.lang==="ar"?"ar-SA":"en-US",{day:"numeric",month:"short",year:"numeric"}).format(d)}
     function time(s){return esc((s||"").slice(0,5))}
-    function notify(msg){ntPush(/تعذّر|مقدرتش|خطأ|ممنوع|🛡|لازم|محتاج/.test(String(msg))?"warn":"ok","",String(msg))}
-    // ---- إشعارات دايمة: ما بتختفيش غير لما تتقفل ----
+    function notify(msg){ntPush(/تعذّر|مقدرتش|ما قدرت|خطأ|ممنوع|🛡|لازم|محتاج/.test(String(msg))?"warn":"ok","",String(msg))}
+    // ---- إشعارات دايمة: ما تختفي غير لما تتقفل ----
     const NT_KEY="awan-notifs";let NT=[];try{NT=JSON.parse(localStorage.getItem(NT_KEY)||"[]")||[]}catch(_e){NT=[]}
     function ntSave(){try{localStorage.setItem(NT_KEY,JSON.stringify(NT.slice(0,60)))}catch(_e){}}
     function ntPush(kind,title,text){const last=NT[0];if(last&&last.title===title&&last.text===text){last.n=(last.n||1)+1;last.at=Date.now()}else NT.unshift({id:"nt"+Date.now()+Math.random().toString(36).slice(2,5),kind,title,text,at:Date.now(),n:1});if(NT.length>60)NT.length=60;ntSave();ntPaint(true)}
@@ -344,7 +344,7 @@
     let ntOpen=false;
     function ntPaint(fresh){let el=document.getElementById("nt-stack");if(!el){el=document.createElement("div");el.id="nt-stack";el.className="nt-stack";el.setAttribute("role","status");el.setAttribute("aria-live","polite");document.body.appendChild(el)}
       if(!NT.length){el.innerHTML="";return}const now=Date.now();const show=ntOpen?NT:NT.slice(0,3);clearTimeout(ntPaint._t);const nx=NT.filter(x=>now-x.at<8000).map(x=>8050-(now-x.at));if(nx.length)ntPaint._t=setTimeout(()=>ntPaint(),Math.min(...nx));const ico={ok:"check",warn:"bell",err:"shield",comm:"commHub"};
-      el.innerHTML=(NT.length>1?`<div class="nt-bar"><span>${NT.length} إشعار</span>${NT.length>1?`<button onclick="ntToggle()">${ntOpen?"اعرض أقل":"اعرض الكل"}</button>`:""}<button onclick="ntCloseAll()">اقفل الكل ✕</button></div>`:"")+show.map((x,i)=>`<div class="nt nt-${x.kind} ${fresh&&i===0?"in":""} ${!ntOpen&&now-x.at>=8000?"mini":""}" onclick="if(this.classList.contains('mini')&&event.target.className!=='nt-x'){ntToggle()}"><span class="nt-ico">${ic(ico[x.kind]||"check",14)}</span><div class="nt-tx">${x.title?`<b>${esc(x.title)}</b>`:""}<span>${esc(x.text)}</span><small>${localTimeOf(new Date(x.at))}${x.n>1?` · ×${x.n}`:""}</small></div><button class="nt-x" onclick="ntClose('${x.id}')" aria-label="اقفل">✕</button></div>`).join("")+(!ntOpen&&NT.length>3?`<button class="nt-more" onclick="ntToggle()">+ ${NT.length-3} إشعارات تانية</button>`:"")}
+      el.innerHTML=(NT.length>1?`<div class="nt-bar"><span>${NT.length} إشعار</span>${NT.length>1?`<button onclick="ntToggle()">${ntOpen?"اعرض أقل":"اعرض الكل"}</button>`:""}<button onclick="ntCloseAll()">اقفل الكل ✕</button></div>`:"")+show.map((x,i)=>`<div class="nt nt-${x.kind} ${fresh&&i===0?"in":""} ${!ntOpen&&now-x.at>=8000?"mini":""}" onclick="if(this.classList.contains('mini')&&event.target.className!=='nt-x'){ntToggle()}"><span class="nt-ico">${ic(ico[x.kind]||"check",14)}</span><div class="nt-tx">${x.title?`<b>${esc(x.title)}</b>`:""}<span>${esc(x.text)}</span><small>${localTimeOf(new Date(x.at))}${x.n>1?` · ×${x.n}`:""}</small></div><button class="nt-x" onclick="ntClose('${x.id}')" aria-label="اقفل">✕</button></div>`).join("")+(!ntOpen&&NT.length>3?`<button class="nt-more" onclick="ntToggle()">+ ${NT.length-3} إشعارات ثانية</button>`:"")}
     setTimeout(()=>ntPaint(),0);
     function can(perm){if(state.role==="management")return true;const p=state.rolePermissions&&state.rolePermissions[state.role];return !!(p&&p[perm])}
     function togglePermission(role,perm){if(!state.rolePermissions[role])return;state.rolePermissions[role][perm]=!state.rolePermissions[role][perm];persist();notify("تم تحديث صلاحيات "+roles[role].label);render()}
