@@ -1,6 +1,6 @@
 const e=`"use strict";
 // أوان — الجزء 4 من 16: 04-connect-comm-library
-// كل ملفات js/ دي بتشتغل كأنها ملف واحد بالترتيب — ما تغيّرش ترتيبها في index.html
+// كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
     // ==================== أوان كونكت — Oan Connect & Decision Hub ====================
     function meetingKindLabel(kind){return kind==="family"?"اجتماع مع أسرة":"اجتماع بين الأقسام"}
     function meetingStatusPill(status){const cls=status==="جارية"?"pill-blue":(status==="منتهية"?"pill-good":"pill-gold");return \`<span class="pill \${cls}">\${esc(status)}</span>\`}
@@ -419,7 +419,7 @@ const e=`"use strict";
       m.status="معتمدة"; m.read=true;
       persist();notify("تم اعتماد القرار");render();
     }
-    // ↪ الدالة migrateLibrary اتنقلت لملف js/01-core-seed.js عشان تكون جاهزة وقت التحميل
+    // ↪ الدالة migrateLibrary انتقلت لملف js/01-core-seed.js عشان تكون جاهزة وقت التحميل
     function communicationHubView(){
       const feed=[...commMessagesScopedToCurrent()].sort((a,b)=>(b.date||"").localeCompare(a.date||"")||String(b.id||"").localeCompare(String(a.id||"")));
       const pendingCount=feed.filter(m=>m.status==="مُرسلة").length;
@@ -867,4 +867,4 @@ const e=`"use strict";
       return \`<div class="muted" style="margin-bottom:10px">يمكن تغييره لاحقاً من إعدادات المركز</div><div class="role-grid">\${Object.entries(roles).map(([key,r])=>\`<div class="role-card \${state.role===key?"selected":""}" onclick="changeRole('\${key}');closeModal()"><span class="role-icon">\${ic(r.icon,22)}</span><b>\${r.label}</b><small>\${r.desc}</small></div>\`).join("")}</div><hr style="border:0;border-top:1px solid var(--line);margin:22px 0"><div class="card-head" style="padding:0 0 10px"><h2 style="font-size:15px">دخول موظف بالكود الشخصي</h2><span class="muted">\${person?\`مسجّلة الدخول: \${esc(person.name)}\`:"كل موظف لديه كود دخول خاص به"}</span></div><form onsubmit="staffCodeLogin(event)" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><div class="field" style="flex:1;min-width:180px;margin:0"><label>الكود الشخصي</label><input class="input" name="code" id="staff-code-input" placeholder="مثال: ه1" required></div><button class="btn btn-primary" type="submit">دخول</button>\${person?\`<button type="button" class="btn btn-outline" onclick="staffLogout()">تسجيل الخروج</button>\`:""}</form>\`;
     }
 `;export{e as default};
-//# sourceMappingURL=04-connect-comm-library-7FbhjaKI.js.map
+//# sourceMappingURL=04-connect-comm-library-BWOzi9J4.js.map

@@ -1,6 +1,6 @@
 const t=`"use strict";
 // أوان — الجزء 6 من 16: 06-assess-programs-consents-intake
-// كل ملفات js/ دي بتشتغل كأنها ملف واحد بالترتيب — ما تغيّرش ترتيبها في index.html
+// كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
     // ===== أدوات التقييم القياسية (VB-MAPP / ABLLS-R / PEP-3 / ASQ / AFLS / PEAK) =====
     function stdAssessDomainsHtml(instrumentKey, existingDomains){
       const names=(ASSESSMENT_INSTRUMENTS[instrumentKey]||[]).slice();
@@ -136,8 +136,8 @@ const t=`"use strict";
       persist();notify("تم إلحاق التقرير بالملف الصحي الموحد للطفل");render();
     }
     // =================== الموافقات الإلكترونية + سجل التدقيق + كيوسك الحضور ===================
-    // كل ده بيتحفظ في نفس state المحلي. سجل التدقيق بيحفظ «مين عمل إيه وإمتى وعلى أنهي ملف» بس،
-    // ومش بينسخ أي محتوى سريري (ملاحظات، نتائج) جواه.
+    // كل هذا يتحفظ في نفس state المحلي. سجل التدقيق يحفظ «مين عمل وش ومتى وعلى أي ملف» بس،
+    // وما ينسخ أي محتوى سريري (ملاحظات، نتائج) جواه.
     function ensureOpsState(){
       if(!Array.isArray(state.auditLog)) state.auditLog=[];
       if(!Array.isArray(state.attendanceLog)) state.attendanceLog=[];
@@ -161,13 +161,13 @@ const t=`"use strict";
       const people=[...new Set(state.auditLog.map(x=>x.by))];
       const actions=[...new Set(state.auditLog.map(x=>x.action.split(":")[0]))];
       const rows=state.auditLog.filter(x=>(!f.who||x.by===f.who)&&(!f.what||x.action.split(":")[0]===f.what)).slice(0,300);
-      return head("الرقابة","سجل التدقيق","كل فتح أو تعديل لملف، وكل حضور وانصراف وموافقة، بيتسجل باسم الشخص والوقت.","")
+      return head("الرقابة","سجل التدقيق","كل فتح أو تعديل لملف، وكل حضور وانصراف وموافقة، يتسجل باسم الشخص والوقت.","")
       +\`<section class="card"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
         <div class="field" style="min-width:200px;margin:0"><label>الشخص</label><select class="select" onchange="setAuditFilter('who',this.value)"><option value="">الكل</option>\${people.map(n=>\`<option \${f.who===n?"selected":""}>\${esc(n)}</option>\`).join("")}</select></div>
         <div class="field" style="min-width:200px;margin:0"><label>نوع الإجراء</label><select class="select" onchange="setAuditFilter('what',this.value)"><option value="">الكل</option>\${actions.map(n=>\`<option \${f.what===n?"selected":""}>\${esc(n)}</option>\`).join("")}</select></div>
         <span class="muted">\${rows.length} إجراء\${state.auditLog.length>rows.length?\` من \${state.auditLog.length}\`:""}</span></div>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>الشخص</th><th>الدور</th><th>الإجراء</th><th>الملف / الهدف</th></tr></thead><tbody>\${rows.length?rows.map(x=>\`<tr><td>\${date(localDateOf(x.at))}</td><td><b>\${localTimeOf(x.at)}</b></td><td>\${esc(x.by)}</td><td>\${esc(x.role)}</td><td>\${esc(x.action)}</td><td>\${esc(x.target)}</td></tr>\`).join(""):\`<tr><td colspan="6"><div class="empty">لسه مفيش إجراءات مسجلة. أي فتح ملف أو تعديل أو حضور من دلوقتي هيظهر هنا.</div></td></tr>\`}</tbody></table></div>
-        <p class="muted" style="margin-top:10px;font-size:11.5px">السجل ما بيقدرش حد يعدّله أو يمسحه من الواجهة، وما بينسخش محتوى الملاحظات السريرية. في النسخة الكاملة بيتحفظ على السيرفر.</p></section>\`;
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>الشخص</th><th>الدور</th><th>الإجراء</th><th>الملف / الهدف</th></tr></thead><tbody>\${rows.length?rows.map(x=>\`<tr><td>\${date(localDateOf(x.at))}</td><td><b>\${localTimeOf(x.at)}</b></td><td>\${esc(x.by)}</td><td>\${esc(x.role)}</td><td>\${esc(x.action)}</td><td>\${esc(x.target)}</td></tr>\`).join(""):\`<tr><td colspan="6"><div class="empty">للحين ما فيه إجراءات مسجلة. أي فتح ملف أو تعديل أو حضور من الحين بيظهر هنا.</div></td></tr>\`}</tbody></table></div>
+        <p class="muted" style="margin-top:10px;font-size:11.5px">السجل ما يقدر حد يعدّله أو يمسحه من الواجهة، وما ينسخ محتوى الملاحظات السريرية. في النسخة الكاملة يتحفظ على السيرفر.</p></section>\`;
     }
     function goAudit(){state.auditFilter={who:"",what:""};setView("audit")}
     function csCloseSig(){state.csSigView=null;render()}
@@ -176,7 +176,7 @@ const t=`"use strict";
     function patientAuditCard(p){
       if(!(state.role==="management"||state.role==="supervisor")) return "";
       ensureOpsState();const rows=state.auditLog.filter(x=>x.target===p.name).slice(0,8);
-      return \`<section class="card" style="margin-top:16px"><div class="card-head"><h2>\${ic("shield",18)} آخر الإجراءات على الملف</h2><button class="back-link" onclick="goAudit()">سجل التدقيق كامل ←</button></div><div class="list">\${rows.length?rows.map(x=>\`<div class="list-row"><div class="list-main"><strong>\${esc(x.action)}</strong><small>\${esc(x.by)} · \${esc(x.role)}</small></div><div class="list-end"><b style="font-size:12px">\${localTimeOf(x.at)}</b><small style="display:block;color:var(--muted);font-size:10px">\${date(localDateOf(x.at))}</small></div></div>\`).join(""):\`<div class="empty">مفيش إجراءات مسجلة على الملف ده لسه.</div>\`}</div></section>\`;
+      return \`<section class="card" style="margin-top:16px"><div class="card-head"><h2>\${ic("shield",18)} آخر الإجراءات على الملف</h2><button class="back-link" onclick="goAudit()">سجل التدقيق كامل ←</button></div><div class="list">\${rows.length?rows.map(x=>\`<div class="list-row"><div class="list-main"><strong>\${esc(x.action)}</strong><small>\${esc(x.by)} · \${esc(x.role)}</small></div><div class="list-end"><b style="font-size:12px">\${localTimeOf(x.at)}</b><small style="display:block;color:var(--muted);font-size:10px">\${date(localDateOf(x.at))}</small></div></div>\`).join(""):\`<div class="empty">ما فيه إجراءات مسجلة على الملف هذا للحين.</div>\`}</div></section>\`;
     }
 
     // ---- الموافقات ----
@@ -243,7 +243,7 @@ const t=`"use strict";
       types.forEach(k=>{const t=CONSENT_TYPES.find(x=>x.k===k);const exp=t.days?localDateOf(new Date(now.getTime()+t.days*864e5)):null;
         consentsOf(p).push({id:"cs-"+Date.now()+"-"+k,type:k,version:t.v,text:t.text,grantedAt:now.toISOString(),by:guardian,method:"توقيع بالإصبع على جهاز المركز",recordedBy:rec.name,sig,expires:exp})});
       audit("توقيع موافقة: "+types.map(k=>CONSENT_TYPES.find(x=>x.k===k).l).join("، "),p.name);
-      state.consentSignFor=null;_sig=null;persist();notify("اتحفظت الموافقة بالتوقيع والتاريخ والوقت");render();
+      state.consentSignFor=null;_sig=null;persist();notify("انحفظت الموافقة بالتوقيع والتاريخ والوقت");render();
     }
     function csShowSig(pid,k){state.csSigView={pid,k};render()}
     function csWithdraw(pid,k){
@@ -251,31 +251,31 @@ const t=`"use strict";
       if(state.csConfirm!==key){state.csConfirm=key;render();setTimeout(()=>{if(state.csConfirm===key){state.csConfirm=null;render()}},4000);return}
       state.csConfirm=null;const p=state.patients.find(x=>x.id===pid);const s=consentStatus(p,k);if(s.st!=="active")return;
       s.c.withdrawnAt=new Date().toISOString();s.c.withdrawnBy=auditActor().name+" (بطلب ولي الأمر)";
-      audit("سحب موافقة: "+CONSENT_TYPES.find(x=>x.k===k).l,p.name);persist();notify("اتسجل سحب الموافقة");render();
+      audit("سحب موافقة: "+CONSENT_TYPES.find(x=>x.k===k).l,p.name);persist();notify("انسجل سحب الموافقة");render();
     }
     // بوابة الأسرة
     function consentFamilySection(p){
       const otp=state.famOtp&&state.famOtp.pid===p.id?state.famOtp:null;
-      return \`<div class="notice" style="margin-top:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><b>الموافقات</b><span class="muted">تقدري توافقي أو تسحبي أي موافقة في أي وقت، وكل خطوة بتتسجل بالتاريخ والوقت.</span></div>
+      return \`<div class="notice" style="margin-top:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><b>الموافقات</b><span class="muted">تقدري توافقي أو تسحبي أي موافقة في أي وقت، وكل خطوة تتسجل بالتاريخ والوقت.</span></div>
         \${CONSENT_TYPES.map(t=>{const s=consentStatus(p,t.k);const conf=state.famConfirm===p.id+"|"+t.k;const isOtp=otp&&otp.k===t.k;
           return \`<div class="list-row" style="align-items:flex-start"><div class="list-main"><strong>\${esc(t.l)}</strong><small>\${esc(t.text)}</small>\${s.c?\`<small style="display:block;margin-top:4px">\${consentDetail(s)}</small>\`:""}
-            \${isOtp?\`<form onsubmit="famConsentVerify(event,'\${p.id}')" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center"><input class="input" name="code" inputmode="numeric" maxlength="4" required placeholder="رمز التحقق" style="max-width:140px"><button class="btn btn-primary" type="submit">تأكيد الموافقة</button><button type="button" class="btn btn-outline" onclick="famOtpCancel()">إلغاء</button><span class="muted" style="font-size:11px">اتبعت رمز على جوال ولي الأمر المسجل. في النسخة التجريبية الرمز هو <b>\${otp.code}</b>.</span></form>\`:""}</div>
+            \${isOtp?\`<form onsubmit="famConsentVerify(event,'\${p.id}')" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center"><input class="input" name="code" inputmode="numeric" maxlength="4" required placeholder="رمز التحقق" style="max-width:140px"><button class="btn btn-primary" type="submit">تأكيد الموافقة</button><button type="button" class="btn btn-outline" onclick="famOtpCancel()">إلغاء</button><span class="muted" style="font-size:11px">انرسل رمز على جوال ولي الأمر المسجل. في النسخة التجريبية الرمز هو <b>\${otp.code}</b>.</span></form>\`:""}</div>
             <div class="list-end" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">\${consentPill(s)}\${s.st==="active"?\`<button class="btn \${conf?"btn-danger":"btn-outline"}" style="padding:5px 10px;font-size:11px" onclick="famConsentWithdraw('\${p.id}','\${t.k}')">\${conf?"تأكيد السحب":"سحب"}</button>\`:(isOtp?"":\`<button class="btn btn-primary" style="padding:5px 10px;font-size:11px" onclick="famConsentStart('\${p.id}','\${t.k}')">أوافق</button>\`)}</div></div>\`}).join("")}</div>\`;
     }
     function famConsentStart(pid,k){state.famOtp={pid,k,code:String(1000+Math.floor(Math.random()*9000))};render()}
     function famConsentVerify(e,pid){
       e.preventDefault();const code=(new FormData(e.target).get("code")||"").trim();const o=state.famOtp;
-      if(!o||o.pid!==pid||code!==o.code){notify("الرمز مش صحيح، جربي تاني");return}
+      if(!o||o.pid!==pid||code!==o.code){notify("الرمز مو صحيح، جربي ثاني");return}
       const p=state.patients.find(x=>x.id===pid);const t=CONSENT_TYPES.find(x=>x.k===o.k);const now=new Date();
       consentsOf(p).push({id:"cs-"+Date.now(),type:t.k,version:t.v,text:t.text,grantedAt:now.toISOString(),by:p.guardian||auditActor().name,method:"رمز تحقق من بوابة الأسرة",recordedBy:"بوابة الأسرة",expires:t.days?localDateOf(new Date(now.getTime()+t.days*864e5)):null});
-      audit("موافقة من بوابة الأسرة: "+t.l,p.name);state.famOtp=null;persist();notify("اتسجلت موافقتك، شكرًا");render();
+      audit("موافقة من بوابة الأسرة: "+t.l,p.name);state.famOtp=null;persist();notify("انسجلت موافقتك، شكرًا");render();
     }
     function famConsentWithdraw(pid,k){
       const key=pid+"|"+k;
       if(state.famConfirm!==key){state.famConfirm=key;render();setTimeout(()=>{if(state.famConfirm===key){state.famConfirm=null;render()}},4000);return}
       state.famConfirm=null;const p=state.patients.find(x=>x.id===pid);const s=consentStatus(p,k);if(s.st!=="active")return;
       s.c.withdrawnAt=new Date().toISOString();s.c.withdrawnBy=p.guardian||"ولي الأمر";
-      audit("سحب موافقة من بوابة الأسرة: "+CONSENT_TYPES.find(x=>x.k===k).l,p.name);persist();notify("اتسجل سحب الموافقة");render();
+      audit("سحب موافقة من بوابة الأسرة: "+CONSENT_TYPES.find(x=>x.k===k).l,p.name);persist();notify("انسجل سحب الموافقة");render();
     }
 
     // ---- كيوسك الحضور ----
@@ -291,16 +291,16 @@ const t=`"use strict";
     function kioskSubmit(e){
       e.preventDefault();const inp=e.target.querySelector("input");const code=(inp.value||"").trim().toLowerCase();
       const s=state.staff.find(x=>(x.code||"").toString().trim().toLowerCase()===code);
-      if(!s){state.kioskMsg={ok:false,text:"الكود ده مش مسجل. جربي تاني أو كلمي الاستقبال."};render();return}
+      if(!s){state.kioskMsg={ok:false,text:"الكود هذا مو مسجل. جربي ثاني أو كلمي الاستقبال."};render();return}
       const nowIn=staffAttendanceMark(s,"كيوسك (كود/QR)");
-      state.kioskMsg={ok:true,text:(nowIn?"أهلًا ":"مع السلامة ")+s.name+" — اتسجل "+(nowIn?"حضورك":"انصرافك")+" الساعة "+localTimeOf(new Date())};
+      state.kioskMsg={ok:true,text:(nowIn?"أهلًا ":"مع السلامة ")+s.name+" — انسجل "+(nowIn?"حضورك":"انصرافك")+" الساعة "+localTimeOf(new Date())};
       persist();render();
       setTimeout(()=>{const i=document.getElementById("kiosk-input");if(i)i.focus()},30);
     }
     function kioskFull(on){state.kioskFull=!!on;state.kioskMsg=null;render();setTimeout(()=>{const i=document.getElementById("kiosk-input");if(i)i.focus()},30)}
     function kioskBlock(big){
       const m=state.kioskMsg;
-      return \`<form class="kiosk \${big?"kiosk-big":""}" onsubmit="kioskSubmit(event)" autocomplete="off"><div><b>\${big?"أهلًا بيكي في "+esc(state.center.name):"كيوسك الحضور"}</b><div class="muted">اكتبي كودك الشخصي أو امسحي كارت الـ QR، واضغطي تسجيل. نفس الكود بيسجل الحضور الصبح والانصراف آخر اليوم.</div></div>
+      return \`<form class="kiosk \${big?"kiosk-big":""}" onsubmit="kioskSubmit(event)" autocomplete="off"><div><b>\${big?"أهلًا بيكي في "+esc(state.center.name):"كيوسك الحضور"}</b><div class="muted">اكتبي كودك الشخصي أو امسحي كارت الـ QR، واضغطي تسجيل. نفس الكود يسجل الحضور الصبح والانصراف آخر اليوم.</div></div>
         <div class="kiosk-row"><input class="input" id="kiosk-input" placeholder="الكود الشخصي" required><button class="btn btn-primary" type="submit">تسجيل</button></div>
         \${m?\`<div class="kiosk-msg \${m.ok?"ok":"bad"}">\${esc(m.text)}</div>\`:""}</form>\`;
     }
@@ -313,7 +313,7 @@ const t=`"use strict";
       return head("الحضور / 07","الحضور والغياب","الموظف يسجل حضوره بنفسه من الكيوسك، أو الاستقبال يسجله من الجدول.",\`<button class="btn btn-primary" onclick="kioskFull(true)">فتح وضع الكيوسك</button>\`)
         +\`<section class="card" style="margin-bottom:16px">\${kioskBlock(false)}\${log.length?\`<div class="list" style="margin-top:12px">\${log.map(x=>\`<div class="list-row"><div class="list-main"><strong>\${esc(x.name)}</strong><small>\${esc(x.method)}</small></div><div class="list-end">\${x.type==="in"?pill("حاضر"):pill("انصراف")} <b style="margin-inline-start:6px">\${localTimeOf(x.at)}</b></div></div>\`).join("")}</div>\`:""}</section>\`
         +\`<section class="card"><div class="card-head"><h2>حالة الحضور اليوم</h2><span class="muted">\${present} من \${state.staff.length} حاضر</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>الاسم</th><th>الدور المهني</th><th>القسم</th><th>الكود</th><th>الحضور</th><th>الانصراف</th><th>الحالة</th><th></th></tr></thead><tbody>\${state.staff.map((s,i)=>\`<tr><td><b>\${esc(s.name)}</b></td><td>\${esc(s.role)}</td><td>\${esc(departmentLabel(s.department))}</td><td><code style="background:#f2ece0;padding:2px 7px;border-radius:6px">\${esc(s.code||"—")}</code></td><td>\${s.checkInAt&&localDateOf(s.checkInAt)===today?localTimeOf(s.checkInAt):"—"}</td><td>\${s.checkOutAt&&localDateOf(s.checkOutAt)===today?localTimeOf(s.checkOutAt):"—"}</td><td>\${s.present?pill("حاضر"):pill("غير حاضر")}</td><td><button class="btn \${s.present?"btn-outline":"btn-primary"}" onclick="toggleStaffPresence(\${i})">\${s.present?"تسجيل انصراف":"تسجيل حضور"}</button></td></tr>\`).join("")}</tbody></table></div>
-        <p class="muted" style="margin-top:10px;font-size:11.5px">أجهزة قراءة الـ QR بتكتب الكود في الخانة لوحدها وتضغط Enter. عشان كده الأفضل تكون أكواد الموظفين بحروف إنجليزي وأرقام.</p></section>\`;
+        <p class="muted" style="margin-top:10px;font-size:11.5px">أجهزة قراءة الـ QR تكتب الكود في الخانة لوحدها وتضغط Enter. عشان كذا الأفضل تكون أكواد الموظفين بحروف إنجليزي وأرقام.</p></section>\`;
     };
     toggleStaffPresence=function(i){const s=state.staff[i];if(!s)return;const nowIn=staffAttendanceMark(s,"من جدول الحضور");persist();notify(nowIn?\`تم تسجيل حضور \${s.name}\`:\`تم تسجيل انصراف \${s.name}\`);render()};
 
@@ -343,30 +343,30 @@ const t=`"use strict";
     staffLogout=function(...a){try{audit("خروج موظف","")}catch(_e){}return _staffLogoutOrig.apply(this,a)};
 
     // =================== الاستقبال الذكي (محرك أوان) ===================
-    // ولي الأمر بيملا دراسة الحالة من الآيباد/الجوال ← كل حرف بيتحفظ لحظيًا ويظهر للمشرف ←
-    // المحرك بيحلل كل نقطة ويطلع: القسم، البرنامج، الأهداف المبدئية، والإحالات الطبية ←
+    // ولي الأمر يملا دراسة الحالة من الآيباد/الجوال ← كل حرف يتحفظ لحظيًا ويظهر للمشرف ←
+    // المحرك يحلل كل نقطة ويطلع: القسم، البرنامج، الأهداف المبدئية، والإحالات الطبية ←
     // تلقائيًا: فتح ملف «قيد التقييم» + حجز تقييم أولي + إبلاغ المشرف ←
-    // الخطة والبرامج بتفضل «مسودة» لحد ما المشرف يعتمدها بضغطة (قرار إكلينيكي لأخصائي مرخّص).
+    // الخطة والبرامج تفضل «مسودة» لين ما المشرف يعتمدها بضغطة (قرار إكلينيكي لأخصائي مرخّص).
     const INTAKE_QS=[
-      {id:"q_words",t:"بيقول كلمات مفهومة؟",bad:"لا",dept:"speech",area:"اللغة التعبيرية",prog:"برنامج تنمية اللغة الاستقبالية والتعبيرية",goal:"يستخدم 20 كلمة وظيفية للطلب والتسمية"},
-      {id:"q_sent",t:"بيتكلم بجمل من كلمتين أو أكتر؟",bad:"لا",dept:"speech",area:"اللغة التعبيرية",prog:"برنامج تنمية اللغة الاستقبالية والتعبيرية",goal:"يكوّن جملة من كلمتين في 4 من 5 فرص"},
-      {id:"q_understand",t:"بيفهم أوامر بسيطة زي «هات» و«تعالى»؟",bad:"لا",dept:"speech",area:"اللغة الاستقبالية",prog:"برنامج تنمية اللغة الاستقبالية والتعبيرية",goal:"ينفذ أمرًا من خطوة واحدة في 4 من 5 فرص"},
+      {id:"q_words",t:"يقول كلمات مفهومة؟",bad:"لا",dept:"speech",area:"اللغة التعبيرية",prog:"برنامج تنمية اللغة الاستقبالية والتعبيرية",goal:"يستخدم 20 كلمة وظيفية للطلب والتسمية"},
+      {id:"q_sent",t:"يتكلم بجمل من كلمتين أو أكثر؟",bad:"لا",dept:"speech",area:"اللغة التعبيرية",prog:"برنامج تنمية اللغة الاستقبالية والتعبيرية",goal:"يكوّن جملة من كلمتين في 4 من 5 فرص"},
+      {id:"q_understand",t:"يفهم أوامر بسيطة زي «هات» و«تعالى»؟",bad:"لا",dept:"speech",area:"اللغة الاستقبالية",prog:"برنامج تنمية اللغة الاستقبالية والتعبيرية",goal:"ينفذ أمرًا من خطوة واحدة في 4 من 5 فرص"},
       {id:"q_clear",t:"كلامه واضح للناس الغريبة؟",bad:"لا",dept:"speech",area:"النطق",prog:"برنامج تعديل اضطرابات النطق والأصوات",goal:"ينطق الأصوات المستهدفة في بداية الكلمة بدقة 80%"},
-      {id:"q_stutter",t:"بيحصل عنده تقطيع أو تكرار في أول الكلام؟",bad:"نعم",dept:"speech",area:"الطلاقة",prog:"برنامج الطلاقة اللفظية (التأتأة)",goal:"يستخدم أسلوب البدء السهل في جمل قصيرة بنجاح 80%"},
+      {id:"q_stutter",t:"يحصل عنده تقطيع أو تكرار في أول الكلام؟",bad:"نعم",dept:"speech",area:"الطلاقة",prog:"برنامج الطلاقة اللفظية (التأتأة)",goal:"يستخدم أسلوب البدء السهل في جمل قصيرة بنجاح 80%"},
       {id:"q_name",t:"بيبص لك لما تناديه باسمه؟",bad:"لا",dept:"aba",area:"الانتباه المشترك",prog:"برنامج التدريب في البيئة الطبيعية (NET)",goal:"يستجيب لاسمه بالنظر في 4 من 5 فرص"},
-      {id:"q_play",t:"بيلعب مع أطفال تانيين؟",bad:"لا",dept:"skills",area:"المهارات الاجتماعية",prog:"برنامج المهارات الاجتماعية",goal:"يشارك في لعب تبادلي مع طفل آخر لمدة 3 دقائق"},
+      {id:"q_play",t:"يلعب مع أطفال ثانيين؟",bad:"لا",dept:"skills",area:"المهارات الاجتماعية",prog:"برنامج المهارات الاجتماعية",goal:"يشارك في لعب تبادلي مع طفل آخر لمدة 3 دقائق"},
       {id:"q_tantrum",t:"عنده نوبات غضب أو صريخ متكررة؟",bad:"نعم",dept:"aba",area:"السلوك",prog:"برنامج الدعم السلوكي الإيجابي (PBS)",goal:"يطلب الاستراحة بطريقة مقبولة بدل نوبة الغضب"},
-      {id:"q_attention",t:"بيقدر يركز في نشاط واحد 5 دقايق؟",bad:"لا",dept:"aba",area:"الانتباه",prog:"برنامج التدريب بالتجارب المنفصلة (DTT)",goal:"يجلس وينتبه لمهمة منظمة لمدة 5 دقائق"},
-      {id:"q_sensory",t:"بيتضايق جدًا من الأصوات العالية أو ملمس الأشياء؟",bad:"نعم",dept:"ot",area:"المعالجة الحسية",prog:"برنامج التكامل الحسي (Sensory Integration)",goal:"يتحمل مثيرًا حسيًا مستهدفًا لمدة 5 دقائق بدون انسحاب"},
-      {id:"q_fine",t:"بيمسك القلم أو يقفل الزراير حسب سنه؟",bad:"لا",dept:"ot",area:"المهارات الحركية الدقيقة",prog:"برنامج المهارات الحركية الدقيقة",goal:"يمسك القلم بمسكة ثلاثية ويرسم خطوطًا وأشكالًا بسيطة"},
-      {id:"q_adl",t:"بياكل ويلبس ويغسل إيده لوحده حسب سنه؟",bad:"لا",dept:"skills",area:"المهارات الحياتية",prog:"برنامج المهارات الحياتية اليومية (ADL)",goal:"يغسل يديه باستقلالية في 4 من 5 مرات"},
+      {id:"q_attention",t:"يقدر يركز في نشاط واحد 5 دقايق؟",bad:"لا",dept:"aba",area:"الانتباه",prog:"برنامج التدريب بالتجارب المنفصلة (DTT)",goal:"يجلس وينتبه لمهمة منظمة لمدة 5 دقائق"},
+      {id:"q_sensory",t:"يتضايق جدًا من الأصوات العالية أو ملمس الأشياء؟",bad:"نعم",dept:"ot",area:"المعالجة الحسية",prog:"برنامج التكامل الحسي (Sensory Integration)",goal:"يتحمل مثيرًا حسيًا مستهدفًا لمدة 5 دقائق بدون انسحاب"},
+      {id:"q_fine",t:"يمسك القلم أو يقفل الزراير حسب سنه؟",bad:"لا",dept:"ot",area:"المهارات الحركية الدقيقة",prog:"برنامج المهارات الحركية الدقيقة",goal:"يمسك القلم بمسكة ثلاثية ويرسم خطوطًا وأشكالًا بسيطة"},
+      {id:"q_adl",t:"ياكل ويلبس ويغسل إيده لوحده حسب سنه؟",bad:"لا",dept:"skills",area:"المهارات الحياتية",prog:"برنامج المهارات الحياتية اليومية (ADL)",goal:"يغسل يديه باستقلالية في 4 من 5 مرات"},
       {id:"q_school",t:"عنده صعوبة في القراءة أو الكتابة في المدرسة؟",bad:"نعم",dept:"inclusion",area:"المهارات الأكاديمية",prog:"برنامج الدمج الأكاديمي والتكيّف الصفي",goal:"يقرأ كلمات من 3 حروف بدقة 80%"},
-      {id:"q_regress",t:"فقد كلام أو مهارات كان بيعملها قبل كده؟",bad:"نعم",dept:"speech",area:"تراجع في المهارات",red:"تراجع في مهارات كانت موجودة: إحالة لطبيب أعصاب أطفال قبل بدء البرنامج",urgent:true}
+      {id:"q_regress",t:"فقد كلام أو مهارات كان يعملها قبل كذا؟",bad:"نعم",dept:"speech",area:"تراجع في المهارات",red:"تراجع في مهارات كانت موجودة: إحالة لطبيب أعصاب أطفال قبل بدء البرنامج",urgent:true}
     ];
     const INTAKE_KEYWORDS=[
       {re:/تأتأ|تهته|تلعثم/,dept:"speech",area:"الطلاقة",prog:"برنامج الطلاقة اللفظية (التأتأة)"},
       {re:/نطق|مخارج|لدغ/,dept:"speech",area:"النطق",prog:"برنامج تعديل اضطرابات النطق والأصوات"},
-      {re:/تأخر.{0,6}(كلام|لغ)|ما بيتكلم|مش بيتكلم|لا يتكلم/,dept:"speech",area:"اللغة التعبيرية",prog:"برنامج تنمية اللغة الاستقبالية والتعبيرية"},
+      {re:/تأخر.{0,6}(كلام|لغ)|ما بيتكلم|ما يتكلم|مش بيتكلم|ما يتكلم|لا يتكلم/,dept:"speech",area:"اللغة التعبيرية",prog:"برنامج تنمية اللغة الاستقبالية والتعبيرية"},
       {re:/توحد|طيف/,dept:"aba",area:"التواصل الاجتماعي",prog:"نموذج دنفر للتدخل المبكر (ESDM)"},
       {re:/فرط|حركة زايدة|تشتت/,dept:"aba",area:"الانتباه",prog:"برنامج التدريب بالتجارب المنفصلة (DTT)"},
       {re:/عصب|سلوك|عدوان|يضرب/,dept:"aba",area:"السلوك",prog:"برنامج الدعم السلوكي الإيجابي (PBS)"},
@@ -408,7 +408,7 @@ const t=`"use strict";
     let _intakeTimer=null;
     function intakeFormHtml(){
       const opt=(q)=>["نعم","أحيانًا","لا"].map(v=>\`<label class="ai-opt"><input type="radio" name="\${q.id}" value="\${v}" required><span>\${v}</span></label>\`).join("");
-      return \`<div class="form-section"><div class="form-section-title"><span class="form-section-num">8</span>مؤشرات النمو الحالية</div><p class="muted" style="margin:0 0 10px">اختاري الإجابة الأقرب لطفلك دلوقتي. مفيش إجابة صح أو غلط.</p>
+      return \`<div class="form-section"><div class="form-section-title"><span class="form-section-num">8</span>مؤشرات النمو الحالية</div><p class="muted" style="margin:0 0 10px">اختاري الإجابة الأقرب لطفلك الحين. ما فيه إجابة صح أو غلط.</p>
         <div class="ai-qs">\${INTAKE_QS.map(q=>\`<div class="ai-q"><span>\${esc(q.t)}</span><div class="ai-opts">\${opt(q)}</div></div>\`).join("")}</div></div>\`;
     }
     function intakeTyping(form){
@@ -451,7 +451,7 @@ const t=`"use strict";
       const pid="p-"+Date.now();const num=1000+state.patients.length+1;
       const code=((f.child||"CH").trim().split(" ")[0].replace(/[^A-Za-z]/g,"").toUpperCase()||"AWN")+"-"+num;
       const slot=intakeNextSlot(clin?clin.name:"");
-      const pt={id:pid,name:(f.child||"").trim(),file:"AWN-SRC-"+num,age:f.age||"—",need:an.flags.slice(0,3).map(x=>x.area).filter((v,i,a)=>a.indexOf(v)===i).join("، ")||"قيد التقييم",program:an.depts.slice(0,2).map(d=>deptName(d.id)).join(" · ")||"قيد التقييم",school:"",status:"قيد التقييم",notes:"ملف اتفتح تلقائيًا من دراسة الحالة الإلكترونية. الوصف: "+(f.reason||""),goal:"يُحدَّد بعد التقييم الأولي",next:slot.date+"T"+slot.time,code,schoolCode:"",guardian:f.guardian||"",phone:f.phone||"",archived:false,assignedPrograms:[],consents:[]};
+      const pt={id:pid,name:(f.child||"").trim(),file:"AWN-SRC-"+num,age:f.age||"—",need:an.flags.slice(0,3).map(x=>x.area).filter((v,i,a)=>a.indexOf(v)===i).join("، ")||"قيد التقييم",program:an.depts.slice(0,2).map(d=>deptName(d.id)).join(" · ")||"قيد التقييم",school:"",status:"قيد التقييم",notes:"ملف انفتح تلقائيًا من دراسة الحالة الإلكترونية. الوصف: "+(f.reason||""),goal:"يُحدَّد بعد التقييم الأولي",next:slot.date+"T"+slot.time,code,schoolCode:"",guardian:f.guardian||"",phone:f.phone||"",archived:false,assignedPrograms:[],consents:[]};
       pt.health=typeof defaultHealth==="function"?defaultHealth(pt):undefined;
       if(pt.health&&f.hearingChecked)pt.health.hearingScreening.status=f.hearingChecked;
       if(pt.health&&f.birthType)pt.health.birthType=f.birthType;
@@ -470,51 +470,51 @@ const t=`"use strict";
       persist();
       form.reset();form.removeAttribute("data-draft");
       const res=document.getElementById("portal-result");
-      if(res)res.innerHTML=\`<div class="notice-blue" style="line-height:2">وصلتنا دراسة حالة <b>\${esc(pt.name)}</b>، ومفيش أي ورق محتاجينه منكم.<br>
-        ✓ اتفتح ملف لطفلك<br>✓ اتحجز له تقييم أولي يوم <b>\${date(slot.date)}</b> الساعة <b>\${time(slot.time)}</b>\${clin?\` مع <b>\${esc(clin.name)}</b>\`:""}<br>
+      if(res)res.innerHTML=\`<div class="notice-blue" style="line-height:2">وصلتنا دراسة حالة <b>\${esc(pt.name)}</b>، وما فيه أي ورق محتاجينه منكم.<br>
+        ✓ انفتح ملف لطفلك<br>✓ انحجز له تقييم أولي يوم <b>\${date(slot.date)}</b> الساعة <b>\${time(slot.time)}</b>\${clin?\` مع <b>\${esc(clin.name)}</b>\`:""}<br>
         ✓ كود متابعة طفلك: <b style="direction:ltr;unicode-bidi:isolate">\${esc(code)}</b> (تقدري تدخلي بيه من «متابعة طفلي»)<br>
         \${an.red.length?\`<span style="color:var(--danger)">قبل التقييم محتاجين: \${an.red.map(r=>esc(r.text)).join("، ")}</span><br>\`:""}
-        الخطة المبدئية بيراجعها المشرف ويعتمدها، ويوصلك إشعار أول ما تتعتمد.</div>\`;
-      notify("اتبعتت دراسة الحالة");
+        الخطة المبدئية يراجعها المشرف ويعتمدها، ويوصلك إشعار أول ما تتعتمد.</div>\`;
+      notify("انرسلت دراسة الحالة");
     }
     // ---- جهة المشرف ----
     function aiAgo(iso){const s=Math.max(0,Math.round((Date.now()-new Date(iso).getTime())/1000));return s<60?\`من \${s} ثانية\`:s<3600?\`من \${Math.round(s/60)} دقيقة\`:\`\${date(localDateOf(iso))} \${localTimeOf(iso)}\`}
-    function aiDeptBars(an){const max=Math.max(1,...an.depts.map(d=>d.sc));return an.depts.length?\`<div class="ai-bars">\${an.depts.map(d=>\`<div class="ai-bar"><span>\${esc(deptName(d.id))}</span><div><i style="width:\${d.sc/max*100}%"></i></div><b>\${d.sc}</b></div>\`).join("")}</div>\`:\`<div class="muted">لسه مفيش مؤشرات كفاية.</div>\`}
-    function aiFlagTable(an){return an.flags.length?\`<div class="table-wrap"><table class="data-table ai-table"><thead><tr><th>النقطة في دراسة الحالة</th><th>الإجابة</th><th>القسم</th><th>البرنامج المقترح</th><th>الهدف المبدئي</th></tr></thead><tbody>\${an.flags.map(x=>\`<tr><td>\${esc(x.from)}</td><td><b>\${esc(x.answer)}</b></td><td>\${esc(deptName(x.dept))}</td><td>\${esc(x.prog||"—")}</td><td>\${esc(x.goal||"يحدده التقييم")}</td></tr>\`).join("")}</tbody></table></div>\`:\`<div class="empty">لسه مفيش نقاط تحتاج تدخل.</div>\`}
+    function aiDeptBars(an){const max=Math.max(1,...an.depts.map(d=>d.sc));return an.depts.length?\`<div class="ai-bars">\${an.depts.map(d=>\`<div class="ai-bar"><span>\${esc(deptName(d.id))}</span><div><i style="width:\${d.sc/max*100}%"></i></div><b>\${d.sc}</b></div>\`).join("")}</div>\`:\`<div class="muted">للحين ما فيه مؤشرات كفاية.</div>\`}
+    function aiFlagTable(an){return an.flags.length?\`<div class="table-wrap"><table class="data-table ai-table"><thead><tr><th>النقطة في دراسة الحالة</th><th>الإجابة</th><th>القسم</th><th>البرنامج المقترح</th><th>الهدف المبدئي</th></tr></thead><tbody>\${an.flags.map(x=>\`<tr><td>\${esc(x.from)}</td><td><b>\${esc(x.answer)}</b></td><td>\${esc(deptName(x.dept))}</td><td>\${esc(x.prog||"—")}</td><td>\${esc(x.goal||"يحدده التقييم")}</td></tr>\`).join("")}</tbody></table></div>\`:\`<div class="empty">للحين ما فيه نقاط تحتاج تدخل.</div>\`}
     function intakeAIView(){
       ensureIntakeState();
       const live=state.smartIntakes.filter(x=>x.status==="live"&&x.fields&&Object.values(x.fields).some(v=>String(v).trim()));
       const drafts=state.smartIntakes.filter(x=>x.status==="draft");
       const done=state.smartIntakes.filter(x=>x.status==="approved"||x.status==="info").slice(0,6);
-      let h=head("الاستقبال الذكي","من أول تواصل لحد أول جلسة — بدون ورق","ولي الأمر بيملا دراسة الحالة من جواله أو آيباد الاستقبال، والمحرك بيحللها وهي بتتكتب. الملف والتقييم الأولي بيتعملوا تلقائي، والخطة بتستنى اعتمادك.",\`<button class="btn btn-outline" onclick="goPublic('parent');setParentTab('case')">فتح دراسة الحالة (للآيباد)</button>\`);
+      let h=head("الاستقبال الذكي","من أول تواصل لين أول جلسة — بدون ورق","ولي الأمر يملا دراسة الحالة من جواله أو آيباد الاستقبال، والمحرك يحللها وهي تتكتب. الملف والتقييم الأولي يتعملوا تلقائي، والخطة تستنى اعتمادك.",\`<button class="btn btn-outline" onclick="goPublic('parent');setParentTab('case')">فتح دراسة الحالة (للآيباد)</button>\`);
       h+=\`<section class="ai-flow">\${["ولي الأمر يملا دراسة الحالة","المحرك يحلل كل نقطة لحظيًا","فتح ملف + حجز تقييم تلقائي","المشرف يعتمد الخطة بضغطة","الطفل يظهر في جدول الأخصائي"].map((t,i)=>\`<div class="ai-step \${i===3?"human":""}"><b>\${i+1}</b><span>\${t}</span></div>\`).join("")}</section>\`;
-      h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2><span class="ai-live-dot"></span> بيتكتب الآن</h2><span class="muted">\${live.length?live.length+" دراسة حالة مفتوحة":"مفيش حد بيكتب دلوقتي"}</span></div>
-        \${live.length?\`<div class="ai-live-grid">\${live.map(r=>{const an=r.analysis||analyzeIntake(r.fields||{});return \`<div class="ai-live"><div class="spread-row"><b>\${esc((r.fields.child||"طفل بدون اسم لسه").trim())}</b><span class="muted">\${aiAgo(r.updatedAt)}</span></div>
+      h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2><span class="ai-live-dot"></span> يتكتب الآن</h2><span class="muted">\${live.length?live.length+" دراسة حالة مفتوحة":"ما فيه حد يكتب الحين"}</span></div>
+        \${live.length?\`<div class="ai-live-grid">\${live.map(r=>{const an=r.analysis||analyzeIntake(r.fields||{});return \`<div class="ai-live"><div class="spread-row"><b>\${esc((r.fields.child||"طفل بدون اسم للحين").trim())}</b><span class="muted">\${aiAgo(r.updatedAt)}</span></div>
           <div class="ai-prog"><i style="width:\${an.progress}%"></i></div><small class="muted">اكتمال \${an.progress}% \${an.missing.length?"· ناقص: "+esc(an.missing.join("، ")):""}</small>
           \${an.red.length?\`<div class="ai-red">\${an.red.map(x=>esc(x.text)).join("<br>")}</div>\`:""}
           \${aiDeptBars(an)}
-          \${an.flags.length?\`<div class="ai-chips">\${an.flags.slice(-6).map(x=>\`<span>\${esc(x.area)}</span>\`).join("")}</div>\`:""}</div>\`}).join("")}</div>\`:\`<div class="empty">أول ما ولي أمر يبدأ يكتب في دراسة الحالة هتظهر هنا لحظة بلحظة.</div>\`}</section>\`;
-      h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2>مسودات جاهزة لاعتمادك</h2><span class="muted">\${drafts.length}</span></div>\${drafts.length?drafts.map(r=>aiDraftCard(r)).join(""):\`<div class="empty">مفيش مسودات بانتظار الاعتماد.</div>\`}</section>\`;
-      if(done.length)h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2>اتعاملت معاها مؤخرًا</h2></div><div class="list">\${done.map(r=>\`<div class="list-row"><div class="list-main"><strong>\${esc(r.fields.child||"")}</strong><small>\${r.status==="approved"?"اعتُمدت ودخل البرنامج":"اتطلبت معلومات إضافية من ولي الأمر"} · \${aiAgo(r.decidedAt||r.updatedAt)}</small></div><div class="list-end">\${r.status==="approved"?\`<button class="btn btn-outline" onclick="openPatient('\${r.patientId}')">فتح الملف</button>\`:pill("معلقة")}</div></div>\`).join("")}</div></section>\`;
-      h+=\`<p class="muted" style="font-size:11.5px;margin-top:12px">المحرك في النسخة دي بيشتغل بقواعد مكتوبة وواضحة (كل اقتراح مكتوب جنبه النقطة اللي طلع منها). ممكن يتضاف بعدين نموذج ذكاء اصطناعي يقرأ الوصف الحر بشكل أعمق، وقرار الخطة يفضل عند المشرف المرخّص.</p>\`;
+          \${an.flags.length?\`<div class="ai-chips">\${an.flags.slice(-6).map(x=>\`<span>\${esc(x.area)}</span>\`).join("")}</div>\`:""}</div>\`}).join("")}</div>\`:\`<div class="empty">أول ما ولي أمر يبدأ يكتب في دراسة الحالة بتظهر هنا لحظة بلحظة.</div>\`}</section>\`;
+      h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2>مسودات جاهزة لاعتمادك</h2><span class="muted">\${drafts.length}</span></div>\${drafts.length?drafts.map(r=>aiDraftCard(r)).join(""):\`<div class="empty">ما فيه مسودات بانتظار الاعتماد.</div>\`}</section>\`;
+      if(done.length)h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2>تعاملت معها مؤخرًا</h2></div><div class="list">\${done.map(r=>\`<div class="list-row"><div class="list-main"><strong>\${esc(r.fields.child||"")}</strong><small>\${r.status==="approved"?"اعتُمدت ودخل البرنامج":"انطلبت معلومات إضافية من ولي الأمر"} · \${aiAgo(r.decidedAt||r.updatedAt)}</small></div><div class="list-end">\${r.status==="approved"?\`<button class="btn btn-outline" onclick="openPatient('\${r.patientId}')">فتح الملف</button>\`:pill("معلقة")}</div></div>\`).join("")}</div></section>\`;
+      h+=\`<p class="muted" style="font-size:11.5px;margin-top:12px">المحرك في النسخة هذي يشتغل بقواعد مكتوبة وواضحة (كل اقتراح مكتوب جنبه النقطة اللي طلع منها). ممكن يتضاف بعدين نموذج ذكاء اصطناعي يقرأ الوصف الحر بشكل أعمق، وقرار الخطة يفضل عند المشرف المرخّص.</p>\`;
       return h;
     }
     function aiDraftCard(r){
       const an=r.analysis;const f=r.fields;const apt=state.appointments.find(a=>a.id===r.aptId);
       const allProgs=[...new Set([...(an.progs||[]).map(p=>p.prog),...(r.draftProgs||[])])];
       return \`<div class="ai-draft \${an.urgent?"urgent":""}"><div class="spread-row"><div><b style="font-size:17px">\${esc(f.child||"")}</b> <span class="muted">· \${esc(f.age||"")} · ولي الأمر \${esc(f.guardian||"")} \${esc(f.phone||"")}</span></div>\${an.urgent?\`<span class="pill pill-red">عاجل</span>\`:""}</div>
-        <div class="ai-auto"><span>✓ الملف اتفتح (قيد التقييم)</span><span>✓ تقييم أولي \${apt?\`\${date(apt.date)} \${time(apt.time)} · \${esc(apt.clinician)}\`:""}</span><span>✓ المشرف اتبلغ</span><span class="wait">⏳ الخطة بانتظارك</span></div>
+        <div class="ai-auto"><span>✓ الملف انفتح (قيد التقييم)</span><span>✓ تقييم أولي \${apt?\`\${date(apt.date)} \${time(apt.time)} · \${esc(apt.clinician)}\`:""}</span><span>✓ المشرف تبلّغ</span><span class="wait">⏳ الخطة بانتظارك</span></div>
         \${an.red.length?\`<div class="ai-red"><b>قبل البدء:</b><br>\${an.red.map(x=>\`\${x.urgent?"🔴 ":""}\${esc(x.text)} <small class="muted">(\${esc(x.from)})</small>\`).join("<br>")}</div>\`:""}
         \${f.reason?\`<div class="notice" style="margin:10px 0"><b>وصف ولي الأمر:</b> \${esc(f.reason)}</div>\`:""}
         <div class="ai-cols"><div><h4>الأقسام حسب المؤشرات</h4>\${aiDeptBars(an)}</div>
-          <div><h4>البرامج المقترحة</h4>\${allProgs.length?allProgs.map(p=>\`<label class="ai-check"><input type="checkbox" \${r.draftProgs.includes(p)?"checked":""} onchange="aiToggle('\${r.id}','prog',this.value,this.checked)" value="\${esc(p)}"><span>\${esc(p)}</span></label>\`).join(""):\`<div class="muted">مفيش</div>\`}</div>
+          <div><h4>البرامج المقترحة</h4>\${allProgs.length?allProgs.map(p=>\`<label class="ai-check"><input type="checkbox" \${r.draftProgs.includes(p)?"checked":""} onchange="aiToggle('\${r.id}','prog',this.value,this.checked)" value="\${esc(p)}"><span>\${esc(p)}</span></label>\`).join(""):\`<div class="muted">ما فيه</div>\`}</div>
           <div><h4>الأهداف المبدئية</h4>\${(an.goals||[]).length?an.goals.map(g=>\`<label class="ai-check"><input type="checkbox" \${r.draftGoals.includes(g.text)?"checked":""} onchange="aiToggle('\${r.id}','goal',this.value,this.checked)" value="\${esc(g.text)}"><span>\${esc(g.text)}</span></label>\`).join(""):\`<div class="muted">تتحدد بعد التقييم</div>\`}</div></div>
-        <details class="ai-why"><summary>ليه المحرك اقترح كده؟ (\${an.flags.length} نقطة)</summary>\${aiFlagTable(an)}</details>
+        <details class="ai-why"><summary>ليش المحرك اقترح كذا؟ (\${an.flags.length} نقطة)</summary>\${aiFlagTable(an)}</details>
         <div class="ai-actions"><button class="btn btn-primary" onclick="aiApprove('\${r.id}')">اعتماد وإدخال الطفل البرنامج</button><button class="btn btn-outline" onclick="aiAskInfo('\${r.id}')">طلب معلومات من ولي الأمر</button>\${r.patientId?\`<button class="btn btn-outline" onclick="openPatient('\${r.patientId}')">فتح الملف</button>\`:""}</div></div>\`;
     }
     function aiToggle(id,kind,val,on){const r=state.smartIntakes.find(x=>x.id===id);if(!r)return;const k=kind==="prog"?"draftProgs":"draftGoals";r[k]=on?[...new Set([...(r[k]||[]),val])]:(r[k]||[]).filter(x=>x!==val);persist()}
     function aiApprove(id){
-      const r=state.smartIntakes.find(x=>x.id===id);if(!r)return;const p=state.patients.find(x=>x.id===r.patientId);if(!p){notify("الملف مش موجود");return}
+      const r=state.smartIntakes.find(x=>x.id===id);if(!r)return;const p=state.patients.find(x=>x.id===r.patientId);if(!p){notify("الملف مو موجود");return}
       const who=auditActor().name;const d=localDateOf(new Date());
       const progDept=prog=>{for(const [dep,list] of Object.entries(PROGRAM_LIBRARY)){if(list.includes(prog))return dep}return r.dept};
       p.assignedPrograms=p.assignedPrograms||[];
@@ -526,26 +526,26 @@ const t=`"use strict";
       (r.draftProgs||[]).forEach(prog=>{const dep=progDept(prog);state.departmentPrograms[dep]=state.departmentPrograms[dep]||[];if(!state.departmentPrograms[dep].includes(prog))state.departmentPrograms[dep].push(prog)});
       const clin=state.staff.find(s=>s.name===r.clinician);
       state.plans.unshift({id:"pl-"+Date.now(),staffId:clin?clin.id:null,department:r.dept,patient:p.name,title:"خطة أولية — من دراسة الحالة الإلكترونية",status:"معتمدة",date:d,note:(r.draftGoals||[]).join(" · ")});
-      state.messages.unshift({id:"msg-"+Date.now(),fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:p.id,text:\`خطة \${p.name} المبدئية اتعتمدت. أول خطوة: التقييم الأولي في موعده، وبعدها البرامج: \${(r.draftProgs||[]).join("، ")||"تتحدد بعد التقييم"}.\`,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
+      state.messages.unshift({id:"msg-"+Date.now(),fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:p.id,text:\`خطة \${p.name} المبدئية اعتُمدت. أول خطوة: التقييم الأولي في موعده، وبعدها البرامج: \${(r.draftProgs||[]).join("، ")||"تتحدد بعد التقييم"}.\`,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
       const reg=state.registrations.find(x=>x.child===p.name&&x.status==="مسودة خطة بانتظار الاعتماد");if(reg)reg.status="معتمدة";
       r.status="approved";r.decidedAt=new Date().toISOString();r.decidedBy=who;
       audit("اعتماد خطة من دراسة الحالة ("+(r.draftProgs||[]).length+" برامج)",p.name);
-      persist();notify("اتعتمدت الخطة ودخل "+p.name+" البرنامج");render();
+      persist();notify("اعتُمدت الخطة ودخل "+p.name+" البرنامج");render();
     }
     function aiAskInfo(id){
       const r=state.smartIntakes.find(x=>x.id===id);if(!r)return;
       const miss=(r.analysis.missing||[]).join("، ")||"تفاصيل إضافية عن الحالة";
       if(r.patientId)state.messages.unshift({id:"msg-"+Date.now(),fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:r.patientId,text:\`محتاجين منكم نكمل دراسة حالة \${r.fields.child}: \${miss}. تقدروا تردوا من هنا.\`,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
-      r.status="info";r.decidedAt=new Date().toISOString();audit("طلب معلومات إضافية من ولي الأمر",r.fields.child||"");persist();notify("اتبعت الطلب لولي الأمر على البوابة");render();
+      r.status="info";r.decidedAt=new Date().toISOString();audit("طلب معلومات إضافية من ولي الأمر",r.fields.child||"");persist();notify("انرسل الطلب لولي الأمر على البوابة");render();
     }
     function smartIntakeBanner(){
       ensureIntakeState();
       const live=state.smartIntakes.filter(x=>x.status==="live"&&x.fields&&Object.values(x.fields).some(v=>String(v).trim())).length;
       const drafts=state.smartIntakes.filter(x=>x.status==="draft");const urgent=drafts.filter(x=>x.analysis&&x.analysis.urgent).length;
       if(!live&&!drafts.length)return "";
-      return \`<section class="ai-banner" onclick="setView('intakeAI')" role="button" tabindex="0"><span class="ai-live-dot"></span><div><b>الاستقبال الذكي</b><small>\${live?live+" دراسة حالة بتتكتب الآن · ":""}\${drafts.length} مسودة خطة بانتظار اعتمادك\${urgent?\` · \${urgent} عاجلة\`:""}</small></div><span class="btn btn-primary">افتح</span></section>\`;
+      return \`<section class="ai-banner" onclick="setView('intakeAI')" role="button" tabindex="0"><span class="ai-live-dot"></span><div><b>الاستقبال الذكي</b><small>\${live?live+" دراسة حالة تتكتب الآن · ":""}\${drafts.length} مسودة خطة بانتظار اعتمادك\${urgent?\` · \${urgent} عاجلة\`:""}</small></div><span class="btn btn-primary">افتح</span></section>\`;
     }
-    // مزامنة لحظية بين التابات/الشاشات على نفس الجهاز (في النسخة الكاملة بتبقى عبر السيرفر)
+    // مزامنة لحظية بين التابات/الشاشات على نفس الجهاز (في النسخة الكاملة تصير عبر السيرفر)
     window.addEventListener("storage",ev=>{
       if(ev.key!==KEY||!ev.newValue)return;
       if(state.view==="public")return;
@@ -555,8 +555,8 @@ const t=`"use strict";
     setInterval(()=>{if(state.view==="intakeAI"){const ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))render()}},15000);
 
     // =================== دراسة الحالة جوه ملف الطفل ← أهداف تلقائية ===================
-    // دراسة الحالة بتتحفظ على الطفل نفسه (p.caseStudy)، وكل ما تتحفظ أو تتعدل المحرك بيطلع
-    // أهداف وبرامج مقترحة. الأهداف اللي تتعتمد بتدخل p.goals، ومنها بتتسحب لشاشة جلسة DTT.
+    // دراسة الحالة تتحفظ على الطفل نفسه (p.caseStudy)، وكل ما تتحفظ أو تتعدل المحرك يطلع
+    // أهداف وبرامج مقترحة. الأهداف اللي تتعتمد تدخل p.goals، ومنها تتسحب لشاشة جلسة DTT.
     function caseStudyOf(p){
       if(!p)return null;
       if(p.caseStudy)return p.caseStudy;
@@ -595,9 +595,9 @@ const t=`"use strict";
       state.csEditFor=null;
       audit(old?"تعديل دراسة الحالة":"إضافة دراسة الحالة",p.name);
       if(source==="family")state.staff.filter(s=>s.roleCategory==="supervisor").slice(0,2).forEach(s=>state.messages.unshift({id:"msg-"+Date.now()+"-"+s.id,fromId:null,fromName:"محرك أوان",toId:s.id,toName:s.name,text:\`ولي أمر \${p.name} كمّل دراسة الحالة · \${an.goals.length} أهداف مقترحة بانتظار الاعتماد\`,date:todayISO(),read:false}));
-      persist();notify(\`اتحفظت دراسة الحالة · \${an.goals.length} أهداف مقترحة\`);render();
+      persist();notify(\`انحفظت دراسة الحالة · \${an.goals.length} أهداف مقترحة\`);render();
     }
-    // بيحدّث قائمة المقترحات من التحليل من غير ما يلمس الأهداف المعتمدة أو اللي المشرف رفضها
+    // يحدّث قائمة المقترحات من التحليل من غير ما يلمس الأهداف المعتمدة أو اللي المشرف رفضها
     function csSyncSuggestions(p){
       const cs=caseStudyOf(p);if(!cs)return;const g=goalsOf(p);
       (cs.analysis.goals||[]).forEach(x=>{if(!g.some(y=>y.text===x.text))g.push({id:"g-"+Date.now()+"-"+Math.random().toString(36).slice(2,6),text:x.text,dept:x.dept,domain:(cs.analysis.flags.find(f=>f.goal===x.text)||{}).area||deptName(x.dept),source:"دراسة الحالة",status:"مقترح"})});
@@ -606,8 +606,8 @@ const t=`"use strict";
     function csCaseCancel(){state.csEditFor=null;render()}
     function csRequestFamily(pid){
       const p=state.patients.find(x=>x.id===pid);if(!p)return;p.caseStudyRequested=true;
-      state.messages.unshift({id:"msg-"+Date.now(),fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:p.id,text:\`نرجو استكمال دراسة حالة \${p.name} من بوابة الأسرة (متابعة طفلي) بالكود \${p.code}. بتاخد حوالي 5 دقايق ومحتاجينها عشان نجهز أهداف طفلك.\`,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
-      audit("طلب دراسة الحالة من ولي الأمر",p.name);persist();notify("اتبعت الطلب لولي الأمر على البوابة");render();
+      state.messages.unshift({id:"msg-"+Date.now(),fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:p.id,text:\`نرجو استكمال دراسة حالة \${p.name} من بوابة الأسرة (متابعة طفلي) بالكود \${p.code}. تاخذ حوالي 5 دقايق ومحتاجينها عشان نجهز أهداف طفلك.\`,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
+      audit("طلب دراسة الحالة من ولي الأمر",p.name);persist();notify("انرسل الطلب لولي الأمر على البوابة");render();
     }
     function csGoalSet(pid,gid,status){
       const p=state.patients.find(x=>x.id===pid);if(!p)return;const g=goalsOf(p).find(x=>x.id===gid);if(!g)return;
@@ -621,15 +621,15 @@ const t=`"use strict";
       const cs=caseStudyOf(p);const d=localDateOf(new Date());p.assignedPrograms=p.assignedPrograms||[];
       if(cs)(cs.analysis.progs||[]).forEach((x,i)=>{if(!p.assignedPrograms.some(a=>a.program===x.prog))p.assignedPrograms.push({id:"ap-"+Date.now()+"-"+i,department:x.dept,program:x.prog,date:d,addedBy:"اعتماد "+who})});
       if(p.status==="قيد التقييم")p.status="نشط";
-      audit(\`اعتماد \${n} أهداف من دراسة الحالة\`,p.name);persist();notify(\`اتعتمد \${n} هدف واتضافوا لجلسات الطفل\`);render();
+      audit(\`اعتماد \${n} أهداف من دراسة الحالة\`,p.name);persist();notify(\`اعتُمد \${n} هدف انتضافوا لجلسات الطفل\`);render();
     }
     function patientCaseStudyCard(p){
       const cs=caseStudyOf(p);const canEdit=can('editPatients')||state.role==="supervisor"||state.role==="staff";
       const canApprove=state.role==="management"||state.role==="supervisor";
       let h=\`<section class="card cs-card" style="margin-top:16px"><div class="card-head"><h2>\${ic("clipboardCheck",18)} دراسة الحالة والأهداف</h2>\${cs&&canEdit&&state.csEditFor!==p.id?\`<button class="btn btn-outline" onclick="csCaseEdit('\${p.id}')">تعديل دراسة الحالة</button>\`:""}</div>\`;
-      if(state.csEditFor===p.id){return h+\`<p class="muted" style="margin-top:0">املّي مع ولي الأمر على الآيباد. أي إجابة بتتغير بتغيّر الأهداف المقترحة، والأهداف المعتمدة بتفضل زي ما هي.</p>\${csFieldsHtml(p.id,cs?cs.fields:{},"staff")}</section>\`}
+      if(state.csEditFor===p.id){return h+\`<p class="muted" style="margin-top:0">املّي مع ولي الأمر على الآيباد. أي إجابة تتغير تغيّر الأهداف المقترحة، والأهداف المعتمدة تفضل زي ما هي.</p>\${csFieldsHtml(p.id,cs?cs.fields:{},"staff")}</section>\`}
       if(!cs){
-        return h+\`<div class="cs-empty"><b>مفيش دراسة حالة على الملف ده.</b><p class="muted">من غير دراسة الحالة المنصة مش هتقدر تطلع أهداف تلقائي للطفل.</p><div class="ai-actions">\${canEdit?\`<button class="btn btn-primary" onclick="csCaseEdit('\${p.id}')">املّيها دلوقتي مع ولي الأمر</button>\`:""}\${canEdit?\`<button class="btn btn-outline" onclick="csRequestFamily('\${p.id}')">\${p.caseStudyRequested?"اتطلبت من ولي الأمر · ابعت تذكير":"اطلبها من ولي الأمر على البوابة"}</button>\`:""}</div></div></section>\`;
+        return h+\`<div class="cs-empty"><b>ما فيه دراسة حالة على الملف هذا.</b><p class="muted">من غير دراسة الحالة المنصة ما بتقدر تطلع أهداف تلقائي للطفل.</p><div class="ai-actions">\${canEdit?\`<button class="btn btn-primary" onclick="csCaseEdit('\${p.id}')">املّيها الحين مع ولي الأمر</button>\`:""}\${canEdit?\`<button class="btn btn-outline" onclick="csRequestFamily('\${p.id}')">\${p.caseStudyRequested?"انطلبت من ولي الأمر · أرسل تذكير":"اطلبها من ولي الأمر على البوابة"}</button>\`:""}</div></div></section>\`;
       }
       const an=cs.analysis;const f=cs.fields;const g=goalsOf(p);
       const sugg=g.filter(x=>x.status==="مقترح"),appr=g.filter(x=>x.status==="معتمد"),rej=g.filter(x=>x.status==="مرفوض");
@@ -642,20 +642,20 @@ const t=`"use strict";
           \${answered.length?\`<div class="cs-answers">\${answered.map(q=>{const hit=f[q.id]===q.bad?"bad":f[q.id]==="أحيانًا"?"mid":"";return \`<div class="cs-ans \${hit}"><span>\${esc(q.t)}</span><b>\${esc(f[q.id])}</b></div>\`}).join("")}</div>\`:""}
           <h4 style="margin-top:14px">الأقسام حسب المؤشرات</h4>\${aiDeptBars(an)}</div>
         <div><h4>الأهداف المقترحة تلقائيًا <span class="muted" style="font-weight:500">(\${sugg.length})</span></h4>
-          \${sugg.length?sugg.map(x=>\`<div class="cs-goal"><div><b>\${esc(x.text)}</b><small>\${x.source==="OpenAI"?\`<span class="pill pill-blue" style="font-size:10px">OpenAI</span> \`:""}\${esc(x.domain)} · \${esc(deptName(x.dept))}\${x.why?\` · \${esc(x.why)}\`:""}</small></div>\${canApprove?\`<div class="cs-goal-act"><button class="btn btn-primary" onclick="csGoalSet('\${p.id}','\${x.id}','معتمد')">اعتماد</button><button class="btn btn-outline" onclick="csGoalSet('\${p.id}','\${x.id}','مرفوض')">استبعاد</button></div>\`:""}</div>\`).join(""):\`<div class="muted">مفيش مقترحات جديدة.</div>\`}
-          \${canApprove?\`<button class="btn btn-outline" style="margin-top:10px;width:100%" onclick="aiCaseGoals('\${p.id}')" \${state.aiBusy===p.id?"disabled":""}>\${state.aiBusy===p.id?"الذكاء الاصطناعي بيحلل...":"اقتراحات إضافية بالذكاء الاصطناعي (OpenAI)"}</button>\`:""}\${canApprove&&sugg.length>1?\`<button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="csApproveAll('\${p.id}')">اعتماد كل المقترح (\${sugg.length}) + البرامج</button>\`:""}
-          \${!canApprove&&sugg.length?\`<p class="muted" style="font-size:11.5px">الاعتماد بيكون من المشرف أو الإدارة.</p>\`:""}
+          \${sugg.length?sugg.map(x=>\`<div class="cs-goal"><div><b>\${esc(x.text)}</b><small>\${x.source==="OpenAI"?\`<span class="pill pill-blue" style="font-size:10px">OpenAI</span> \`:""}\${esc(x.domain)} · \${esc(deptName(x.dept))}\${x.why?\` · \${esc(x.why)}\`:""}</small></div>\${canApprove?\`<div class="cs-goal-act"><button class="btn btn-primary" onclick="csGoalSet('\${p.id}','\${x.id}','معتمد')">اعتماد</button><button class="btn btn-outline" onclick="csGoalSet('\${p.id}','\${x.id}','مرفوض')">استبعاد</button></div>\`:""}</div>\`).join(""):\`<div class="muted">ما فيه مقترحات جديدة.</div>\`}
+          \${canApprove?\`<button class="btn btn-outline" style="margin-top:10px;width:100%" onclick="aiCaseGoals('\${p.id}')" \${state.aiBusy===p.id?"disabled":""}>\${state.aiBusy===p.id?"الذكاء الاصطناعي يحلل...":"اقتراحات إضافية بالذكاء الاصطناعي (OpenAI)"}</button>\`:""}\${canApprove&&sugg.length>1?\`<button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="csApproveAll('\${p.id}')">اعتماد كل المقترح (\${sugg.length}) + البرامج</button>\`:""}
+          \${!canApprove&&sugg.length?\`<p class="muted" style="font-size:11.5px">الاعتماد يكون من المشرف أو الإدارة.</p>\`:""}
           <h4 style="margin-top:16px">أهداف الخطة المعتمدة <span class="muted" style="font-weight:500">(\${appr.length})</span></h4>
-          \${appr.length?appr.map(x=>\`<div class="cs-goal ok"><div><b>\${esc(x.text)}</b><small>\${esc(x.domain)} · اعتمدها \${esc(x.approvedBy||"")}</small></div>\${canApprove?\`<div class="cs-goal-act"><button class="btn btn-outline" onclick="csGoalSet('\${p.id}','\${x.id}','مقترح')">إرجاع</button></div>\`:""}</div>\`).join(""):\`<div class="muted">لسه مفيش أهداف معتمدة. أول ما تتعتمد بتظهر للأخصائي في شاشة الجلسة.</div>\`}
+          \${appr.length?appr.map(x=>\`<div class="cs-goal ok"><div><b>\${esc(x.text)}</b><small>\${esc(x.domain)} · اعتمدها \${esc(x.approvedBy||"")}</small></div>\${canApprove?\`<div class="cs-goal-act"><button class="btn btn-outline" onclick="csGoalSet('\${p.id}','\${x.id}','مقترح')">إرجاع</button></div>\`:""}</div>\`).join(""):\`<div class="muted">للحين ما فيه أهداف معتمدة. أول ما تتعتمد تظهر للأخصائي في شاشة الجلسة.</div>\`}
           \${rej.length?\`<details style="margin-top:10px"><summary class="muted">مستبعدة (\${rej.length})</summary>\${rej.map(x=>\`<div class="cs-goal off"><div><b>\${esc(x.text)}</b></div>\${canApprove?\`<div class="cs-goal-act"><button class="btn btn-outline" onclick="csGoalSet('\${p.id}','\${x.id}','مقترح')">إرجاع</button></div>\`:""}</div>\`).join("")}</details>\`:""}
         </div></div>
-        <details class="ai-why" style="margin-top:12px"><summary>ليه المحرك اقترح الأهداف دي؟ (\${an.flags.length} نقطة)</summary>\${aiFlagTable(an)}</details>\`;
+        <details class="ai-why" style="margin-top:12px"><summary>ليش المحرك اقترح الأهداف هذي؟ (\${an.flags.length} نقطة)</summary>\${aiFlagTable(an)}</details>\`;
       return h+\`</section>\`;
     }
     function familyCaseStudySection(p){
       const cs=caseStudyOf(p);
-      if(cs&&!p.caseStudyRequested)return \`<div class="notice" style="margin-top:16px"><b>دراسة الحالة</b> ✓ وصلت للمركز \${date(localDateOf(cs.at))}. الأهداف بتتجهز بناءً عليها.</div>\`;
-      return \`<div class="notice" style="margin-top:16px;border-color:var(--navy)"><b>\${p.caseStudyRequested?"المركز محتاج منكم دراسة الحالة":"دراسة الحالة"}</b><p class="muted" style="margin:4px 0 12px">5 دقايق من جوالك، ومن غيرها منقدرش نجهز أهداف \${esc(p.name.split(" ")[0])}.</p>\${csFieldsHtml(p.id,cs?cs.fields:{},"family")}</div>\`;
+      if(cs&&!p.caseStudyRequested)return \`<div class="notice" style="margin-top:16px"><b>دراسة الحالة</b> ✓ وصلت للمركز \${date(localDateOf(cs.at))}. الأهداف تتجهز بناءً عليها.</div>\`;
+      return \`<div class="notice" style="margin-top:16px;border-color:var(--navy)"><b>\${p.caseStudyRequested?"المركز محتاج منكم دراسة الحالة":"دراسة الحالة"}</b><p class="muted" style="margin:4px 0 12px">5 دقايق من جوالك، ومن غيرها ما نقدر نجهز أهداف \${esc(p.name.split(" ")[0])}.</p>\${csFieldsHtml(p.id,cs?cs.fields:{},"family")}</div>\`;
     }
 
     // ↩ منقولة من js/16-profile-journey-brain.js (لازم تكون متعرّفة هنا قبل ما تتستخدم وقت التحميل)
@@ -663,4 +663,4 @@ const t=`"use strict";
     // ↩ منقولة من js/16-profile-journey-brain.js (لازم تكون متعرّفة هنا قبل ما تتستخدم وقت التحميل)
     function cancelBooking(id){const b=state.sessionBookings.find(x=>x.id===id);if(b){b.status="ملغي";persist();notify("تم إلغاء الحجز، نتمنى نشوفك قريب");render()}}
 `;export{t as default};
-//# sourceMappingURL=06-assess-programs-consents-intake-CpId2eg-.js.map
+//# sourceMappingURL=06-assess-programs-consents-intake-Dt2OpUP1.js.map

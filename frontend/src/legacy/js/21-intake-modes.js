@@ -1,8 +1,5 @@
 "use strict";
-// أوان — الجزء 21: فصل الاستقبال العادي عن الذكي
-// «الاستقبال» في القائمة يفتح صفحة اختيار، وكل نوع له شريطه وشاشاته لحاله:
-// العادي (فريق المركز خطوة بخطوة): لوحة الاستقبال العادي + الإحالات
-// الذكي (المحرك الآلي): محرك الاستقبال الذكي + الاستقبال الصوتي
+// أوان — الجزء 21: توحيد الاستقبال العادي والذكي في لوحة واحدة
 
     const IM_NORMAL=[["frontDesk","لوحة الاستقبال العادي"],["referrals","الإحالات"]];
     const IM_SMART=[["intakeAI","محرك الاستقبال الذكي"],["calls","الاستقبال الصوتي"]];
@@ -39,29 +36,7 @@
     })();
 
     function intakeHomeView(){
-      const F=typeof fdList==="function"?fdList():[];const M=typeof smList==="function"?smList():[];
-      const fc=k=>F.filter(p=>p.intake.stage===k).length,sc=k=>M.filter(p=>p.smart.stage===k).length;
-      const mineN=F.filter(p=>typeof fdMine==="function"&&fdMine(p)).length;
-      const go=(k,alt)=>imCan(k)?k:alt;
-      return head("الاستقبال","اختر نوع الاستقبال","المركز يستقبل الأسر بطريقتين منفصلتين: فريق المركز يمشي الحالة بنفسه، أو المحرك الذكي يمشيها آليًا.","")
-      +`<div class="im-pick">
-        <section class="im-card normal">
-          <h2><span>👤</span>الاستقبال العادي</h2>
-          <p class="lead">الأسرة تحضر للمركز، وفريق المركز يمشي الحالة خطوة بخطوة — كل خطوة عند صاحبها.</p>
-          <ol class="im-steps"><li><b>الاستقبال</b><small>يسجّل الأسرة ويفتح الملف</small></li><li><b>المشرف العام</b><small>دراسة الحالة وتحديد القسم</small></li><li><b>مشرف القسم</b><small>التقييم والتوجيه بالخطة</small></li><li><b>الاستقبال</b><small>حجز المواعيد حسب التوجيه</small></li><li><b>الأخصائيين</b><small>الطفل في جداولهم</small></li></ol>
-          <div class="im-nums"><div><b>${fc("case")}</b><small>دراسة حالة</small></div><div><b>${fc("assess")}</b><small>تقييم وتوجيه</small></div><div><b>${fc("book")}</b><small>جاهز للحجز</small></div><div><b>${fc("done")}</b><small>في الجدول</small></div></div>
-          ${mineN?`<div class="im-note">🔔 عندك ${mineN} ${mineN===1?"ملف ينتظرك":"ملفات تنتظرك"}</div>`:""}
-          <button class="btn btn-primary" onclick="setView('${go("frontDesk","referrals")}')">ادخل للاستقبال العادي</button>
-        </section>
-        <section class="im-card smart">
-          <h2><span>🤖</span>الاستقبال الذكي</h2>
-          <p class="lead">الأسرة تعبّي دراسة الحالة الإلكترونية، والمحرك يمشي الحالة آليًا بدون تدخل الإدارة — لين المتابعة طول الاشتراك.</p>
-          <ol class="im-steps"><li><b>الأسرة</b><small>دراسة الحالة من الجوال أو الآيباد</small></li><li><b>المحرك</b><small>يفتح الملف ويحجز التقييم ويبلّغ الأخصائي</small></li><li class="hu"><b>الأخصائي</b><small>يسجّل نتيجة التقييم</small></li><li><b>المحرك</b><small>البرامج والجداول والخطة للأهل</small></li><li class="hu"><b>مشرف القسم</b><small>يعتمد خطة قسمه</small></li><li><b>المحرك</b><small>تقرير أسبوعي للمشرفين طول الاشتراك</small></li></ol>
-          <div class="im-nums"><div><b>${sc("assess")}</b><small>تقييم محجوز</small></div><div><b>${sc("approve")}</b><small>بانتظار اعتماد</small></div><div><b>${sc("active")}</b><small>متابعة مستمرة</small></div><div><b>${(state.smartDigests||[]).length}</b><small>تقرير انرسل</small></div></div>
-          <div class="im-note">الخانات المنقطة بالذهبي هي بس اللي يحتاج فيها إنسان.</div>
-          <button class="btn" onclick="setView('${go("intakeAI","calls")}')">ادخل للاستقبال الذكي</button>
-        </section>
-      </div>`;
+      return typeof rcDeskView==="function"?rcDeskView():head("الاستقبال","محطة الاستقبال","إدارة موحدة للاستقبال العادي والذكي.","");
     }
 
     // شريط علوي خاص بكل نوع بدل خلط الشاشات في شريط واحد

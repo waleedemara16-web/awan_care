@@ -113,11 +113,12 @@
       rcSeed();rsSeed();const tab=state.rsTab||"today";const today=rcToday();
       const T=rsTasks();const newC=rcContacts().filter(c=>c.status==="new").length;
       const now=new Date();const clock=pad2(now.getHours())+":"+pad2(now.getMinutes());
+      const smartCount=typeof smList==="function"?smList().length:0;
       let h=`<div class="rs-top"><div><div class="eyebrow">الاستقبال</div><h1>محطة الاستقبال</h1><div class="muted">${esc(date(today))} · الساعة ${clock}</div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="rcOpen('contactNew')">＋ استفسار</button><button class="btn btn-outline" onclick="rsBookOpen({type:'kashf',mode:'new'})">🩺 حجز كشف</button><button class="btn btn-outline" onclick="rsBookOpen({type:'assess'})">🧩 حجز تقييم</button><button class="btn btn-primary" onclick="rsBookOpen({type:'session'})">＋ حجز جلسة</button></div></div>`;
-      const tabs=[["today","🏠 اليوم",T.filter(t=>t.p>=3).length],["cal","🗓️ الجدول",0],["kashf","🩺 الكشوفات",rsAfterKashf().length],["assess","🧩 التقييمات",rsAssessNeeded().length],["contacts","💬 الاستفسارات",newC],["tasks","📋 يحتاج منك",T.length]];
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="setView('frontDesk')">👤 تسجيل أسرة</button><button class="btn btn-outline" onclick="goPublic('parent');setParentTab('case')">🤖 دراسة حالة ذكية</button><button class="btn btn-outline" onclick="rcOpen('contactNew')">＋ استفسار</button><button class="btn btn-outline" onclick="rsBookOpen({type:'kashf',mode:'new'})">🩺 حجز كشف</button><button class="btn btn-outline" onclick="rsBookOpen({type:'assess'})">🧩 حجز تقييم</button><button class="btn btn-primary" onclick="rsBookOpen({type:'session'})">＋ حجز جلسة</button></div></div>`;
+      const tabs=[["today","🏠 اليوم",T.filter(t=>t.p>=3).length],["cal","🗓️ الجدول",0],["kashf","🩺 الكشوفات",rsAfterKashf().length],["assess","🧩 التقييمات",rsAssessNeeded().length],["contacts","💬 الاستفسارات",newC],["tasks","📋 يحتاج منك",T.length],["smart","🤖 الاستقبال الذكي",smartCount]];
       h+=`<div class="rs-tabs">${tabs.map(([k,l,n])=>`<button class="${tab===k?"on":""}" onclick="rsTabSet('${k}')">${l}${n?`<em>${n}</em>`:""}</button>`).join("")}</div>`;
-      h+=tab==="today"?rsToday():tab==="cal"?rsCal():tab==="kashf"?rsTypeTab("kashf"):tab==="assess"?rsTypeTab("assess"):tab==="contacts"?rsContactsTab():rsTasksTab(T);
+      h+=tab==="today"?rsToday():tab==="cal"?rsCal():tab==="kashf"?rsTypeTab("kashf"):tab==="assess"?rsTypeTab("assess"):tab==="contacts"?rsContactsTab():tab==="tasks"?rsTasksTab(T):typeof smBoardHtml==="function"?smBoardHtml():`<div class="fd-empty">لوحة الاستقبال الذكي غير متاحة حاليًا</div>`;
       return h+rsPopHtml()+rcPopHtml();
     }
     function rsTabSet(k){state.rsTab=k;render();window.scrollTo(0,0)}
@@ -336,4 +337,4 @@
     // ---- ربط: المحطة تحل محل مكتب الاستقبال ----
     rcDeskView=rsView;
     Object.assign(window,{rcDeskView,rcComp,rsTabSet,rsShift,rsOpenApt,rsClose,rsAct,rsPayOpen,rsPaySubmit,rsKashfNext,rsBookOpen,rsBookSet,rsBookConfirm,fdApplyAssess,fdCard});
-    if(state.view==="rcDesk")render();
+    if(state.view==="rcDesk"||state.view==="intakeHome")render();
