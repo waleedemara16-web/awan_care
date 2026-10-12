@@ -23,6 +23,16 @@
       const m=sipadMin(a.time),now=rcNowM();if(now>m+10)return ["no","ما وصل"];if(now>m)return ["late","متأخر"];return ["up","قادم"];
     }
     function rsWaitMin(a){const v=rcVisit(a);return v?Math.max(0,Math.round((Date.now()-Date.parse(v.inAt))/60000)):0}
+    // رقم الزيارة من سجلات الأخصائيين: الجلسات/المواعيد اللي خلصت قبل هذا الموعد + أيام تسجيلات الجلسات
+    function rsVisitNo(a){
+      const t=rsType(a);const same=x=>["kashf","assess"].includes(t)?rsType(x)===t:["session","comp"].includes(rsType(x));const key=a.date+a.time;
+      const done=state.appointments.filter(x=>x!==a&&x.patient===a.patient&&same(x)&&x.status==="مكتمل"&&(x.date+x.time)<key);
+      const days=new Set(done.map(x=>x.date));const p=rcPatient(a);let n=done.length;
+      if(p&&["session","comp"].includes(t))new Set((state.sessionLogs||[]).filter(l=>l.patientId===p.id&&l.date<a.date&&!days.has(l.date)).map(l=>l.date)).forEach(()=>n++);
+      if(p&&["session","comp"].includes(t))n+=+p.visitsBefore||0; // جلسات قبل أوان (مستوردة)
+      return n+1;
+    }
+    function rsVisitBadge(a){const n=rsVisitNo(a);return n===1?`<span class="rs-new">أول زيارة</span>`:`<span class="rs-new" style="background:var(--cream-2);color:var(--ink)">الزيارة رقم ${n}</span>`}
     function rsIsNew(a){const p=rcPatient(a);if(!p)return true;return !state.appointments.some(x=>x!==a&&x.patient===a.patient&&x.status==="مكتمل"&&x.date<a.date)}
 
     (function rsStyles(){
@@ -81,7 +91,7 @@
     function rsRowHtml(a){
       const [k,l]=rsSt(a);const T=RS_T[rsType(a)];const pr=rsPrice(a);const dep=rcDeptOfStaff(a.clinician);
       const pay=pr?(a.paid?`<span class="rs-pay ok">مدفوع</span>`:`<span class="rs-pay due">${pr} ر.س</span>`):`<span class="rs-pay pk">باقة</span>`;
-      return `<div class="rs-row" onclick="rsOpenApt('${a.id}')"><time>${esc(time(a.time))}</time><div><b>${esc(a.patient)}</b>${rsIsNew(a)?`<span class="rs-new">أول زيارة</span>`:""}<small>${T.ic} ${esc(a.service||T.l)}</small></div><div>${esc(a.clinician||"—")}<small>${esc(dep?deptName(dep):"")}${a.room?" · "+esc(a.room):""}</small></div><span class="rc-s ${k}">${l}${k==="wait"?" "+rsWaitMin(a)+"د":""}</span>${pay}</div>`;
+      return `<div class="rs-row" onclick="rsOpenApt('${a.id}')"><time>${esc(time(a.time))}</time><div><b>${esc(a.patient)}</b>${rsVisitBadge(a)}<small>${T.ic} ${esc(a.service||T.l)}${a.attendBy?` · <span style="color:#166534">✓ سجّل الحضور ${esc(a.attendBy)} ${esc(localTimeOf(new Date(a.attendAt)))}</span>`:""}</small></div><div>${esc(a.clinician||"—")}<small>${esc(dep?deptName(dep):"")}${a.room?" · "+esc(a.room):""}</small></div><span class="rc-s ${k}">${l}${k==="wait"?" "+rsWaitMin(a)+"د":""}</span>${pay}</div>`;
     }
     function rsList(type,from,to){return state.appointments.filter(a=>a.status!=="ملغي"&&rsType(a)===type&&a.date>=from&&a.date<=to).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))}
 

@@ -54,7 +54,13 @@ export async function startPatientSync() {
   started = true
   const s = engineState()
   const server = await call('awan_care.api.get_patients')
-  if (server.length) {
+  if (s.demoSetFresh) {
+    // fresh sample dataset built in the browser: replace the server copy with it
+    remember(server)
+    delete s.demoSetFresh
+    window.persist()
+    await push()
+  } else if (server.length) {
     // records saved before the Saudi-dialect pass get converted here and pushed back
     s.patients = window.awanDialect ? window.awanDialect(JSON.parse(JSON.stringify(server))) : server
     remember(server)
