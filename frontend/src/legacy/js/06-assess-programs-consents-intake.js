@@ -458,7 +458,7 @@
       pt.caseStudy={fields:f,analysis:an,at:new Date().toISOString(),by:f.guardian||"ولي الأمر",source:"دراسة الحالة الإلكترونية"};
       state.patients.unshift(pt);csSyncSuggestions(pt);
       // 2) حجز تقييم أولي
-      const apt={id:"apt-"+Date.now(),date:slot.date,time:slot.time,patient:pt.name,service:"تقييم أولي — "+(INTAKE_INSTRUMENTS[dept]||"تقييم شامل"),clinician:clin?clin.name:"",room:"غرفة التقييم",status:"مجدول",newForStaff:true,autoBooked:true};
+      const apt={id:"apt-"+Date.now(),date:slot.date,time:slot.time,patient:pt.name,service:"تقييم أولي — "+(INTAKE_INSTRUMENTS[dept]||"تقييم شامل"),clinician:clin?clin.name:"",room:"غرفة التقييم",status:"مجدول",newForStaff:true,autoBooked:true,familyNote:f.reason||""};
       state.appointments.push(apt);
       // 3) إبلاغ المشرف
       const sups=state.staff.filter(s=>s.roleCategory==="supervisor"&&(s.department===dept||!s.department));

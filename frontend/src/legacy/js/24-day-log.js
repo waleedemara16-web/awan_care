@@ -73,7 +73,6 @@
         if(ty==="kashf"&&p.status==="كشف أولي")p.status=o[0]==="none"?"لا يحتاج":"قيد التقييم";
         if(f.fam&&typeof cmSendTo==="function")cmSendTo("fam:"+p.id,`نتيجة ${RS_T[rsType(a)].l} ${p.name.split(" ")[0]} مع ${me.name}: ${o[1]}.${f.sum?"\n"+f.sum:""}${o[2]?"\nالاستقبال بيتواصل معكم للخطوة الجاية 🌿":""}`)}
       if(typeof cmSendTo==="function"){const m=cmSendTo("dept:reception",`${RS_T[rsType(a)].ic} ${me.name} خلص ${RS_T[rsType(a)].l} ${a.patient}: ${o[1]}${o[2]?" ← "+o[2]:""}${f.sum?" · "+f.sum.slice(0,80):""}`);if(m&&me.id){m.fromId=me.id;m.fromName=me.name;m.fromDept=me.department||null}}
-      if(a.rsType==="kashf"||rsType(a)==="kashf")a.kashfDecided=a.kashfDecided||"outcome";
       _flAudit(`نتيجة ${RS_T[rsType(a)].l}: ${o[1]}`,a.patient);
       OC_OPEN=null;ocPaint();persist();notify("انحفظت النتيجة في ملف الطفل وتبلّغ الاستقبال");render();
     }
@@ -92,7 +91,6 @@
     rsBookConfirm=function(){const fo=state.rsBook&&state.rsBook.fromOutcome;const r=_ocBookConfirm.apply(this,arguments);if(fo&&!state.rsBook){const a=state.appointments.find(x=>x.id===fo);if(a&&a.outcome){a.outcome.handled=true;persist()}}return r};
     const _ocBookOpen=rsBookOpen;
     rsBookOpen=function(o){const r=_ocBookOpen.apply(this,arguments);if(o&&o.fromOutcome&&state.rsBook)state.rsBook.fromOutcome=o.fromOutcome;return r};
-    const _ocAfterKashf=rsAfterKashf;rsAfterKashf=function(){return _ocAfterKashf.apply(this,arguments).filter(a=>!a.outcome)};
     const _ocTasks=rsTasks;
     rsTasks=function(){const T=_ocTasks.apply(this,arguments).sort((a,b)=>b.p-a.p);const top=[];
       ocPending().forEach(a=>{const o=a.outcome;top.push({p:3,ic:"📥",t:`${o.by}: ${a.patient} — ${o.label}`,d:`${o.next}${o.sum?" · "+o.sum.slice(0,70):""}`,acts:[[o.next,`ocAct('${a.id}')`,1],["التفاصيل",`rsOpenApt('${a.id}')`]]})});
@@ -102,10 +100,8 @@
     const _ocPop=rsPopHtml;
     rsPopHtml=function(){let h=_ocPop.apply(this,arguments);const o=state.rsPop;if(!o||o.k!=="apt")return h;const a=state.appointments.find(x=>x.id===o.id);if(!a)return h;
       const box=a.outcome?`<div class="oc-box">📥 <b>نتيجة ${esc(a.outcome.by)}:</b> ${esc(a.outcome.label)}${a.outcome.dept&&!["none","refer","ok","noshow"].includes(a.outcome.k)?" — "+esc(deptName(a.outcome.dept)):""}${a.outcome.sum?`<br>${esc(a.outcome.sum)}`:""}${!a.outcome.handled?`<br><button class="btn btn-primary" style="margin-top:6px" onclick="ocAct('${a.id}')">${esc(a.outcome.next)}</button>`:" · ✓ انقفلت"}</div>`
-        :["kashf","assess"].includes(rsType(a))&&!["غائب","ملغي"].includes(a.status)?`<div class="oc-box">⏳ نتيجة ${esc(RS_T[rsType(a)].l)} لسه ما سجّلها ${esc(a.clinician)}. ${state.role==="reception"?`<button class="btn btn-outline" style="padding:4px 10px;font-size:12px" onclick="ocActAs('${a.id}')">ادخل باسم ${esc(a.clinician)} وسجّلها ←</button>`:`<button class="btn btn-primary" style="padding:4px 10px;font-size:12px" onclick="state.rsPop=null;render();ocOpen('${a.id}')">سجّل النتيجة</button>`}</div>`:"";
+        :["kashf","assess"].includes(rsType(a))&&!["غائب","ملغي"].includes(a.status)?`<div class="oc-box">⏳ النتيجة بانتظار تسجيلها من المختص: ${esc(a.clinician)}.</div>`:"";
       return h.replace('<div class="rs-acts">',box+'<div class="rs-acts">')};
-    function ocActAs(id){const a=state.appointments.find(x=>x.id===id);const s=a&&state.staff.find(x=>x.name===a.clinician);if(!s)return;state.role=s.roleCategory==="supervisor"?"supervisor":"staff";state.currentStaffId=s.id;state.rsPop=null;state.view="myIpad";persist();notify(`أنت الحين ${s.name}`);render();setTimeout(()=>ocOpen(id),50)}
-
     // ---- ٤ الأخصائي: كشوفاتي وتقييماتي + رسالة للاستقبال ----
     function spCard(me){
       if(!me)return "";const today=rcToday();const from=localDateOf(new Date(Date.now()-3*864e5));
@@ -213,5 +209,5 @@
     roleHome=function(){return state.view==="dayReports"&&roles[state.role].nav.includes("dayReports")?dayReportsView():_dlRoleHome.apply(this,arguments)};
     const _dlRender=render;
     render=function(){try{rdTick()}catch(_e){}const r=_dlRender.apply(this,arguments);try{ocPaint()}catch(_e){}return r};
-    Object.assign(window,{audit,patientDetail,ocOpen,ocClose,ocSubmit,ocAct,ocActAs,rsBookConfirm,rsBookOpen,rsAfterKashf,rsTasks,rsPopHtml,spToRc,spToRcCustom,myIpadView,rcMsgDone,rdSubmit,rdClose,dayReportsView,rcDeskView,roleHome,render});
+    Object.assign(window,{audit,patientDetail,ocOpen,ocClose,ocSubmit,ocAct,rsBookConfirm,rsBookOpen,rsTasks,rsPopHtml,spToRc,spToRcCustom,myIpadView,rcMsgDone,rdSubmit,rdClose,dayReportsView,rcDeskView,roleHome,render});
     render();

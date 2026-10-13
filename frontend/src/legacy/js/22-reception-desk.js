@@ -5,7 +5,17 @@
 // ٣ مواعيد اليوم/بكرة بالوقت وعند مين، وحجز موعد جديد يختار الوقت والأخصائي تلقائيًا
 
     const RC_CH={whatsapp:["💬","واتساب"],instagram:["📸","إنستجرام"],snapchat:["👻","سناب شات"],tiktok:["🎵","تيك توك"],x:["✖️","X"],call:["📞","اتصال"],web:["🌐","الموقع"],walkin:["🚪","زيارة للمركز"]};
-    const RC_ST={new:["جديد","red"],contacted:["تم التواصل","gold"],registered:["انسجّل","good"],link:["انرسل رابط الذكي","good"],lost:["غير مهتم","muted"]};
+    const RC_PLATFORM={
+      whatsapp:["WA","واتساب","#25D366","#effcf3"],
+      instagram:["◎","إنستجرام","#d9468f","#fff1f7"],
+      snapchat:["👻","سناب شات","#b39b00","#fffde7"],
+      tiktok:["♪","تيك توك","#111827","#f3f4f6"],
+      x:["X","X","#111827","#f3f4f6"],
+      call:["☎","اتصال","#2563eb","#eff6ff"],
+      web:["↗","الموقع","#0e8388","#ecfdfb"],
+      walkin:["↗","زيارة للمركز","#8a5a12","#fff8e8"]
+    };
+    const RC_ST={new:["جديد","red"],contacted:["تم التواصل","gold"],registered:["انسجّل","good"],converted:["انحجز تقييم","good"],link:["انرسل الرابط","good"],lost:["غير مهتم","muted"]};
     const RC_TYPES=[["جلسة علاجية",40],["تقييم أولي",45],["جلسة تعويضية",40],["استشارة أسرية",30]];
 
     (function rcStyles(){
@@ -22,9 +32,14 @@
 .rc-task .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.rc-task .btn{padding:7px 12px;font-size:12px}
 .rc-cols{display:grid;grid-template-columns:1fr 1.25fr;gap:16px;align-items:start}
 .rc-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.rc-chips button{all:unset;cursor:pointer;font-size:12px;font-weight:700;padding:6px 11px;border-radius:99px;background:var(--cream-2);color:var(--muted)}.rc-chips button.on{background:var(--navy);color:#fff}
-.rc-ct{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}
-.rc-ct-h{display:flex;align-items:center;gap:8px}.rc-ct-h .ch{font-size:20px}.rc-ct-h b{font-size:13px}.rc-ct-h small{color:var(--muted);font-size:11px;display:block}
-.rc-ct .msg{font-size:12.5px;background:var(--cream-2);border-radius:10px;padding:8px 10px;line-height:1.7}
+.rc-ct{border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;background:var(--card)}
+.rc-ct-h{display:flex;align-items:center;gap:8px}.rc-ct-h .ch{display:none}.rc-ct-h b{font-size:13px}.rc-ct-h small{color:var(--muted);font-size:11px;display:block}
+.rc-ct-platform{display:inline-flex;align-items:center;gap:6px;width:max-content;max-width:100%;border-radius:99px;padding:4px 9px 4px 5px;background:var(--platform-bg);color:var(--platform-color);font-size:11px;font-weight:800}
+.rc-ct-platform .mark{display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:var(--platform-color);color:#fff;font-size:11px;font-weight:900;line-height:1}
+.rc-ct-chat{display:flex;justify-content:flex-start}
+.rc-ct .msg{position:relative;max-width:min(100%,520px);font-size:12.5px;background:var(--bubble-bg,var(--cream-2));border:1px solid color-mix(in srgb,var(--platform-color,#94a3b8) 25%,transparent);border-inline-start:3px solid var(--platform-color,#94a3b8);border-radius:16px 16px 16px 4px;padding:9px 12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}
+.rc-ct-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.rc-ct-meta small{color:var(--muted);font-size:11px}
 .rc-ct .acts{display:flex;gap:6px;flex-wrap:wrap}.rc-ct .btn{padding:6px 10px;font-size:11.5px}
 .rc-pill{margin-inline-start:auto;font-size:10.5px;font-weight:800;border-radius:99px;padding:3px 8px}
 .rc-pill.red{background:#fee2e2;color:#b91c1c}.rc-pill.gold{background:var(--gold-2);color:#8a5a12}.rc-pill.good{background:#dcfce7;color:#166534}.rc-pill.muted{background:var(--cream-2);color:var(--muted)}
@@ -85,7 +100,7 @@
       const T=rcTasks();const C=rcContacts();const newC=C.filter(c=>c.status==="new").length;
       const day=state.rcDay==="tomorrow"?rcTomorrow():rcToday();const A=rcDayApts(day);const todayA=rcDayApts(rcToday());
       const arrived=todayA.filter(a=>["in","live","done"].includes(rcStatus(a)[0])).length;const tm=rcDayApts(rcTomorrow());
-      let h=head("الاستقبال","مكتب الاستقبال","مهامك، الحالات اللي تواصلت، ومواعيد اليوم — كل شي هنا.",`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="rcOpen('contactNew')">＋ تواصل جديد</button><button class="btn btn-primary" onclick="rcOpen('book')">＋ حجز موعد</button></div>`);
+      let h=head("الاستقبال","محطة الاستقبال","تسجيل الأسر والتواصل معها ومتابعة مواعيد الأطفال — كل شيء في مكان واحد.",`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="rcOpen('contactNew')">＋ تواصل جديد</button><button class="btn btn-primary" onclick="typeof rsQuickOpen==='function'?rsQuickOpen():rcOpen('book')">＋ تسجيل أسرة</button><button class="btn btn-outline" onclick="rcOpen('book')">＋ حجز موعد</button></div>`);
       h+=`<div class="rc-kpis">
         <button class="rc-kpi ${T.some(t=>t.p===3)?"hot":""}" onclick="document.getElementById('rc-tasks').scrollIntoView({behavior:'smooth'})"><b>${T.length}</b><span>مهامي الحين</span><small>${T.filter(t=>t.p===3).length} عاجلة</small></button>
         <button class="rc-kpi ${newC?"hot":""}" onclick="document.getElementById('rc-contacts').scrollIntoView({behavior:'smooth'})"><b>${newC}</b><span>تواصل جديد</span><small>واتساب وسوشيال واتصال</small></button>
@@ -107,17 +122,17 @@
           <td style="white-space:nowrap">${day===rcToday()&&["up","late","no"].includes(k)?`<button class="btn btn-primary" onclick="rcArrive('${a.id}')">وصل</button> `:""}${day===rcToday()&&["late","no"].includes(k)?`<button class="btn btn-outline" onclick="rcAbsent('${a.id}')">غياب</button>`:""}${day!==rcToday()&&!a.confirmSent?`<button class="btn btn-outline" onclick="rcConfirmOne('${a.id}')">تأكيد</button>`:""}</td></tr>`}).join("")||`<tr><td colspan="6" class="fd-empty">ما فيه مواعيد هنا</td></tr>`}
         </tbody></table></div>${AL.length>25&&!state.rcApAll?`<button class="btn btn-outline" style="margin-top:8px;width:100%" onclick="rcSet('rcApAll',1)">اعرض الكل (${AL.length})</button>`:""}</section>`;
       h+=`<div class="rc-cols">${contacts}${apts}</div>`;
-      h+=`<section class="rc-sec"><h2>🧭 مسارات الأسر الجديدة</h2><p>كل أسرة جديدة تمشي في مسار واحد من الاثنين — منفصلين تمامًا.</p><div class="rc-flows">
-        <button class="rc-flow" onclick="setView('frontDesk')"><b>👤 الاستقبال العادي</b><small>الأسرة حضرت للمركز ← أنت تسجّلها ← المشرف العام ← مشرف القسم ← أنت تحجز</small></button>
-        <button class="rc-flow smart" onclick="setView('intakeAI')"><b>🤖 الاستقبال الذكي</b><small>الأسرة تعبّي الرابط ← المحرك يكمّل كل شي لحاله ويحجز التقييم</small></button></div></section>`;
+      h+=`<section class="rc-sec"><h2>👤 استقبال الأسرة</h2><p>سجّلي بيانات الأسرة أو أرسلي لها رابط دراسة الحالة، وتابعي الملف والموعد من هنا.</p><button class="btn btn-primary" onclick="typeof rsQuickOpen==='function'?rsQuickOpen():setView('frontDesk')">تسجيل سريع وحجز تقييم</button></section>`;
       return h+rcPopHtml();
     }
     function rcContactCard(c){
-      const [st,cls]=RC_ST[c.status];const p=c.pid&&state.patients.find(x=>x.id===c.pid);
+      const [st,cls]=RC_ST[c.status]||["جديد","red"];const p=c.pid&&state.patients.find(x=>x.id===c.pid);
+      const platform=RC_PLATFORM[c.ch]||["•","منصة أخرى","#64748b","#f1f5f9"];
+      const [mark,label,color,bg]=platform;
       const open=["new","contacted"].includes(c.status);
-      return `<article class="rc-ct"><div class="rc-ct-h"><span class="ch">${RC_CH[c.ch][0]}</span><div><b>${esc(c.guardian||"—")}${c.child?` · ${esc(c.child)}${c.age?" ("+esc(c.age)+")":""}`:""}</b><small>${esc(RC_CH[c.ch][1])} · ${esc(c.phone||"")} · ${fdAgo(new Date(c.at).toISOString())}</small></div><span class="rc-pill ${cls}">${st}</span></div>
-        ${c.msg?`<div class="msg">${esc(c.msg)}</div>`:""}${c.note?`<small class="muted">📝 ${esc(c.note)}${c.follow?" · متابعة "+esc(date(c.follow)):""}</small>`:""}
-        <div class="acts">${open?`<button class="btn btn-primary" onclick="rcOpen('contactAct','${c.id}')">تواصل وقرر</button><a class="btn btn-outline" target="_blank" rel="noopener" href="${esc(rcWa(c.phone,`السلام عليكم ${c.guardian||""}، معك استقبال ${state.center.name} 🌿`))}" onclick="rcTouched('${c.id}')">واتساب</a>`:""}${p?`<button class="btn btn-outline" onclick="openPatient('${p.id}')">فتح الملف</button>`:""}</div></article>`;
+      return `<article class="rc-ct" style="--platform-color:${color};--platform-bg:${bg};--bubble-bg:${bg}"><div class="rc-ct-h"><div><b>${esc(c.guardian||"—")}${c.child?` · ${esc(c.child)}${c.age?" ("+esc(c.age)+")":""}`:""}</b><div class="rc-ct-meta"><small>${esc(c.phone||"")} · ${fdAgo(new Date(c.at).toISOString())}</small><span class="rc-ct-platform"><span class="mark">${esc(mark)}</span>${esc(label)}</span></div></div><span class="rc-pill ${cls}">${st}</span></div>
+        ${c.msg?`<div class="rc-ct-chat"><div class="msg">${esc(c.msg)}</div></div>`:""}${c.note?`<small class="muted">📝 ${esc(c.note)}${c.follow?" · متابعة "+esc(date(c.follow)):""}</small>`:""}
+        <div class="acts">${open?`<button class="btn btn-primary" onclick="rsQuickOpen('${c.id}')">تسجيل وحجز تقييم</button><button class="btn btn-outline" onclick="rcOpen('contactAct','${c.id}')">متابعة</button><a class="btn btn-outline" target="_blank" rel="noopener" href="${esc(rcWa(c.phone,`السلام عليكم ${c.guardian||""}، معك استقبال ${state.center.name} 🌿`))}" onclick="rcTouched('${c.id}')">واتساب</a>`:""}${p?`<button class="btn btn-outline" onclick="openPatient('${p.id}')">فتح الملف</button>`:""}</div></article>`;
     }
 
     // ---- النوافذ ----
@@ -137,9 +152,9 @@
         return wrap(`<h3>${RC_CH[c.ch][0]} ${esc(c.guardian||"")} — ${esc(RC_CH[c.ch][1])}</h3><p class="muted">${esc(c.phone)} · ${fdAgo(new Date(c.at).toISOString())}</p>${c.msg?`<div class="rc-ct"><div class="msg">${esc(c.msg)}</div></div>`:""}
           <form onsubmit="rcContactAct(event,'${c.id}')"><div class="form-grid"><div class="field"><label>اسم الطفل</label><input class="input" name="child" value="${esc(c.child||"")}"></div><div class="field"><label>العمر</label><input class="input" name="age" value="${esc(c.age||"")}"></div>
           <div class="field" style="grid-column:1/-1"><label>ملاحظة</label><input class="input" name="note" value="${esc(c.note||"")}"></div></div>
-          <div style="margin-top:12px;font-weight:700">وش القرار؟</div><div class="rc-sug">
-          <label class="best"><input type="radio" name="act" value="normal" checked><span><b>👤 تسجيل في الاستقبال العادي</b><br><small>يفتح ملف ويتحوّل للمشرف العام لدراسة الحالة</small></span></label>
-          <label><input type="radio" name="act" value="smart"><span><b>🤖 أرسل رابط الاستقبال الذكي</b><br><small>الأسرة تعبّي دراسة الحالة والمحرك يكمّل لحاله</small></span></label>
+          <div style="margin-top:12px;font-weight:700">الخطوة التالية</div><div class="rc-sug">
+          <label class="best"><input type="radio" name="act" value="register" checked><span><b>👤 تسجيل الأسرة</b><br><small>يفتح ملفًا ويتحوّل للمشرف العام لاستكمال دراسة الحالة</small></span></label>
+          <label style="display:block"><input type="checkbox" name="sendLink" value="1"> أرسل للأسرة رابط دراسة الحالة على واتساب</label>
           <label><input type="radio" name="act" value="follow"><span><b>↩️ تواصلت — أتابع معهم لاحقًا</b><br><small>تاريخ المتابعة: <input type="date" name="follow" value="${rcTomorrow()}" onclick="event.stopPropagation()"></small></span></label>
           <label><input type="radio" name="act" value="lost"><span><b>✕ غير مهتم</b></span></label></div>
           <div class="fd-acts"><button type="button" class="btn btn-outline" onclick="rcClose()">إلغاء</button><button class="btn btn-primary">نفّذ</button></div></form>`)}
@@ -151,12 +166,11 @@
     function rcContactAct(e,id){
       e.preventDefault();const c=rcContacts().find(x=>x.id===id);if(!c)return;const f=Object.fromEntries(new FormData(e.target).entries());
       Object.assign(c,{child:f.child||c.child,age:f.age||c.age,note:f.note||c.note});
-      if(f.act==="normal"){if(!c.child)return notify("اكتب اسم الطفل قبل التسجيل");
+      if(f.act==="register"){if(!c.child)return notify("اكتب اسم الطفل قبل التسجيل");
         const p=fdCreate({child:c.child,age:c.age,guardian:c.guardian,phone:c.phone,reason:c.msg||c.note||"",ref:RC_CH[c.ch][1],source:"normal"});
-        Object.assign(c,{status:"registered",pid:p.id});audit("تواصل ← استقبال عادي",p.name);notify(`انفتح ملف ${p.name.split(" ")[0]} وانحوّل للمشرف العام`)}
-      else if(f.act==="smart"){const link=location.origin+location.pathname.replace(/\/app.*$/,"")+"#case";
-        window.open(rcWa(c.phone,`أهلًا ${c.guardian||""} 🌿 هذا رابط دراسة الحالة الإلكترونية في ${state.center.name}، عبّوه ونتواصل معكم بموعد التقييم:\n${link}`),"_blank");
-        c.status="link";audit("تواصل ← رابط الاستقبال الذكي",c.guardian);notify("انفتح الواتساب برسالة الرابط")}
+        Object.assign(c,{status:"registered",pid:p.id});audit("تواصل ← استقبال",p.name);
+        if(f.sendLink){const link=location.origin+location.pathname.replace(/\/app.*$/,"")+"#case";window.open(rcWa(c.phone,`أهلًا ${c.guardian||""} 🌿 هذا رابط دراسة الحالة الإلكترونية في ${state.center.name}:\n${link}`),"_blank")}
+        notify(`انفتح ملف ${p.name.split(" ")[0]} وانحوّل للمشرف العام`)}
       else if(f.act==="follow"){c.status="contacted";c.follow=f.follow||rcTomorrow();notify("تمام — بتطلع لك مهمة متابعة "+date(c.follow))}
       else{c.status="lost";notify("انقفل التواصل")}
       state.rcOpen=null;persist();render();

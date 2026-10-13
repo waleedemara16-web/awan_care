@@ -4,11 +4,12 @@
 // and they share top-level `let`/`const` bindings, so they can't be ES modules.
 const files = import.meta.glob('./js/*.js', { query: '?raw', import: 'default' })
 
-let loading = null
-
 export function loadEngine() {
-  if (loading) return loading
-  loading = (async () => {
+  if (window.__awanEngineLoadPromise) return window.__awanEngineLoadPromise
+  if (typeof window.render === 'function' && typeof window.__awanState === 'function') {
+    return Promise.resolve()
+  }
+  const loading = (async () => {
     const keys = Object.keys(files).sort((a, b) => {
       // the QR vendor library has to exist before the app files
       const va = a.includes('vendor') ? 0 : 1
@@ -26,6 +27,10 @@ export function loadEngine() {
       throw new Error('Awan engine failed to start')
     }
   })()
+  window.__awanEngineLoadPromise = loading
+  loading.catch(() => {
+    if (window.__awanEngineLoadPromise === loading) delete window.__awanEngineLoadPromise
+  })
   return loading
 }
 

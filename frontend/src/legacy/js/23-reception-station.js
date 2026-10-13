@@ -97,12 +97,10 @@
 
     // ---- المهام (يحتاج منك) ----
     function rsAssessNeeded(){return (typeof fdList==="function"?fdList():[]).filter(p=>p.intake.stage==="assess"&&!state.appointments.some(a=>a.patient===p.name&&rsType(a)==="assess"&&a.status==="مجدول"))}
-    function rsAfterKashf(){const today=rcToday();return state.appointments.filter(a=>rsType(a)==="kashf"&&a.status==="مكتمل"&&a.date>=localDateOf(new Date(Date.now()-14*864e5))&&!a.kashfDecided).filter(a=>{const p=rcPatient(a);return p&&!p.intake&&!p.smart})}
     function rsTasks(){
       const T=[];
       rsAssessNeeded().forEach(p=>{const s=fdDeptSup(p.intake.dept);T.push({p:3,ic:"🧩",t:`احجز موعد تقييم: ${p.name}`,d:`عند ${s?s.name:"مشرف "+deptName(p.intake.dept)} — حوّله المشرف العام ${fdAgo(p.intake.caseAt)}`,acts:[["احجز التقييم",`rsBookOpen({type:'assess',pid:'${p.id}',dept:'${p.intake.dept}',clin:'${s?s.id:""}'})`,1]]})});
       (typeof fdList==="function"?fdList():[]).filter(p=>p.intake.stage==="book").forEach(p=>T.push({p:3,ic:"📅",t:`احجز جلسات الخطة: ${p.name}`,d:`توجيه ${p.intake.direction&&p.intake.direction.by||"مشرف القسم"}: ${fdLinesText(p)}`,acts:[["احجز الجلسات",`fdOpen('book','${p.id}')`,1]]}));
-      rsAfterKashf().forEach(a=>T.push({p:2,ic:"🩺",t:`بعد الكشف — وش الخطوة الجاية لـ${a.patient}؟`,d:`كشف ${date(a.date)} عند ${a.clinician}`,acts:[["قرار",`rsOpenApt('${a.id}')`,1]]}));
       state.appointments.filter(a=>a.date===rcToday()&&rsPrice(a)&&!a.paid&&a.status==="مكتمل").forEach(a=>T.push({p:2,ic:"💳",t:`تحصيل: ${a.patient} (${rsPrice(a)} ر.س)`,d:`${RS_T[rsType(a)].l} خلص ولم يُدفع`,acts:[["تحصيل",`rsPayOpen('${a.id}')`,1]]}));
       rcTasks().forEach(t=>{if(!/احجز مواعيد/.test(t.t))T.push(t)});
       return T.sort((a,b)=>b.p-a.p);
@@ -110,15 +108,14 @@
 
     // ---- الشاشة ----
     function rsView(){
-      rcSeed();rsSeed();const tab=state.rsTab||"today";const today=rcToday();
+      rcSeed();rsSeed();const tab=state.rsTab==="smart"?"today":state.rsTab||"today";const today=rcToday();
       const T=rsTasks();const newC=rcContacts().filter(c=>c.status==="new").length;
       const now=new Date();const clock=pad2(now.getHours())+":"+pad2(now.getMinutes());
-      const smartCount=typeof smList==="function"?smList().length:0;
-      let h=`<div class="rs-top"><div><div class="eyebrow">الاستقبال</div><h1>محطة الاستقبال</h1><div class="muted">${esc(date(today))} · الساعة ${clock}</div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="setView('frontDesk')">👤 تسجيل أسرة</button><button class="btn btn-outline" onclick="goPublic('parent');setParentTab('case')">🤖 دراسة حالة ذكية</button><button class="btn btn-outline" onclick="rcOpen('contactNew')">＋ استفسار</button><button class="btn btn-outline" onclick="rsBookOpen({type:'kashf',mode:'new'})">🩺 حجز كشف</button><button class="btn btn-outline" onclick="rsBookOpen({type:'assess'})">🧩 حجز تقييم</button><button class="btn btn-primary" onclick="rsBookOpen({type:'session'})">＋ حجز جلسة</button></div></div>`;
-      const tabs=[["today","🏠 اليوم",T.filter(t=>t.p>=3).length],["cal","🗓️ الجدول",0],["kashf","🩺 الكشوفات",rsAfterKashf().length],["assess","🧩 التقييمات",rsAssessNeeded().length],["contacts","💬 الاستفسارات",newC],["tasks","📋 يحتاج منك",T.length],["smart","🤖 الاستقبال الذكي",smartCount]];
+      let h=`<div class="rs-top"><div><div class="eyebrow">الاستقبال</div><h1>الاستقبال</h1><div class="muted">${esc(date(today))} · الساعة ${clock}</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="rsQuickOpen()">＋ تسجيل أسرة</button><button class="btn btn-outline" onclick="rsBookOpen({type:'session'})">＋ حجز موعد</button><button class="btn btn-outline" onclick="rcOpen('contactNew')">＋ تواصل جديد</button></div></div>`;
+      const tabs=[["today","🏠 اليوم",T.filter(t=>t.p>=3).length],["cal","🗓️ الجدول",0],["kashf","🩺 الكشوفات",0],["assess","🧩 التقييمات",rsAssessNeeded().length],["contacts","💬 الاستفسارات",newC],["tasks","📋 يحتاج منك",T.length]];
       h+=`<div class="rs-tabs">${tabs.map(([k,l,n])=>`<button class="${tab===k?"on":""}" onclick="rsTabSet('${k}')">${l}${n?`<em>${n}</em>`:""}</button>`).join("")}</div>`;
-      h+=tab==="today"?rsToday():tab==="cal"?rsCal():tab==="kashf"?rsTypeTab("kashf"):tab==="assess"?rsTypeTab("assess"):tab==="contacts"?rsContactsTab():tab==="tasks"?rsTasksTab(T):typeof smBoardHtml==="function"?smBoardHtml():`<div class="fd-empty">لوحة الاستقبال الذكي غير متاحة حاليًا</div>`;
+      h+=tab==="today"?rsToday():tab==="cal"?rsCal():tab==="kashf"?rsTypeTab("kashf"):tab==="assess"?rsTypeTab("assess"):tab==="contacts"?rsContactsTab():rsTasksTab(T);
       return h+rsPopHtml()+rcPopHtml();
     }
     function rsTabSet(k){state.rsTab=k;render();window.scrollTo(0,0)}
@@ -157,9 +154,8 @@
       const byDay={};L.forEach(a=>{(byDay[a.date]=byDay[a.date]||[]).push(a)});
       let need="";
       if(type==="assess"){const N=rsAssessNeeded();need=`<section class="rs-box"><h2>⏳ يحتاج موعد تقييم<small>محوّلين من المشرف العام لمشرف القسم</small></h2>${N.map(p=>{const s=fdDeptSup(p.intake.dept);return `<div class="rc-task p3"><span class="ic">🧩</span><div class="tx"><b>${esc(p.name)}</b><small>${esc(deptName(p.intake.dept))} · عند ${esc(s?s.name:"مشرف القسم")} · ${esc(p.guardian||"")} ${esc(p.phone||"")}</small></div><div class="acts"><button class="btn btn-primary" onclick="rsBookOpen({type:'assess',pid:'${p.id}',dept:'${p.intake.dept}',clin:'${s?s.id:""}'})">احجز التقييم</button></div></div>`}).join("")||`<div class="fd-empty">✓ كل التقييمات المطلوبة محجوزة</div>`}</section>`}
-      if(type==="kashf"){const N=rsAfterKashf();need=`<section class="rs-box"><h2>⏳ بعد الكشف — يحتاج قرار<small>وش الخطوة الجاية للطفل؟</small></h2>${N.map(a=>`<div class="rc-task p2"><span class="ic">🩺</span><div class="tx"><b>${esc(a.patient)}</b><small>كشف ${esc(date(a.date))} عند ${esc(a.clinician)}${a.kashfNote?" · "+esc(a.kashfNote):""}</small></div><div class="acts"><button class="btn btn-primary" onclick="rsKashfNext('${a.id}','normal')">حوّل للمشرف العام</button><button class="btn btn-outline" onclick="rsKashfNext('${a.id}','assess')">احجز تقييم مباشر</button><button class="btn btn-outline" onclick="rsKashfNext('${a.id}','none')">ما يحتاج</button></div></div>`).join("")||`<div class="fd-empty">✓ ما فيه كشوفات تنتظر قرار</div>`}</section>`}
       return need+`<section class="rs-box"><h2>${T.ic} ${T.l === "كشف"?"الكشوفات":"التقييمات"} الجاية<small>${L.length} خلال أسبوعين</small></h2>
-        <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn btn-primary" onclick="rsBookOpen({type:'${type}'${type==="kashf"?",mode:'new'":""}})">＋ حجز ${T.l}</button></div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn btn-primary" onclick="rsBookOpen({type:'${type}'${type==="kashf"?",mode:'new'":""}})">＋ ${type==="kashf"?"تسجيل أسرة وحجز كشف":"حجز "+T.l}</button></div>
         ${Object.keys(byDay).sort().map(d=>`<div class="rs-day">${d===today?"اليوم · ":d===rcTomorrow()?"بكرة · ":""}${esc(date(d))}</div>${byDay[d].map(a=>rsRowHtml(a)).join("")}`).join("")||`<div class="fd-empty">ما فيه ${T.l} محجوز</div>`}</section>`;
     }
     function rsContactsTab(){
@@ -172,9 +168,10 @@
 
     // ---- نافذة الموعد: كل إجراءات الاستقبال على موعد واحد ----
     function rsOpenApt(id){state.rsPop={k:"apt",id};render()}
-    function rsClose(){state.rsPop=null;state.rsBook=null;render()}
+    function rsClose(){state.rsPop=null;state.rsBook=null;state.rsQuick=null;render()}
     function rsPopHtml(){
       const o=state.rsPop;if(!o)return "";const wrap=b=>`<div class="pl-scrim" onclick="if(event.target===this)rsClose()"><div class="pl-pop fd-pop">${b}</div></div>`;
+      if(o.k==="quick"){const q=state.rsQuick||{};return wrap(`<h3>${q.contact?"تسجيل الأسرة وحجز التقييم":"تسجيل أسرة جديدة"}</h3><p class="muted">ثلاث بيانات أساسية تكفي لفتح الملف. ملاحظة الأسرة اختيارية، ونقترح القسم والموعد تلقائيًا.</p><form onsubmit="rsQuickSubmit(event)"><div class="form-grid"><div class="field"><label>اسم الطفل</label><input class="input" name="child" value="${esc(q.child||"")}" required autofocus></div><div class="field"><label>العمر <small>(اختياري)</small></label><input class="input" name="age" value="${esc(q.age||"")}" placeholder="مثال: 5 سنوات"></div><div class="field"><label>اسم ولي الأمر</label><input class="input" name="guardian" value="${esc(q.guardian||"")}" required></div><div class="field"><label>رقم الجوال</label><input class="input" name="phone" value="${esc(q.phone||"")}" type="tel" inputmode="tel" required></div><div class="field" style="grid-column:1/-1"><label>ملاحظة الأسرة <small>(اختياري)</small></label><textarea class="input" name="reason" rows="2" placeholder="أي ملاحظة تساعد المختص">${esc(q.reason||"")}</textarea></div></div><div class="fd-acts"><button type="button" class="btn btn-outline" onclick="rsClose()">إلغاء</button><button class="btn btn-primary">حفظ وحجز أقرب تقييم</button></div></form>`)}
       if(o.k==="book")return wrap(rsBookHtml());
       const a=state.appointments.find(x=>x.id===o.id);if(!a)return "";
       if(o.k==="pay"){const pr=rsPrice(a);return wrap(`<h3>💳 تحصيل — ${esc(a.patient)}</h3><p class="muted">${esc(a.service||"")} · ${esc(date(a.date))} ${esc(time(a.time))}</p><form onsubmit="rsPaySubmit(event,'${a.id}')"><div class="form-grid"><div class="field"><label>المبلغ (قبل الضريبة)</label><input class="input" name="amount" type="number" min="0" value="${pr}"></div><div class="field"><label>طريقة الدفع</label><select class="select" name="method">${RS_PAY.map(m=>`<option>${m}</option>`).join("")}</select></div></div><p class="muted" style="margin-top:8px">تنضاف ضريبة القيمة المضافة 15٪ وتطلع فاتورة في قسم المالية.</p><div class="fd-acts"><button type="button" class="btn btn-outline" onclick="rsOpenApt('${a.id}')">رجوع</button><button class="btn btn-primary">حصّل وأصدر الفاتورة</button></div></form>`)}
@@ -189,12 +186,10 @@
       if(a.date>rcToday()&&!a.confirmSent)acts.push(b("✅ أرسل تأكيد",`rsAct('${a.id}','confirm')`));
       if(p)acts.push(b("💬 رسالة للأسرة",`setView('communicationHub');cmOpen('fam:${p.id}')`));
       if(p)acts.push(b("📁 الملف",`openPatient('${p.id}')`));
-      const kdec=rsType(a)==="kashf"&&a.status==="مكتمل"&&p&&!p.intake&&!p.smart&&!a.kashfDecided;
       return wrap(`<h3>${T.ic} ${esc(T.l)} — ${esc(a.patient)}</h3><span class="rc-s ${k}">${l}${k==="wait"?" "+rsWaitMin(a)+" دقيقة":""}</span>
         <div class="rs-kv"><span>الموعد</span><b>${esc(date(a.date))} · ${esc(time(a.time))} (${+a.duration||T.dur} د)</b><span>عند</span><b>${esc(a.clinician||"—")}</b><span>الخدمة</span><b>${esc(a.service||"")}${a.room?" · "+esc(a.room):""}</b>
         ${p?`<span>ولي الأمر</span><b>${esc(p.guardian||"—")} · <span style="direction:ltr;unicode-bidi:isolate">${esc(p.phone||"")}</span></b><span>الملف</span><b>${esc(p.file||"")}${rsIsNew(a)?' <span class="rs-new">أول زيارة</span>':""}</b>`:""}
         <span>الدفع</span><b>${pr?(a.paid?`✓ مدفوع ${pr} ر.س`:`غير مدفوع — ${pr} ر.س`):"ضمن الباقة"}</b></div>
-        ${kdec?`<div class="rc-task p2" style="margin-top:12px"><span class="ic">🩺</span><div class="tx"><b>بعد الكشف — وش الخطوة الجاية؟</b></div><div class="acts">${b("حوّل للمشرف العام",`rsKashfNext('${a.id}','normal')`,1)}${b("احجز تقييم",`rsKashfNext('${a.id}','assess')`)}${b("ما يحتاج",`rsKashfNext('${a.id}','none')`)}</div></div>`:""}
         <div class="rs-acts">${acts.join("")}</div><div class="fd-acts"><button class="btn btn-outline" onclick="rsClose()">إغلاق</button></div>`);
     }
     function rsAct(id,act){
@@ -215,14 +210,6 @@
       inv.fromReception=true;inv.aptId=a.id;a.paid=true;a.price=amt;a.invoiceId=inv.id;
       audit("تحصيل من الاستقبال",`${a.patient} · ${inv.total} ر.س · ${f.get("method")}`);state.rsPop=null;persist();notify(`انحصّل ${inv.total} ر.س وانصدرت الفاتورة`);render();
     }
-    function rsKashfNext(id,what){
-      const a=state.appointments.find(x=>x.id===id);const p=a&&rcPatient(a);if(!p)return;a.kashfDecided=what;
-      if(what==="normal"){p.intake={source:"normal",stage:"case",regAt:new Date().toISOString(),regBy:auditActor().name,reason:p.need||a.kashfNote||"",ref:"بعد الكشف عند "+a.clinician};p.status="قيد التقييم";audit("بعد الكشف ← المشرف العام",p.name);notify(`${p.name.split(" ")[0]} انحوّل للمشرف العام لدراسة الحالة`)}
-      if(what==="assess"){persist();state.rsPop=null;return rsBookOpen({type:"assess",pid:p.id,dept:rcDeptOfStaff(a.clinician)||""})}
-      if(what==="none"){audit("بعد الكشف ← ما يحتاج متابعة",p.name);notify("تمام")}
-      state.rsPop=null;persist();render();
-    }
-
     // ---- الحجز ----
     function rsBookOpen(o){
       o=o||{};const T=RS_T[o.type||"session"];
@@ -232,6 +219,27 @@
       if(b.pid&&!b.dept)b.dept=rcPatientDept(state.patients.find(x=>x.id===b.pid));
       if(!b.dept)b.dept=(state.departments[0]||{}).id;
       state.rsPop={k:"book"};if(state.view!=="rcDesk"){state.view="rcDesk"}render();
+    }
+    function rsQuickOpen(contactId){
+      const c=contactId&&rcContacts().find(x=>x.id===contactId);
+      state.rsQuick=c?{contact:c.id,child:c.child||"",age:c.age||"",guardian:c.guardian||"",phone:c.phone||"",reason:c.msg||c.note||""}:{};
+      state.rsPop={k:"quick"};state.view="rcDesk";render()
+    }
+    function rsQuickSubmit(e){
+      e.preventDefault();
+      const f=formData(e),child=(f.child||"").trim(),age=(f.age||"").trim(),guardian=(f.guardian||"").trim(),phone=(f.phone||"").trim(),reason=(f.reason||"").trim();
+      if(!child||!guardian||!phone)return notify("اكتبي اسم الطفل وولي الأمر والجوال");
+      if(phone.replace(/[^\d٠-٩]/g,"").length<8)return notify("تأكدي من رقم الجوال");
+      const analysis=analyzeIntake({reason});
+      const available=state.departments.filter(d=>state.staff.some(s=>s.department===d.id&&(s.clinical||s.roleCategory==="staff"||s.roleCategory==="supervisor")));
+      const leastLoaded=available.flatMap(d=>state.staff.filter(s=>s.department===d.id&&(s.clinical||s.roleCategory==="staff"||s.roleCategory==="supervisor")).map(s=>({dept:d.id,load:fdLoad(s.name)}))).sort((a,b)=>a.load-b.load)[0];
+      const dept=analysis.primary&&available.some(d=>d.id===analysis.primary)?analysis.primary:leastLoaded&&leastLoaded.dept;
+      if(!dept)return notify("ما فيه مختص متاح لحجز تقييم الآن؛ سجّلي الأسرة من التسجيل الكامل");
+      const b={type:"assess",mode:"new",nf:{child,age,guardian,phone,reason},dept,from:rcToday(),pref:"any",pick:0,price:RS_T.assess.price,pay:"later",familyNote:reason,contact:state.rsQuick&&state.rsQuick.contact};
+      const suggestions=rsSuggest(b);
+      if(!suggestions.length)return notify(`ما لقينا موعد تقييم متاح في ${deptName(dept)} خلال الفترة القريبة`);
+      b.quickIntake={note:reason,analysis,at:new Date().toISOString(),by:auditActor().name};
+      state.rsBook=b;state.rsPop={k:"book"};rsBookConfirm();
     }
     function rsBookSet(k,v){const b=state.rsBook;if(!b)return;
       if(k.startsWith("nf."))b.nf[k.slice(3)]=v;else b[k]=["pick","price"].includes(k)?+v:v;
@@ -265,10 +273,11 @@
         <div class="rs-types">${Object.entries(RS_T).map(([k,t])=>`<button class="${b.type===k?"on":""}" onclick="rsBookSet('type','${k}')"><span>${t.ic}</span>${t.l}<small>${t.dur} د${t.price?" · "+t.price+" ر.س":" · ضمن الباقة"}</small></button>`).join("")}</div>
         <div class="rs-seg"><button class="${b.mode==="existing"?"on":""}" onclick="rsBookSet('mode','existing')">طفل مسجّل</button><button class="${b.mode==="new"?"on":""}" onclick="rsBookSet('mode','new')">أسرة جديدة</button></div>
         <div class="form-grid">${b.mode==="existing"?`<div class="field" style="grid-column:1/-1"><label>الطفل</label>${sel("pid",[["","اختر الطفل"],...P.map(p=>[p.id,`${p.name} · ${p.file||""} · ${p.guardian||""}`])],b.pid)}</div>`
-          :`${inp("child","اسم الطفل",b.nf.child)}${inp("age","العمر",b.nf.age,"مثال: 4 سنوات")}${inp("guardian","ولي الأمر",b.nf.guardian)}${inp("phone","الجوال",b.nf.phone,"05xxxxxxxx")}<div class="field" style="grid-column:1/-1"><label>سبب الزيارة</label><input class="input" value="${esc(b.nf.reason||"")}" oninput="rsBookSet('nf.reason',this.value)"></div><div style="grid-column:1/-1"><button class="btn btn-outline" style="padding:6px 12px;font-size:12px" onclick="render()">ابحث عن وقت ←</button></div>`}
+          :`${b.type==="kashf"?`<div class="muted" style="grid-column:1/-1">بيانات الأسرة تُسجّل مع حجز الكشف، ثم يكتب المختص نتيجة الكشف.</div>`:""}${inp("child","اسم الطفل · مطلوب",b.nf.child)}${inp("age","العمر",b.nf.age,"مثال: 4 سنوات")}${inp("guardian","ولي الأمر · مطلوب",b.nf.guardian)}${inp("phone","الجوال · مطلوب",b.nf.phone,"05xxxxxxxx")}<div class="field" style="grid-column:1/-1"><label>سبب الزيارة / ملاحظة الأسرة</label><input class="input" value="${esc(b.nf.reason||"")}" oninput="rsBookSet('nf.reason',this.value)"></div><div style="grid-column:1/-1"><button class="btn btn-outline" style="padding:6px 12px;font-size:12px" onclick="render()">ابحث عن وقت ←</button></div>`}
           <div class="field"><label>القسم</label>${sel("dept",state.departments.map(d=>[d.id,d.name]),b.dept)}</div>
           <div class="field"><label>${T.l==="كشف"?"الطبيب / الأخصائي":"الأخصائي"}</label>${sel("clin",[["","تلقائي — "+(b.type==="assess"?"مشرف القسم أول":b.type==="kashf"?"طبيب أو مشرف القسم":"الأقل ضغط")],...pool.map(s=>[s.id,`${s.name} (${fdLoad(s.name)} موعد)`])],b.clin)}</div>
           ${b.date&&b.time?"":`<div class="field"><label>من تاريخ</label><input class="input" type="date" value="${b.from}" onchange="rsBookSet('from',this.value)"></div><div class="field"><label>الوقت المفضل</label>${sel("pref",[["any","أي وقت"],["am","صباحي"],["pm","بعد الظهر"]],b.pref)}</div>`}</div>
+        ${b.type==="assess"?`<div class="field" style="margin-top:10px"><label>ملاحظات ولي الأمر للمختص</label><textarea class="textarea" rows="3" placeholder="اكتب ملاحظات الأسرة أو سبب طلب التقييم" oninput="state.rsBook.familyNote=this.value">${esc(b.familyNote||"")}</textarea><small class="muted">تصل الملاحظات للمختص مباشرة مع إشعار الحجز.</small></div>`:""}
         ${b.date&&b.time?`<div class="rs-fixed"><span>الموعد: <b>${esc(date(b.date))} · ${esc(time(b.time))}</b> عند <b>${esc((S[0]&&S[0].clin.name)||"—")}</b>${S[0]&&!S[0].free?' <span style="color:var(--danger)">— الوقت مو فاضي</span>':""}</span><button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="state.rsBook.date='';state.rsBook.time='';state.rsBook.fixedSlot=false;render()">اقترح وقت ثاني</button></div>`
           :S.length?`<div style="margin-top:12px;font-weight:700">أقرب الأوقات المتاحة</div><div class="rc-sug">${S.map((s,i)=>`<label class="${i===b.pick?"best":""}"><input type="radio" name="rspick" ${i===b.pick?"checked":""} onchange="rsBookSet('pick',${i})"><span><b>${esc(date(s.date))} · ${esc(time(s.time))}</b> عند <b>${esc(s.clin.name)}</b><br><small>${esc(deptName(b.dept))} · ${s.dur} دقيقة${i===0?" · ✨ المقترح":""}</small></span></label>`).join("")}</div>`
           :`<div class="fd-empty">${(b.mode==="new"&&!b.nf.child)||(b.mode==="existing"&&!b.pid)?"اختر الطفل أو اكتب اسمه عشان نطلّع الأوقات":"ما فيه وقت فاضي خلال أسبوعين — غيّر القسم أو الأخصائي"}</div>`}
@@ -278,25 +287,29 @@
     function rsBookConfirm(){
       const b=state.rsBook;const S=rsSuggest(b);const s=S[b.pick]||S[0];if(!s)return;const T=RS_T[b.type];
       let p=b.mode==="existing"?state.patients.find(x=>x.id===b.pid):null;
-      if(b.mode==="new"){if(!b.nf.child||!b.nf.phone)return notify("اكتب اسم الطفل والجوال");
+      if(b.mode==="new"){if(!String(b.nf.child||"").trim()||!String(b.nf.guardian||"").trim()||!String(b.nf.phone||"").trim())return notify("سجّل اسم الطفل وولي الأمر ورقم الجوال قبل حجز الكشف");
+        if(String(b.nf.phone).replace(/[^\d٠-٩]/g,"").length<8)return notify("تأكدي من رقم الجوال");
         const num=1000+state.patients.length+1;p={id:"p"+Date.now(),name:b.nf.child.trim(),file:"AWN-"+num,age:b.nf.age||"—",need:b.nf.reason||"",program:"",school:"",guardian:b.nf.guardian||"",phone:b.nf.phone,status:b.type==="kashf"?"كشف أولي":"قيد التقييم",notes:b.nf.reason?"سبب الزيارة: "+b.nf.reason:"",goal:"يُحدَّد بعد التقييم",next:"",code:"AWN-"+num,schoolCode:"",archived:false,assignedPrograms:[],consents:[]};
+        if(b.quickIntake)p.quickIntake=b.quickIntake;
         if(typeof defaultHealth==="function")p.health=defaultHealth(p);state.patients.unshift(p);
-        if(b.contact){const c=rcContacts().find(x=>x.id===b.contact);if(c)Object.assign(c,{status:"registered",pid:p.id})}}
+        if(b.contact){const c=rcContacts().find(x=>x.id===b.contact);if(c)Object.assign(c,{status:b.quickIntake?"converted":"registered",pid:p.id})}}
       if(!p)return;
       const moved=b.moveOf&&state.appointments.find(x=>x.id===b.moveOf);if(moved){moved.status="ملغي";moved.movedTo=true}
       const svc=b.type==="kashf"?`كشف — ${deptName(b.dept)}`:b.type==="assess"?`تقييم أولي — ${deptName(b.dept)}`:`${deptName(b.dept)} — ${T.l}`;
-      const a={id:"apt-"+Date.now()+"-rs",date:s.date,time:s.time,duration:s.dur,patient:p.name,service:svc,clinician:s.clin.name,room:b.type==="kashf"?"عيادة الكشف":b.type==="assess"?"غرفة التقييم":"غرفة "+deptName(b.dept).replace(/^قسم\s*/,""),status:"مجدول",newForStaff:true,bookedBy:"الاستقبال",rsType:b.type,price:T.price||b.type==="assess"||b.type==="kashf"?+b.price:0};
+      const familyNote=b.familyNote||(b.type==="kashf"&&b.mode==="new"?b.nf.reason:"");
+      const a={id:"apt-"+Date.now()+"-rs",date:s.date,time:s.time,duration:s.dur,patient:p.name,service:svc,clinician:s.clin.name,room:b.type==="kashf"?"عيادة الكشف":b.type==="assess"?"غرفة التقييم":"غرفة "+deptName(b.dept).replace(/^قسم\s*/,""),status:"مجدول",newForStaff:true,bookedBy:"الاستقبال",rsType:b.type,price:T.price||b.type==="assess"||b.type==="kashf"?+b.price:0,...(familyNote?{familyNote}:{})};
       if(moved&&moved.paid)Object.assign(a,{paid:true,invoiceId:moved.invoiceId,price:moved.price});
       state.appointments.push(a);
+      if(b.quickIntake&&b.contact){const c=rcContacts().find(x=>x.id===b.contact);if(c)c.assessmentAptId=a.id}
       if(a.price&&!a.paid&&b.pay==="now"){const inv=createInvoice({patientId:p.id,patientName:p.name,type:T.l,label:`${svc} — ${date(a.date)}`,amount:a.price,taxRate:0.15,payment:b.method});inv.fromReception=true;inv.aptId=a.id;a.paid=true;a.invoiceId=inv.id}
       if(b.compOf){const o=state.appointments.find(x=>x.id===b.compOf);if(o)o.compBooked=true}
       if(!p.next||p.next<a.date)p.next=a.date+"T"+a.time;
-      if(typeof cmSendTo==="function"){cmSendTo("fam:"+p.id,`${b.moveOf?"انتقل":"انحجز"} موعد ${p.name.split(" ")[0]} 🌿 ${T.l}: ${date(a.date)} الساعة ${time(a.time)} عند ${a.clinician}${a.price&&!a.paid?` · الرسوم ${a.price} ر.س عند الحضور`:""}.`);cmSendTo("staff:"+s.clin.id,`📅 ${T.l} جديد في جدولك: ${p.name} ${date(a.date)} ${time(a.time)}.`)}
+      if(typeof cmSendTo==="function"){cmSendTo("fam:"+p.id,`${b.moveOf?"انتقل":"انحجز"} موعد ${p.name.split(" ")[0]} 🌿 ${T.l}: ${date(a.date)} الساعة ${time(a.time)} عند ${a.clinician}${a.price&&!a.paid?` · الرسوم ${a.price} ر.س عند الحضور`:""}.`);cmSendTo("staff:"+s.clin.id,`📅 ${T.l} جديد في جدولك: ${p.name} ${date(a.date)} ${time(a.time)}.${a.familyNote?`\n📝 ملاحظات الأسرة: ${a.familyNote}`:""}`);if(b.type==="assess")a.assessmentNoticeSentAt=new Date().toISOString()}
       audit(`${b.moveOf?"تأجيل":"حجز"} ${T.l} من الاستقبال`,`${p.name} · ${date(a.date)} ${time(a.time)} · ${a.clinician}`);
-      state.rsPop=null;state.rsBook=null;persist();notify(`${b.moveOf?"انتقل الموعد":"انحجز "+T.l}: ${date(a.date)} ${time(a.time)} عند ${a.clinician}`);render();
+      state.rsPop=null;state.rsBook=null;state.rsQuick=null;persist();notify(`${b.moveOf?"انتقل الموعد":"انحجز "+T.l}: ${date(a.date)} ${time(a.time)} عند ${a.clinician}`);render();
     }
 
-    // التقييم في الاستقبال العادي: مشرف القسم يقيّم في موعد محجوز، مو موعد وهمي
+    // التقييم: مشرف القسم يقيّم في موعد محجوز، مو موعد وهمي
     const _rsApplyAssess=fdApplyAssess;
     fdApplyAssess=function(p,d,staff,at){
       const booked=state.appointments.find(a=>a.patient===p.name&&rsType(a)==="assess"&&a.status==="مجدول");
@@ -322,7 +335,7 @@
         if(d===today){const m=sipadMin(t);if(m+30<nowM){a.status="مكتمل";a.paid=true;a.kashfNote=need;state.childVisits=state.childVisits||[];state.childVisits.unshift({id:"cv-rsk"+i,patientId:p.id,name:p.name,date:d,inAt:new Date(Date.now()-((nowM-m)+8)*60000).toISOString(),aptId:a.id})}
           else if(m-25<nowM){state.childVisits=state.childVisits||[];state.childVisits.unshift({id:"cv-rsk"+i,patientId:p.id,name:p.name,date:d,inAt:new Date(Date.now()-12*60000).toISOString(),aptId:a.id})}}
         p.next=d+"T"+t;state.appointments.push(a)});
-      // تقييمات: الأطفال المحوّلين لمشرف القسم في الاستقبال العادي + تقييم أسرة من الكشف
+      // تقييمات الأطفال المحوّلين لمشرف القسم، وتقييم الأسرة من الكشف
       (typeof fdList==="function"?fdList():[]).filter(p=>p.intake.stage==="assess").slice(0,1).forEach((p,i)=>{const s=fdDeptSup(p.intake.dept);if(s)state.appointments.push({id:"apt-rsa-"+i,date:today,time:"11:00",duration:60,patient:p.name,service:"تقييم أولي — "+deptName(p.intake.dept),clinician:s.name,room:"غرفة التقييم",status:"مجدول",rsType:"assess",price:600,bookedBy:"الاستقبال"})});
       const p2=mkP("هيفاء عبدالله الزهراني","عبدالله الزهراني","0551002009","5 سنوات","تقييم شامل بطلب المدرسة");p2.status="قيد التقييم";
       const s2=fdDeptSup("inclusion")||doc(0);state.appointments.push({id:"apt-rsa-x",date:W[0],time:"09:00",duration:60,patient:p2.name,service:"تقييم أولي — "+deptName(s2.department),clinician:s2.name,room:"غرفة التقييم",status:"مجدول",rsType:"assess",price:600,paid:true,bookedBy:"الاستقبال"});
@@ -336,5 +349,5 @@
       rsBookOpen({type:"comp",pid:p?p.id:"",dept:rcDeptOfStaff(a.clinician)||"",clin:s?s.id:"",compOf:id})};
     // ---- ربط: المحطة تحل محل مكتب الاستقبال ----
     rcDeskView=rsView;
-    Object.assign(window,{rcDeskView,rcComp,rsTabSet,rsShift,rsOpenApt,rsClose,rsAct,rsPayOpen,rsPaySubmit,rsKashfNext,rsBookOpen,rsBookSet,rsBookConfirm,fdApplyAssess,fdCard});
+    Object.assign(window,{rcDeskView,rcComp,rsTabSet,rsShift,rsOpenApt,rsClose,rsAct,rsPayOpen,rsPaySubmit,rsBookOpen,rsQuickOpen,rsQuickSubmit,rsBookSet,rsBookConfirm,fdApplyAssess,fdCard});
     if(state.view==="rcDesk"||state.view==="intakeHome")render();

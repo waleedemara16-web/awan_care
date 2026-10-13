@@ -1,5 +1,5 @@
 const t=`"use strict";
-// أوان — الجزء 20: محرك الاستقبال الذكي (آلي بالكامل)
+// أوان — معالجة دراسة الحالة الإلكترونية
 // ١ دراسة الحالة الإلكترونية ← يفتح الملف، يحدد القسم، يحجز التقييم في جدول الأخصائي ويبلّغه — بدون الإدارة.
 // ٢ نتيجة التقييم ← يحط البرنامج المناسب في كل الأقسام، ينزّل الجداول للأخصائيين، يرسل الخطة للأهل،
 //    ويجهّز خطة كل قسم ويرسلها لمشرف القسم يعتمدها.
@@ -30,7 +30,7 @@ const t=`"use strict";
     })();
 
     // رسائل المحرك تطلع باسمه، مو باسم المستخدم الحالي
-    function smSend(th,text){const m=cmSendTo(th,text);if(m){m.fromId=null;m.fromDept=null;m.fromName="محرك الاستقبال الذكي";if(th==="dept:supervision"){m.toName="المشرف العام";m.ch="agent"}}return m}
+    function smSend(th,text){const m=cmSendTo(th,text);if(m){m.fromId=null;m.fromDept=null;m.fromName="الاستقبال";if(th==="dept:supervision"){m.toName="المشرف العام";m.ch="agent"}}return m}
     function smList(){return state.patients.filter(p=>p.smart&&!p.archived)}
     function smLog(p,t,human){p.smart.log=p.smart.log||[];p.smart.log.push({at:new Date().toISOString(),t,hu:!!human})}
     function smPlans(p){return (state.plans||[]).filter(x=>x.smartPid===p.id)}
@@ -55,7 +55,7 @@ const t=`"use strict";
       if(apt){
         smLog(p,\`حجز التقييم \${date(apt.date)} \${time(apt.time)} في جدول \${apt.clinician}\`);
         const s=state.staff.find(x=>x.name===apt.clinician);
-        if(s&&typeof smSend==="function"){smSend("staff:"+s.id,\`🆕 تقييم أولي جديد في جدولك: \${p.name} — \${date(apt.date)} \${time(apt.time)}. دراسة الحالة جاهزة في ملفه.\`);smLog(p,\`بلّغ \${s.name}\`)}
+        if(s&&typeof smSend==="function"&&!apt.assessmentNoticeSentAt){smSend("staff:"+s.id,\`🆕 تقييم أولي جديد في جدولك: \${p.name} — \${date(apt.date)} \${time(apt.time)}. دراسة الحالة جاهزة في ملفه.\`);smLog(p,\`بلّغ \${s.name}\`)}
       }
       persist();
     }
@@ -74,11 +74,11 @@ const t=`"use strict";
       const lines=smLinesFor(p);p.smart.lines=lines;
       // البرامج في كل الأقسام المطلوبة
       p.assignedPrograms=p.assignedPrograms||[];
-      lines.forEach((l,i)=>{const pr=(an.progs||[]).filter(x=>x.dept===l.dept).map(x=>x.prog);(pr.length?pr:["برنامج "+deptName(l.dept).replace(/^قسم\\s*/,"")]).forEach((prog,j)=>{if(!p.assignedPrograms.some(a=>a.program===prog))p.assignedPrograms.push({id:"ap-"+Date.now()+"-"+i+j,department:l.dept,program:prog,date:today,addedBy:"محرك الاستقبال الذكي"})})});
+      lines.forEach((l,i)=>{const pr=(an.progs||[]).filter(x=>x.dept===l.dept).map(x=>x.prog);(pr.length?pr:["برنامج "+deptName(l.dept).replace(/^قسم\\s*/,"")]).forEach((prog,j)=>{if(!p.assignedPrograms.some(a=>a.program===prog))p.assignedPrograms.push({id:"ap-"+Date.now()+"-"+i+j,department:l.dept,program:prog,date:today,addedBy:"الاستقبال"})})});
       smLog(p,\`حط البرامج: \${p.assignedPrograms.map(a=>a.program).join("، ")}\`);
       // الجداول
       const plan=fdPlan(p,{start:fdNextWorkday(),weeks:4,pref:"any",picks:{}},lines);
-      plan.list.forEach((a,i)=>state.appointments.push(Object.assign({id:"apt-"+Date.now()+"-sm"+i,service:deptName(a.dept)+" — جلسة علاجية",room:"غرفة "+deptName(a.dept).replace(/^قسم\\s*/,""),newForStaff:true,bookedBy:"محرك الاستقبال الذكي",smartPid:p.id},a)));
+      plan.list.forEach((a,i)=>state.appointments.push(Object.assign({id:"apt-"+Date.now()+"-sm"+i,service:deptName(a.dept)+" — جلسة علاجية",room:"غرفة "+deptName(a.dept).replace(/^قسم\\s*/,""),newForStaff:true,bookedBy:"الاستقبال",smartPid:p.id},a)));
       const byClin={};plan.list.forEach(a=>{byClin[a.clinician]=(byClin[a.clinician]||0)+1});
       Object.entries(byClin).forEach(([n,c])=>{const s=state.staff.find(x=>x.name===n);if(s&&typeof smSend==="function")smSend("staff:"+s.id,\`📅 \${p.name} انضاف لجدولك: \${c} جلسة خلال 4 أسابيع.\`)});
       smLog(p,\`نزّل الجداول: \${plan.list.length} جلسة عند \${Object.keys(byClin).join("، ")}\`);
@@ -97,7 +97,7 @@ const t=`"use strict";
       });
       smLog(p,\`جهّز خطط الأقسام وأرسلها للمشرفين: \${smSupervisors(p).map(s=>s.name).join("، ")||"—"}\`);
       p.smart.stage="approve";p.smart.assessAt=new Date().toISOString();
-      audit("الاستقبال الذكي: برنامج وجداول وخطط آلية",p.name);persist();
+      audit("الاستقبال: تجهيز البرنامج والجداول والخطة",p.name);persist();
     }
     // التقييم من آيباد الأخصائي
     const _smEvSubmit=evSubmit;
@@ -170,7 +170,7 @@ const t=`"use strict";
     function smBoardHtml(){
       smSeed();smTick();const all=smList();
       const chain=[["دراسة الحالة","الأسرة تعبّيها من الجوال أو آيباد الاستقبال",0],["فتح الملف وحجز التقييم","في جدول أخصائي القسم + تبليغه",0],["نتيجة التقييم","الأخصائي يسجّلها على آيباده",1],["البرامج والجداول","في كل الأقسام المطلوبة + الخطة للأهل",0],["اعتماد خطط الأقسام","مشرف كل قسم يعتمد خطته",1],["متابعة مستمرة","تقرير أسبوعي للمشرف العام والأقسام",0]];
-      return \`<section class="sm-hero"><h2>🤖 محرك الاستقبال الذكي</h2><p>من دراسة الحالة الإلكترونية لين الجداول والمتابعة — آلي بالكامل بدون تدخل الإدارة. الخانات الذهبية هي بس اللي يحتاج فيها إنسان.</p>
+      return \`<section class="sm-hero"><h2>📋 دراسة الحالة الإلكترونية</h2><p>من استلام بيانات الأسرة إلى تجهيز الملف والتقييم والمتابعة — الخانات الذهبية هي بس اللي تحتاج تدخل الفريق.</p>
         <div class="sm-chain">\${chain.map(([b,d,h])=>\`<div class="\${h?"hu":""}"><b>\${h?"👤":"🤖"} \${esc(b)}</b>\${esc(d)}</div>\`).join("")}</div></section>
         <div class="sm-board">\${SM_STAGES.map(s=>{const L=all.filter(p=>p.smart.stage===s.k);return \`<section class="fd-col"><div class="fd-col-h"><div><b>\${esc(s.l)}</b><small>\${esc(s.d)}</small></div><em>\${L.length}</em></div>\${L.map(smCard).join("")||\`<div class="fd-empty">ما فيه ملفات هنا</div>\`}</section>\`}).join("")}</div>\`;
     }
@@ -212,7 +212,7 @@ const t=`"use strict";
     }
     function smSimAssessQuiet(p){const apt=state.appointments.find(a=>a.id===p.smart.aptId);if(apt)apt.status="مكتمل";smAfterAssess(p,apt?apt.clinician:"الأخصائي")}
 
-    // ملفات قديمة من نسخة سابقة كانت تحط أطفال الاستقبال العادي كـ«ذكي»
+    // ملفات قديمة من نسخة سابقة كانت تصنّف بعض الأطفال ضمن المصدر الخطأ
     state.patients.forEach(p=>{if(p.intake&&p.intake.source==="smart")p.intake.source="normal"});
 
     const _smRender=render;
@@ -220,4 +220,4 @@ const t=`"use strict";
     smSeed();
     Object.assign(window,{intakeSubmit,evSubmit,reviewPlan,intakeAIView,brDecisions,render,smSimAssess,smDigest});
 `;export{t as default};
-//# sourceMappingURL=20-smart-intake-5V1XfmtF.js.map
+//# sourceMappingURL=20-smart-intake-oWuKzyrb.js.map

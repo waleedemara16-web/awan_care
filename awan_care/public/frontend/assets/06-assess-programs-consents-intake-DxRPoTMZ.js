@@ -458,7 +458,7 @@ const t=`"use strict";
       pt.caseStudy={fields:f,analysis:an,at:new Date().toISOString(),by:f.guardian||"ولي الأمر",source:"دراسة الحالة الإلكترونية"};
       state.patients.unshift(pt);csSyncSuggestions(pt);
       // 2) حجز تقييم أولي
-      const apt={id:"apt-"+Date.now(),date:slot.date,time:slot.time,patient:pt.name,service:"تقييم أولي — "+(INTAKE_INSTRUMENTS[dept]||"تقييم شامل"),clinician:clin?clin.name:"",room:"غرفة التقييم",status:"مجدول",newForStaff:true,autoBooked:true};
+      const apt={id:"apt-"+Date.now(),date:slot.date,time:slot.time,patient:pt.name,service:"تقييم أولي — "+(INTAKE_INSTRUMENTS[dept]||"تقييم شامل"),clinician:clin?clin.name:"",room:"غرفة التقييم",status:"مجدول",newForStaff:true,autoBooked:true,familyNote:f.reason||""};
       state.appointments.push(apt);
       // 3) إبلاغ المشرف
       const sups=state.staff.filter(s=>s.roleCategory==="supervisor"&&(s.department===dept||!s.department));
@@ -663,4 +663,4 @@ const t=`"use strict";
     // ↩ منقولة من js/16-profile-journey-brain.js (لازم تكون متعرّفة هنا قبل ما تتستخدم وقت التحميل)
     function cancelBooking(id){const b=state.sessionBookings.find(x=>x.id===id);if(b){b.status="ملغي";persist();notify("تم إلغاء الحجز، نتمنى نشوفك قريب");render()}}
 `;export{t as default};
-//# sourceMappingURL=06-assess-programs-consents-intake-Dt2OpUP1.js.map
+//# sourceMappingURL=06-assess-programs-consents-intake-DxRPoTMZ.js.map

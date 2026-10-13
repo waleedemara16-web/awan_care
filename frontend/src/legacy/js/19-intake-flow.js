@@ -1,8 +1,8 @@
 "use strict";
-// أوان — الجزء 19: الاستقبال العادي — مسار الأسرة من أول زيارة لين جداول الأخصائيين
+// أوان — الجزء 19: الاستقبال — مسار الأسرة من أول زيارة لين جداول الأخصائيين
 // الاستقبال يسجّل ← المشرف العام يعمل دراسة الحالة ويحدد القسم ← مشرف القسم يقيّم ويكتب التوجيه بالخطة
 // ← الاستقبال يحجز المواعيد حسب التوجيه ← الطفل يدخل جداول الأخصائيين.
-// الإحالات تدخل نفس السلسلة عند المشرف العام. الاستقبال الذكي مسار آلي منفصل (الجزء 20).
+// الإحالات ودراسة الحالة الإلكترونية تدخل نفس مسار الاستقبال.
 // كل خطوة تكتب في نفس البيانات اللي تقراها رحلة الطفل: دراسة الحالة، موعد التقييم، الأهداف المعتمدة، الموافقة، المواعيد.
 
     const FD_STAGES=[
@@ -106,7 +106,7 @@
       const f=Object.fromEntries(new FormData(e.target).entries());if(!f.dept)return notify("اختر القسم المحوّل له");
       const by=auditActor().name;fdApplyCase(p,f,by);
       const sup=fdDeptSup(f.dept);
-      if(sup&&typeof cmSendTo==="function")cmSendTo("staff:"+sup.id,`📋 ${p.name} محوّل لك للتقييم وكتابة التوجيه بالخطة العلاجية — دراسة الحالة جاهزة في «الاستقبال العادي».`);
+      if(sup&&typeof cmSendTo==="function")cmSendTo("staff:"+sup.id,`📋 ${p.name} محوّل لك للتقييم وكتابة التوجيه بالخطة العلاجية — دراسة الحالة جاهزة في «الاستقبال».`);
       audit("دراسة حالة ← تحويل لمشرف القسم",p.name);state.fdOpen=null;persist();
       notify(`انحفظت دراسة الحالة وانحوّل ${p.name.split(" ")[0]} لـ${sup?sup.name:deptName(f.dept)}`);render();
     }
@@ -236,7 +236,7 @@
       const myStage=state.role==="reception"?"reception":fdIsGeneralSup()?"case":fdIsDeptSup(fdMe())?"assess":null;
       const mine=all.filter(fdMine);
       const flow=[["الاستقبال","يسجّل الأسرة ويفتح الملف","reception"],["المشرف العام","دراسة الحالة وتحديد القسم","case"],["مشرف القسم","التقييم والتوجيه بالخطة","assess"],["الاستقبال","حجز المواعيد حسب التوجيه","reception"],["الأخصائيين","الطفل في جداولهم","done"]];
-      let h=head("الاستقبال","الاستقبال العادي","من أول ما تدخل الأسرة المركز لين ما ينحجز للطفل في جداول الأخصائيين — وكل خطوة عند صاحبها.",fdCan("register")?`<button class="btn btn-primary" onclick="fdOpen('register')">＋ تسجيل أسرة جديدة</button>`:"");
+      let h=head("الاستقبال","الاستقبال","من تسجيل الأسرة إلى دراسة الحالة والتقييم وحجز المواعيد — كل الخطوات مترابطة.",fdCan("register")?`<button class="btn btn-primary" onclick="fdOpen('register')">＋ تسجيل أسرة جديدة</button>`:"");
       h+=`<div class="fd-flow">${flow.map(([w,d,k],i)=>`<div class="fd-step ${myStage===k?"me":""}"><span class="n">${i+1}</span><b>${esc(w)}</b><small>${esc(d)}</small></div>`).join("")}</div>`;
       if(mine.length)h+=`<div class="fd-turn">${ic("bell",16)}<span>عندك <b>${mine.length}</b> ${mine.length===1?"ملف ينتظرك":"ملفات تنتظرك"} — ${esc(mine.slice(0,3).map(p=>p.name).join("، "))}</span></div>`;
       h+=`<div class="fd-board">${FD_STAGES.map(s=>{let L=by(s.k);if(s.k==="done")L=L.sort((a,b)=>String(b.intake.bookedAt).localeCompare(String(a.intake.bookedAt))).slice(0,8);
@@ -255,24 +255,29 @@
         </div><div class="fd-acts"><button type="button" class="btn btn-outline" onclick="fdClose()">إلغاء</button><button class="btn btn-primary">سجّل وحوّل للمشرف العام</button></div></form>`);
       if(!p||!p.intake)return "";
       if(o.k==="case"){const cs=caseStudyOf(p);const pf=cs&&cs.fields||{};const sug=cs&&cs.analysis&&cs.analysis.primary||(typeof rfDept==="function"?rfDept({name:p.need,note:p.intake.reason}):"");
-        return wrap(`<h3>دراسة الحالة — ${esc(p.name)}</h3><p class="muted">${esc(p.age||"")} · ولي الأمر: ${esc(p.guardian||"—")} · ${esc(FD_SRC[p.intake.source])}${p.intake.source==="smart"?" — الأسرة عبّت بيانات أولية من الرابط، تقدر تبني عليها":""}</p>
+        return wrap(`<h3>دراسة الحالة — ${esc(p.name)}</h3><p class="muted">${esc(p.age||"")} · ولي الأمر: ${esc(p.guardian||"—")}</p>
           <form onsubmit="fdCaseSubmit(event,'${p.id}')"><div class="form-grid">
-          ${FD_CASE_FIELDS.map(([k,l,req])=>field(k,l,k==="reason"?(p.intake.reason||pf.reason||""):"",{area:1,full:1,req}) ).join("")}
-          <div class="field"><label>القسم المحوّل له للتقييم</label><select class="select" name="dept" required><option value="">اختر القسم</option>${state.departments.map(d=>`<option value="${d.id}" ${sug===d.id?"selected":""}>${esc(d.name)}${fdDeptSup(d.id)?" — "+esc(fdDeptSup(d.id).name):""}</option>`).join("")}</select></div>
-          ${field("note","ملاحظة لمشرف القسم","",{})}
-          </div><div class="fd-acts"><button type="button" class="btn btn-outline" onclick="fdClose()">إلغاء</button><button class="btn btn-primary">احفظ وحوّل لمشرف القسم</button></div></form>`)}
-      if(o.k==="assess"){const cs=caseStudyOf(p);const sup=cs&&cs.sup||{};const own=p.intake.dept;
+          ${field("reason","أهم ملاحظة من الأسرة",p.intake.reason||pf.reason||p.need||"",{area:1,full:1,req:1,rows:3})}
+          <div class="field" style="grid-column:1/-1"><label>القسم المقترح للتقييم</label><select class="select" name="dept" required><option value="">اختاري القسم</option>${state.departments.map(d=>`<option value="${d.id}" ${sug===d.id?"selected":""}>${esc(d.name)}${fdDeptSup(d.id)?" — "+esc(fdDeptSup(d.id).name):""}</option>`).join("")}</select><small class="muted">الاقتراح مبني على ملاحظة الأسرة؛ تقدري تغيّريه.</small></div>
+          </div><details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">إضافة تفاصيل أخرى (اختياري)</summary><div class="form-grid" style="margin-top:10px">
+          ${FD_CASE_FIELDS.filter(([k])=>k!=="reason").map(([k,l])=>field(k,l,pf["sup_"+k]||pf[k]||"",{area:1,full:1,rows:2})).join("")}
+          ${field("note","ملاحظة لمشرف القسم",p.intake.caseNote||"",{area:1,full:1,rows:2})}
+          </div></details><div class="fd-acts"><button type="button" class="btn btn-outline" onclick="fdClose()">إلغاء</button><button class="btn btn-primary">حفظ وتحويل للتقييم</button></div></form>`)}
+      if(o.k==="assess"){const cs=caseStudyOf(p);const sup=cs&&cs.sup||{};const own=p.intake.dept;const an=cs&&cs.analysis||{};const suggestedGoals=(an.goals||[]).map(g=>g.text).filter(Boolean);
+        const deptRow=d=>`<tr><td><input type="checkbox" name="on_${d.id}" ${d.id===own?"checked":""}></td><td>${esc(d.name)}</td><td><select class="select" name="pw_${d.id}">${[1,2,3,4,5].map(n=>`<option ${n===(d.id===own?3:2)?"selected":""}>${n}</option>`).join("")}</select></td><td><select class="select" name="mn_${d.id}">${[30,40,45,60].map(n=>`<option value="${n}" ${n===40?"selected":""}>${n} دقيقة</option>`).join("")}</select></td></tr>`;
         return wrap(`<h3>التقييم والتوجيه بالخطة — ${esc(p.name)}</h3><p class="muted">${esc(deptName(own))} · دراسة الحالة من ${esc(p.intake.caseBy||"المشرف العام")}</p>
           <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">ملخص دراسة الحالة</summary><div class="fd-meta" style="margin-top:8px">${FD_CASE_FIELDS.filter(([k])=>sup[k]).map(([k,l])=>`<b>${esc(l)}:</b> ${esc(sup[k])}`).join("<br>")||"—"}${p.intake.caseNote?`<br><b>ملاحظة المشرف:</b> ${esc(p.intake.caseNote)}`:""}</div></details>
           <form onsubmit="fdAssessSubmit(event,'${p.id}')"><div class="form-grid">
-          ${field("summary","نتيجة التقييم (ملخص)","",{area:1,full:1,req:1,rows:3})}
+          ${field("summary","نتيجة التقييم (عدّلي الملخص المقترح)",p.intake.caseNote||p.intake.reason||p.need||sup.reason||"",{area:1,full:1,req:1,rows:3})}
           <div class="field"><label>شدة الاحتياج</label><select class="select" name="level"><option>بسيط</option><option selected>متوسط</option><option>شديد</option></select></div>
           </div>
           <div style="margin-top:12px;font-weight:700">التوجيه بالخطة العلاجية</div>
+          <p class="muted" style="margin:3px 0 8px">القسم المحوّل إليه محدد مسبقًا. أضيفي أقسامًا أخرى فقط إذا احتاج الطفل.</p>
           <table class="fd-lines"><thead><tr><th></th><th>القسم</th><th>جلسات أسبوعيًا</th><th>مدة الجلسة</th></tr></thead><tbody>
-          ${state.departments.map(d=>`<tr><td><input type="checkbox" name="on_${d.id}" ${d.id===own?"checked":""}></td><td>${esc(d.name)}</td><td><select class="select" name="pw_${d.id}">${[1,2,3,4,5].map(n=>`<option ${n===(d.id===own?3:2)?"selected":""}>${n}</option>`).join("")}</select></td><td><select class="select" name="mn_${d.id}">${[30,40,45,60].map(n=>`<option value="${n}" ${n===40?"selected":""}>${n} دقيقة</option>`).join("")}</select></td></tr>`).join("")}
+          ${state.departments.filter(d=>d.id===own).map(deptRow).join("")}
           </tbody></table>
-          <div class="form-grid">${field("goals","الأهداف الأساسية (هدف في كل سطر)","",{area:1,full:1,req:1,rows:4})}${field("notes","توصيات للأسرة والاستقبال","",{area:1,full:1})}</div>
+          <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">إضافة أقسام أخرى للخطة (اختياري)</summary><div style="overflow:auto"><table class="fd-lines"><thead><tr><th></th><th>القسم</th><th>جلسات أسبوعيًا</th><th>مدة الجلسة</th></tr></thead><tbody>${state.departments.filter(d=>d.id!==own).map(deptRow).join("")}</tbody></table></div></details>
+          <div class="form-grid">${field("goals","الأهداف المقترحة — راجعيها وعدّليها",suggestedGoals.join("\n"),{area:1,full:1,req:1,rows:3})}${field("notes","توصيات إضافية (اختياري)","",{area:1,full:1,rows:2})}</div>
           <div class="fd-acts"><button type="button" class="btn btn-outline" onclick="fdClose()">إلغاء</button><button class="btn btn-primary">اعتمد التوجيه وحوّل للاستقبال</button></div></form>`)}
       if(o.k==="book"){const c=fdBookCfg(p);const plan=fdPlan(p,c);const d=p.intake.direction||{};
         return wrap(`<h3>حجز المواعيد — ${esc(p.name)}</h3><p class="muted">توجيه ${esc(d.by||"مشرف القسم")}: <b>${esc(fdLinesText(p))}</b>${d.notes?" · "+esc(d.notes):""}</p>
@@ -293,7 +298,7 @@
     // ---- ربط الشاشة بالمنصة ----
     (function fdWire(){
       const hub=HUBS.find(h=>h.k==="intake");
-      if(hub){hub.l="الاستقبال";hub.d="عادي وذكي وإحالات";hub.views=[["frontDesk","الاستقبال العادي"],["intakeAI","الاستقبال الذكي"],["calls","الاستقبال الصوتي"],["referrals","الإحالات"]];
+      if(hub){hub.l="الاستقبال";hub.d="تسجيل الأسر ودراسة الحالة والإحالات";hub.views=[["frontDesk","تسجيل الأسرة"],["intakeAI","دراسة الحالة"],["calls","الاستقبال الصوتي"],["referrals","الإحالات"]];
         const g=ORG_GROUPS.find(x=>x.k==="intake");if(g)g.keys=hub.views.map(v=>v[0])}
       if(!navItems.some(n=>n[0]==="frontDesk"))navItems.splice(1,0,["frontDesk","referrals"]);
       ["reception","supervisor","management"].forEach(r=>{const nav=roles[r].nav;if(!nav.includes("frontDesk"))nav.unshift("frontDesk")});
@@ -306,8 +311,8 @@
     brDecisions=function(){
       const out=_fdBrDecisions.apply(this,arguments);if(state.role!=="supervisor")return out;
       fdList().filter(fdMine).forEach(p=>{const s=p.intake.stage;
-        out.push(s==="case"?{cat:"kids",sev:2,ic:"book",src:"الاستقبال العادي",t:`دراسة حالة جديدة: ${p.name}`,d:`سبب المراجعة: ${p.intake.reason||"—"}`,acts:[["ابدأ دراسة الحالة",`fdOpen('case','${p.id}')`,1]]}
-          :{cat:"kids",sev:2,ic:"target",src:"الاستقبال العادي",t:`تقييم وتوجيه: ${p.name}`,d:`محوّل من ${p.intake.caseBy||"المشرف العام"}`,acts:[["قيّم واكتب التوجيه",`fdOpen('assess','${p.id}')`,1]]})});
+        out.push(s==="case"?{cat:"kids",sev:2,ic:"book",src:"الاستقبال",t:`دراسة حالة جديدة: ${p.name}`,d:`سبب المراجعة: ${p.intake.reason||"—"}`,acts:[["ابدأ دراسة الحالة",`fdOpen('case','${p.id}')`,1]]}
+          :{cat:"kids",sev:2,ic:"target",src:"الاستقبال",t:`تقييم وتوجيه: ${p.name}`,d:`محوّل من ${p.intake.caseBy||"المشرف العام"}`,acts:[["قيّم واكتب التوجيه",`fdOpen('assess','${p.id}')`,1]]})});
       return out.sort((a,b)=>b.sev-a.sev);
     };
 
