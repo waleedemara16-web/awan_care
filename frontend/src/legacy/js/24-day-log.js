@@ -93,8 +93,8 @@
     rsBookOpen=function(o){const r=_ocBookOpen.apply(this,arguments);if(o&&o.fromOutcome&&state.rsBook)state.rsBook.fromOutcome=o.fromOutcome;return r};
     const _ocTasks=rsTasks;
     rsTasks=function(){const T=_ocTasks.apply(this,arguments).sort((a,b)=>b.p-a.p);const top=[];
-      ocPending().forEach(a=>{const o=a.outcome;top.push({p:3,ic:"📥",t:`${o.by}: ${a.patient} — ${o.label}`,d:`${o.next}${o.sum?" · "+o.sum.slice(0,70):""}`,acts:[[o.next,`ocAct('${a.id}')`,1],["التفاصيل",`rsOpenApt('${a.id}')`]]})});
-      rcMsgs().filter(m=>!m.rcDone).slice(0,6).forEach(m=>top.push({p:3,ic:"📣",t:`${m.fromName}: ${m.text}`,d:fdAgo(new Date(m.at).toISOString()),acts:[["تم",`rcMsgDone('${m.id}')`,1]]}));
+      ocPending().forEach(a=>{const o=a.outcome;top.push({p:3,ic:"📥",t:`${o.by}: ${a.patient} — ${o.label}`,d:`${o.next}${o.sum?" · "+o.sum.slice(0,70):""}`,acts:[[o.next,`ocAct('${a.id}')`,1],["التفاصيل",`rsOpenApt('${a.id}')`]],execute:()=>ocAct(a.id)})});
+      rcMsgs().filter(m=>!m.rcDone).slice(0,6).forEach(m=>top.push({p:3,ic:"📣",t:`${m.fromName}: ${m.text}`,d:fdAgo(new Date(m.at).toISOString()),acts:[["تم",`rcMsgDone('${m.id}')`,1]],execute:()=>rcMsgDone(m.id)}));
       return [...top,...T]};
     // في نافذة الموعد: نتيجة الأخصائي + زر «ادخل باسم الأخصائي» للعرض
     const _ocPop=rsPopHtml;

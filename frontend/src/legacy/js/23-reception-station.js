@@ -97,11 +97,28 @@
 
     // ---- المهام (يحتاج منك) ----
     function rsAssessNeeded(){return (typeof fdList==="function"?fdList():[]).filter(p=>p.intake.stage==="assess"&&!state.appointments.some(a=>a.patient===p.name&&rsType(a)==="assess"&&a.status==="مجدول"))}
+    function rsAutoBookAssessment(pid){
+      const p=state.patients.find(x=>x.id===pid);
+      if(!p||!p.intake||p.intake.stage!=="assess")return notify("المهمة اتحدثت؛ حدّث الصفحة");
+      if(state.appointments.some(a=>a.patient===p.name&&rsType(a)==="assess"&&a.status==="مجدول"))return notify("موعد التقييم محجوز بالفعل");
+      const dept=p.intake.dept;
+      if(!dept)return notify("لا يوجد قسم محدد في الإحالة؛ راجع المشرف قبل الحجز");
+      const b={type:"assess",mode:"existing",pid:p.id,dept,clin:"",from:rcToday(),pref:"any",pick:0,price:RS_T.assess.price,pay:"later",method:"كاش"};
+      const slots=rsSuggest(b);
+      if(!slots.length)return notify(`ما لقينا موعدًا متاحًا في ${deptName(dept)}؛ افتح الحجز لاختيار إعداد آخر`);
+      state.rsBook=b;rsBookConfirm();
+    }
+    function rsExecuteTask(index){
+      const task=rsTasks()[index];
+      if(!task)return notify("المهمة اتحدثت؛ حدّث الصفحة");
+      if(typeof task.execute!=="function")return notify("المهمة تحتاج مراجعة يدوية");
+      return task.execute();
+    }
     function rsTasks(){
       const T=[];
-      rsAssessNeeded().forEach(p=>{const s=fdDeptSup(p.intake.dept);T.push({p:3,ic:"🧩",t:`احجز موعد تقييم: ${p.name}`,d:`عند ${s?s.name:"مشرف "+deptName(p.intake.dept)} — حوّله المشرف العام ${fdAgo(p.intake.caseAt)}`,acts:[["احجز التقييم",`rsBookOpen({type:'assess',pid:'${p.id}',dept:'${p.intake.dept}',clin:'${s?s.id:""}'})`,1]]})});
-      (typeof fdList==="function"?fdList():[]).filter(p=>p.intake.stage==="book").forEach(p=>T.push({p:3,ic:"📅",t:`احجز جلسات الخطة: ${p.name}`,d:`توجيه ${p.intake.direction&&p.intake.direction.by||"مشرف القسم"}: ${fdLinesText(p)}`,acts:[["احجز الجلسات",`fdOpen('book','${p.id}')`,1]]}));
-      state.appointments.filter(a=>a.date===rcToday()&&rsPrice(a)&&!a.paid&&a.status==="مكتمل").forEach(a=>T.push({p:2,ic:"💳",t:`تحصيل: ${a.patient} (${rsPrice(a)} ر.س)`,d:`${RS_T[rsType(a)].l} خلص ولم يُدفع`,acts:[["تحصيل",`rsPayOpen('${a.id}')`,1]]}));
+      rsAssessNeeded().forEach(p=>{const s=fdDeptSup(p.intake.dept);T.push({p:3,ic:"🧩",t:`احجز موعد تقييم: ${p.name}`,d:`عند ${s?s.name:"مشرف "+deptName(p.intake.dept)} — حوّله المشرف العام ${fdAgo(p.intake.caseAt)}`,acts:[["احجز التقييم",`rsBookOpen({type:'assess',pid:'${p.id}',dept:'${p.intake.dept}',clin:'${s?s.id:""}'})`,1]],execute:()=>rsAutoBookAssessment(p.id)} )});
+      (typeof fdList==="function"?fdList():[]).filter(p=>p.intake.stage==="book").forEach(p=>T.push({p:3,ic:"📅",t:`احجز جلسات الخطة: ${p.name}`,d:`توجيه ${p.intake.direction&&p.intake.direction.by||"مشرف القسم"}: ${fdLinesText(p)}`,acts:[["احجز الجلسات",`fdOpen('book','${p.id}')`,1]],execute:()=>fdOpen("book",p.id)}));
+      state.appointments.filter(a=>a.date===rcToday()&&rsPrice(a)&&!a.paid&&a.status==="مكتمل").forEach(a=>T.push({p:2,ic:"💳",t:`تحصيل: ${a.patient} (${rsPrice(a)} ر.س)`,d:`${RS_T[rsType(a)].l} خلص ولم يُدفع`,acts:[["تحصيل",`rsPayOpen('${a.id}')`,1]],execute:()=>rsPayOpen(a.id)}));
       rcTasks().forEach(t=>{if(!/احجز مواعيد/.test(t.t))T.push(t)});
       return T.sort((a,b)=>b.p-a.p);
     }
@@ -133,7 +150,7 @@
       const waitBox=`<section class="rs-box"><h2>🪑 الصالة<small>وصلوا وينتظرون</small></h2>${wait.map(a=>{const m=rsWaitMin(a);return `<div class="rs-wait"><span class="m ${m>=15?"long":""}">${m}د</span><div class="t"><b>${esc(a.patient)}</b><small>${RS_T[rsType(a)].ic} ${esc(time(a.time))} عند ${esc(a.clinician)}</small></div><button class="btn btn-primary" onclick="rsAct('${a.id}','in')">دخّله</button></div>`}).join("")||`<div class="fd-empty">الصالة فاضية</div>`}
         ${inside.length?`<div style="margin-top:10px;font-weight:700;font-size:12px;color:var(--muted)">داخل الحين</div>${inside.map(a=>`<div class="rs-wait"><span class="m" style="color:#166534">●</span><div class="t"><b>${esc(a.patient)}</b><small>عند ${esc(a.clinician)}</small></div><button class="btn btn-outline" onclick="rsAct('${a.id}','done')">خلص</button></div>`).join("")}`:""}</section>`;
       const T=rsTasks().slice(0,6);
-      const tasksBox=`<section class="rs-box"><h2>📋 يحتاج منك<small><button class="btn btn-outline" style="padding:4px 9px;font-size:11px" onclick="rsTabSet('tasks')">الكل</button></small></h2>${T.map(t=>`<div class="rc-task p${t.p}" style="margin-bottom:6px"><span class="ic">${t.ic}</span><div class="tx"><b>${esc(t.t)}</b><small>${esc(t.d)}</small></div><div class="acts">${t.acts.slice(0,1).map(([l,js])=>`<button class="btn btn-primary" onclick="${js}">${esc(l)}</button>`).join("")}</div></div>`).join("")||`<div class="fd-empty">✓ كل شي تمام</div>`}</section>`;
+      const tasksBox=`<section class="rs-box"><h2>📋 يحتاج منك<small><button class="btn btn-outline" style="padding:4px 9px;font-size:11px" onclick="rsTabSet('tasks')">الكل</button></small></h2>${T.map((t,i)=>`<div class="rc-task p${t.p}" style="margin-bottom:6px"><span class="ic">${t.ic}</span><div class="tx"><b>${esc(t.t)}</b><small>${esc(t.d)}</small></div><div class="acts">${t.acts.slice(0,1).map(([l,js])=>`<button class="btn btn-primary" onclick="${js}">${esc(l)}</button>`).join("")}<button class="btn btn-outline" onclick="rsExecuteTask(${i})" title="ينفّذ الإجراء الآمن أو يفتح الخطوة الجاهزة للمراجعة">✦ تنفيذ آلي</button></div></div>`).join("")||`<div class="fd-empty">✓ كل شي تمام</div>`}</section>`;
       return h+`<div class="rs-grid2"><div>${lane("🩺 كشوفات اليوم",K,"kashf")}${lane("🧩 تقييمات اليوم",A,"assess")}${sess}</div><div>${waitBox}${tasksBox}</div></div>`;
     }
     function rsCal(){
@@ -164,7 +181,7 @@
       return `<section class="rs-box"><h2>💬 الاستفسارات<small>واتساب وسوشيال واتصال — حوّل أي استفسار لكشف بضغطة</small></h2><div class="rc-chips">${chips.map(([k,l])=>`<button class="${f===k?"on":""}" onclick="state.rcChF='${k}';render()">${esc(l)}</button>`).join("")}</div>
         ${CL.map(c=>rcContactCard(c).replace('<div class="acts">',`<div class="acts">${["new","contacted"].includes(c.status)?`<button class="btn btn-primary" onclick="rsBookOpen({type:'kashf',mode:'new',contact:'${c.id}'})">🩺 احجز كشف</button>`:""}`).replace('class="btn btn-primary" onclick="rcOpen(\'contactAct\'','class="btn btn-outline" onclick="rcOpen(\'contactAct\'')).join("")||`<div class="fd-empty">ما فيه استفسارات هنا</div>`}</section>`;
     }
-    function rsTasksTab(T){return `<section class="rs-box"><h2>📋 يحتاج منك<small>مرتبة بالأولوية</small></h2>${T.map(t=>`<div class="rc-task p${t.p}"><span class="ic">${t.ic}</span><div class="tx"><b>${esc(t.t)}</b><small>${esc(t.d)}</small></div><div class="acts">${t.acts.map(([l,js,pri])=>`<button class="btn ${pri?"btn-primary":"btn-outline"}" onclick="${js}">${esc(l)}</button>`).join("")}</div></div>`).join("")||`<div class="fd-empty">✓ ما عندك شي الحين</div>`}</section>`}
+    function rsTasksTab(T){return `<section class="rs-box"><h2>📋 يحتاج منك<small>مرتبة بالأولوية — الإدارة الذكية تقترح الإجراء الأنسب</small></h2>${T.map((t,i)=>`<div class="rc-task p${t.p}"><span class="ic">${t.ic}</span><div class="tx"><b>${esc(t.t)}</b><small>${esc(t.d)}</small></div><div class="acts">${t.acts.map(([l,js,pri])=>`<button class="btn ${pri?"btn-primary":"btn-outline"}" onclick="${js}">${esc(l)}</button>`).join("")}<button class="btn btn-outline" onclick="rsExecuteTask(${i})" title="ينفّذ الإجراء الآمن أو يفتح الخطوة الجاهزة للمراجعة">✦ تنفيذ آلي</button></div></div>`).join("")||`<div class="fd-empty">✓ ما عندك شي الحين</div>`}</section>`}
 
     // ---- نافذة الموعد: كل إجراءات الاستقبال على موعد واحد ----
     function rsOpenApt(id){state.rsPop={k:"apt",id};render()}
@@ -349,5 +366,5 @@
       rsBookOpen({type:"comp",pid:p?p.id:"",dept:rcDeptOfStaff(a.clinician)||"",clin:s?s.id:"",compOf:id})};
     // ---- ربط: المحطة تحل محل مكتب الاستقبال ----
     rcDeskView=rsView;
-    Object.assign(window,{rcDeskView,rcComp,rsTabSet,rsShift,rsOpenApt,rsClose,rsAct,rsPayOpen,rsPaySubmit,rsBookOpen,rsQuickOpen,rsQuickSubmit,rsBookSet,rsBookConfirm,fdApplyAssess,fdCard});
+    Object.assign(window,{rcDeskView,rcComp,rsTabSet,rsShift,rsOpenApt,rsClose,rsAct,rsPayOpen,rsPaySubmit,rsBookOpen,rsQuickOpen,rsQuickSubmit,rsBookSet,rsBookConfirm,rsExecuteTask,fdApplyAssess,fdCard});
     if(state.view==="rcDesk"||state.view==="intakeHome")render();

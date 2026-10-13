@@ -82,15 +82,15 @@
     function rcTasks(){
       const T=[];const today=rcToday();
       const no=rcDayApts(today).filter(a=>rcStatus(a)[0]==="no");
-      no.slice(0,5).forEach(a=>T.push({p:3,ic:"⏰",t:`ما وصل: ${a.patient}`,d:`موعده ${time(a.time)} مع ${a.clinician}`,acts:[["وصل",`rcArrive('${a.id}')`,1],["غياب + تعويض",`rcAbsent('${a.id}')`]]}));
-      if(no.length>5)T.push({p:3,ic:"⏰",t:`و${no.length-5} أطفال ثانيين ما وصلوا`,d:"تحت في مواعيد اليوم",acts:[["اعرضهم",`rcSet('rcApF','no')`,1]]});
-      rcContacts().filter(c=>c.status==="new").sort((a,b)=>a.at-b.at).forEach(c=>{const h=(Date.now()-c.at)/36e5;T.push({p:h>2?3:2,ic:RC_CH[c.ch][0],t:`رد على ${c.guardian||c.phone} (${RC_CH[c.ch][1]})`,d:`${c.child?c.child+" · ":""}${fdAgo(new Date(c.at).toISOString())}`,acts:[["تواصل",`rcOpen('contactAct','${c.id}')`,1]]})});
-      rcContacts().filter(c=>c.status==="contacted"&&c.follow&&c.follow<=today).forEach(c=>T.push({p:2,ic:"↩️",t:`تابع ${c.guardian}`,d:`متفقين نتواصل ${date(c.follow)}${c.note?" · "+c.note:""}`,acts:[["تواصل",`rcOpen('contactAct','${c.id}')`,1]]}));
-      (typeof fdList==="function"?fdList():[]).filter(p=>p.intake.stage==="book").forEach(p=>T.push({p:2,ic:"📅",t:`احجز مواعيد ${p.name}`,d:`توجيه ${p.intake.direction&&p.intake.direction.by||"مشرف القسم"}: ${fdLinesText(p)}`,acts:[["احجز المواعيد",`fdOpen('book','${p.id}')`,1]]}));
-      (state.sessionBookings||[]).filter(b=>!b.seen&&b.status!=="ملغي").forEach(b=>T.push({p:2,ic:"🌐",t:`طلب حجز من بوابة الأسرة: ${b.patientName}`,d:`${b.day||""} ${b.time||""} · ${b.specialist||""}`,acts:[["تم الاطلاع",`markBookingSeen('${b.id}')`,1]]}));
-      state.appointments.filter(a=>a.status==="غائب"&&a.date>=localDateOf(new Date(Date.now()-3*864e5))&&!a.compBooked).slice(0,5).forEach(a=>T.push({p:1,ic:"🔁",t:`احجز تعويض لـ${a.patient}`,d:`غاب ${date(a.date)} ${time(a.time)} عند ${a.clinician}`,acts:[["احجز تعويض",`rcComp('${a.id}')`,1]]}));
+      no.slice(0,5).forEach(a=>T.push({p:3,ic:"⏰",t:`ما وصل: ${a.patient}`,d:`موعده ${time(a.time)} مع ${a.clinician}`,acts:[["وصل",`rsOpenApt('${a.id}')`,1],["غياب + تعويض",`rcAbsent('${a.id}')`]],execute:()=>rsOpenApt(a.id)}));
+      if(no.length>5)T.push({p:3,ic:"⏰",t:`و${no.length-5} أطفال ثانيين ما وصلوا`,d:"تحت في مواعيد اليوم",acts:[["اعرضهم",`rcSet('rcApF','no')`,1]],execute:()=>rcSet("rcApF","no")});
+      rcContacts().filter(c=>c.status==="new").sort((a,b)=>a.at-b.at).forEach(c=>{const h=(Date.now()-c.at)/36e5;T.push({p:h>2?3:2,ic:RC_CH[c.ch][0],t:`رد على ${c.guardian||c.phone} (${RC_CH[c.ch][1]})`,d:`${c.child?c.child+" · ":""}${fdAgo(new Date(c.at).toISOString())}`,acts:[["تواصل",`rcOpen('contactAct','${c.id}')`,1]],execute:()=>rcOpen("contactAct",c.id)})});
+      rcContacts().filter(c=>c.status==="contacted"&&c.follow&&c.follow<=today).forEach(c=>T.push({p:2,ic:"↩️",t:`تابع ${c.guardian}`,d:`متفقين نتواصل ${date(c.follow)}${c.note?" · "+c.note:""}`,acts:[["تواصل",`rcOpen('contactAct','${c.id}')`,1]],execute:()=>rcOpen("contactAct",c.id)}));
+      (typeof fdList==="function"?fdList():[]).filter(p=>p.intake.stage==="book").forEach(p=>T.push({p:2,ic:"📅",t:`احجز مواعيد ${p.name}`,d:`توجيه ${p.intake.direction&&p.intake.direction.by||"مشرف القسم"}: ${fdLinesText(p)}`,acts:[["احجز المواعيد",`fdOpen('book','${p.id}')`,1]],execute:()=>fdOpen("book",p.id)}));
+      (state.sessionBookings||[]).filter(b=>!b.seen&&b.status!=="ملغي").forEach(b=>T.push({p:2,ic:"🌐",t:`طلب حجز من بوابة الأسرة: ${b.patientName}`,d:`${b.day||""} ${b.time||""} · ${b.specialist||""}`,acts:[["تم الاطلاع",`markBookingSeen('${b.id}')`,1]],execute:()=>markBookingSeen(b.id)}));
+      state.appointments.filter(a=>a.status==="غائب"&&a.date>=localDateOf(new Date(Date.now()-3*864e5))&&!a.compBooked).slice(0,5).forEach(a=>T.push({p:1,ic:"🔁",t:`احجز تعويض لـ${a.patient}`,d:`غاب ${date(a.date)} ${time(a.time)} عند ${a.clinician}`,acts:[["احجز تعويض",`rcComp('${a.id}')`,1]],execute:()=>rcComp(a.id)}));
       const tm=rcDayApts(rcTomorrow()).filter(a=>!a.confirmSent);
-      if(tm.length)T.push({p:1,ic:"✅",t:`أكّد مواعيد بكرة (${tm.length})`,d:"رسالة تذكير لكل أسرة بالوقت واسم الأخصائي",acts:[["أرسل التذكيرات",`rcConfirmTomorrow()`,1]]});
+      if(tm.length)T.push({p:1,ic:"✅",t:`أكّد مواعيد بكرة (${tm.length})`,d:"رسالة تذكير لكل أسرة بالوقت واسم الأخصائي",acts:[["أرسل التذكيرات",`rcConfirmTomorrow()`,1]],execute:()=>rcConfirmTomorrow()});
       return T.sort((a,b)=>b.p-a.p);
     }
 
@@ -106,7 +106,7 @@
         <button class="rc-kpi ${newC?"hot":""}" onclick="document.getElementById('rc-contacts').scrollIntoView({behavior:'smooth'})"><b>${newC}</b><span>تواصل جديد</span><small>واتساب وسوشيال واتصال</small></button>
         <button class="rc-kpi" onclick="rcSet('rcDay','today')"><b>${todayA.length}</b><span>مواعيد اليوم</span><small>وصل ${arrived}</small></button>
         <button class="rc-kpi" onclick="rcSet('rcDay','tomorrow')"><b>${tm.length}</b><span>مواعيد بكرة</span><small>${tm.filter(a=>!a.confirmSent).length} بانتظار تأكيد</small></button></div>`;
-      h+=`<section class="rc-sec" id="rc-tasks"><h2>📋 مهامي الحين</h2><p>مرتبة بالأولوية — الأحمر أول.</p>${T.length?T.map(t=>`<div class="rc-task p${t.p}"><span class="ic">${t.ic}</span><div class="tx"><b>${esc(t.t)}</b><small>${esc(t.d)}</small></div><div class="acts">${t.acts.map(([l,js,pri])=>`<button class="btn ${pri?"btn-primary":"btn-outline"}" onclick="${js}">${esc(l)}</button>`).join("")}</div></div>`).join(""):`<div class="fd-empty">✓ ما عندك مهام الحين</div>`}</section>`;
+      h+=`<section class="rc-sec" id="rc-tasks"><h2>📋 مهامي الحين</h2><p>مرتبة بالأولوية — الأحمر أول.</p>${T.length?T.map((t,i)=>`<div class="rc-task p${t.p}"><span class="ic">${t.ic}</span><div class="tx"><b>${esc(t.t)}</b><small>${esc(t.d)}</small></div><div class="acts">${t.acts.map(([l,js,pri])=>`<button class="btn ${pri?"btn-primary":"btn-outline"}" onclick="${js}">${esc(l)}</button>`).join("")}<button class="btn btn-outline" onclick="rsExecuteTask(${i})" title="ينفّذ الإجراء الآمن أو يفتح الخطوة الجاهزة للمراجعة">✦ تنفيذ آلي</button></div></div>`).join(""):`<div class="fd-empty">✓ ما عندك مهام الحين</div>`}</section>`;
       // التواصل
       const f=state.rcChF||"open";const CL=C.filter(c=>f==="all"?true:f==="open"?["new","contacted"].includes(c.status):c.ch===f).sort((a,b)=>b.at-a.at);
       const chips=[["open","المفتوحة"],["all","الكل"],...Object.entries(RC_CH).filter(([k])=>C.some(c=>c.ch===k)).map(([k,v])=>[k,v[0]+" "+v[1]])];
