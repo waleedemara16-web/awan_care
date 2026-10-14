@@ -94,6 +94,7 @@ const e=`"use strict";
 
 ملخص النقاش مع الأسرة:
 \${m.notes&&m.notes.trim()?m.notes.trim():"لم تُسجَّل ملاحظات نقاش."}
+\${m.transcript&&m.transcript.trim()?\`\\n\\nتفريغ التسجيل الصوتي:\\n\${m.transcript.trim()}\`:""}
 
 القرارات المتخذة خلال الاجتماع:
 \${decisionsBlock}
@@ -112,6 +113,7 @@ const e=`"use strict";
 
 ملخص النقاش:
 \${m.notes&&m.notes.trim()?m.notes.trim():"لم تُسجَّل ملاحظات نقاش."}
+\${m.transcript&&m.transcript.trim()?\`\\n\\nتفريغ التسجيل الصوتي:\\n\${m.transcript.trim()}\`:""}
 
 القرارات المتخذة:
 \${decisionsBlock}
@@ -186,6 +188,62 @@ const e=`"use strict";
       },1000);
     }
     function stopMeetingTimer(){if(meetingTimerHandle){clearInterval(meetingTimerHandle);meetingTimerHandle=null}}
+    let meetingCapture=null;
+    let meetingAudioBlob=null;
+    function meetingRecordingConsent(){
+      const checkbox=document.getElementById("meeting-recording-consent");
+      return !!(checkbox&&checkbox.checked);
+    }
+    function beginMeetingCapture(id,stream){
+      if(meetingCapture){stream.getTracks().forEach(t=>t.stop());notify("يوجد تسجيل اجتماع جارٍ بالفعل");return false}
+      if(meetingAudioBlob){stream.getTracks().forEach(t=>t.stop());notify("فرّغ التسجيل السابق أو احذفه قبل بدء تسجيل آخر");return false}
+      try{
+        const recorder=new MediaRecorder(stream);
+        const chunks=[];
+        let resolveStopped;
+        const stopped=new Promise(resolve=>{resolveStopped=resolve});
+        const capture={id,recorder,stream,chunks,stopped};
+        recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+        recorder.onstop=()=>{
+          stream.getTracks().forEach(t=>t.stop());
+          const blob=new Blob(chunks,{type:recorder.mimeType||"audio/webm"});
+          meetingCapture=null;
+          const m=state.meetings.find(x=>x.id===id);
+          if(blob.size&&m){
+            meetingAudioBlob={id,blob};
+            m.recordingStatus="captured";
+            m.recordingDurationSeconds=Math.max(1,Math.round((Date.now()-capture.startedAt)/1000));
+            persist();
+            notify("انتهى التسجيل. الصوت مؤقت في هذه الصفحة؛ أرسليه للتفريغ أو احذفيه قبل إغلاقها");
+          }
+          resolveStopped(blob.size?blob:null);
+          if(state.view==="meetingRoom")render();
+        };
+        recorder.onerror=e=>{
+          const m=state.meetings.find(x=>x.id===id);
+          if(m)m.recordingStatus="error";
+          notify("حدث خطأ أثناء تسجيل الاجتماع: "+(e.error&&e.error.message||"تعذر تسجيل الصوت"));
+        };
+        capture.startedAt=Date.now();
+        meetingCapture=capture;
+        recorder.start(1000);
+        const m=state.meetings.find(x=>x.id===id);
+        if(m){m.recordingStatus="recording";persist()}
+        return true;
+      }catch(e){
+        stream.getTracks().forEach(t=>t.stop());
+        notify("تعذر بدء تسجيل الاجتماع: "+(e.message||e));
+        return false;
+      }
+    }
+    async function requestMeetingStream(){
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==="undefined"){
+        notify("تسجيل الصوت غير مدعوم في هذا المتصفح أو الاتصال. يمكنك بدء الاجتماع دون تسجيل");
+        return null;
+      }
+      try{return await navigator.mediaDevices.getUserMedia({audio:true})}
+      catch(e){notify("تعذر الوصول إلى الميكروفون: "+(e.message||e));return null}
+    }
     function openMeetingRoom(id){
       state.activeMeetingId=id;
       state.view="meetingRoom";
@@ -200,9 +258,74 @@ const e=`"use strict";
       persist();render();
     }
     async function startMeeting(id){
-      await apiStartMeeting(id);
+      const wantsRecording=meetingRecordingConsent();
+      const stream=wantsRecording?await requestMeetingStream():null;
+      if(wantsRecording&&!stream)return;
+      const meeting=await apiStartMeeting(id);
+      if(!meeting)return;
+      if(wantsRecording){
+        meeting.recordingConsentAt=new Date().toISOString();
+        if(!beginMeetingCapture(id,stream))meeting.recordingStatus="not-recording";
+      }
       persist();notify("بدأ الاجتماع");render();
       startMeetingTimer();
+    }
+    async function startMeetingRecording(id){
+      if(!meetingRecordingConsent()){notify("أكد أولاً موافقة جميع الحاضرين على التسجيل");return}
+      const stream=await requestMeetingStream();
+      if(!stream)return;
+      const m=state.meetings.find(x=>x.id===id);
+      if(!m||m.status!=="جارية"){stream.getTracks().forEach(t=>t.stop());notify("لا يمكن تسجيل اجتماع غير جارٍ");return}
+      m.recordingConsentAt=new Date().toISOString();
+      if(beginMeetingCapture(id,stream)){persist();render()}
+    }
+    function stopMeetingRecording(id){
+      const capture=meetingCapture;
+      if(!capture||capture.id!==id)return Promise.resolve(meetingAudioBlob&&meetingAudioBlob.id===id?meetingAudioBlob.blob:null);
+      if(capture.recorder.state!=="inactive")capture.recorder.stop();
+      return capture.stopped;
+    }
+    function discardMeetingAudio(id){
+      if(!meetingAudioBlob||meetingAudioBlob.id!==id)return;
+      meetingAudioBlob=null;
+      const m=state.meetings.find(x=>x.id===id);
+      if(m){m.recordingStatus="discarded";persist()}
+      notify("تم حذف التسجيل الصوتي المؤقت");
+      render();
+    }
+    async function transcribeMeeting(id){
+      const m=state.meetings.find(x=>x.id===id);
+      const audio=meetingAudioBlob&&meetingAudioBlob.id===id?meetingAudioBlob.blob:null;
+      if(!m||!audio){notify("التسجيل الصوتي غير متاح في هذه الصفحة؛ أعد تسجيل الاجتماع أو اكتب المحضر يدويًا");return}
+      if(audio.size>25*1024*1024){notify("حجم التسجيل أكبر من الحد المسموح للتفريغ (25 ميجابايت)");return}
+      if(!aiReady()){notify("فعّل ربط OpenAI من «الإدارة الآلية ← OpenAI» لتفريغ التسجيل");return}
+      if(!window.confirm("سيُرسل الصوت إلى OpenAI للتفريغ، ثم يُحفظ النص في سجل الاجتماع. لن يُحفظ الملف الصوتي. هل تريد المتابعة؟"))return;
+      state.meetingTranscribing=id;render();
+      try{
+        const fd=new FormData();
+        fd.append("file",audio,\`meeting-\${id}.webm\`);
+        fd.append("model","gpt-4o-transcribe");
+        fd.append("language","ar");
+        fd.append("prompt","اجتماع عمل لمركز رعاية وتأهيل أطفال. اكتب الكلام كما قيل بوضوح، ولا تضف معلومات أو قرارات غير مسموعة.");
+        let response=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{"Authorization":"Bearer "+state.ai.key},body:fd});
+        if(!response.ok){
+          const fallback=new FormData();
+          fallback.append("file",audio,\`meeting-\${id}.webm\`);
+          fallback.append("model","whisper-1");
+          fallback.append("language","ar");
+          response=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{"Authorization":"Bearer "+state.ai.key},body:fallback});
+        }
+        if(!response.ok)throw new Error("OpenAI "+response.status);
+        const result=await response.json();
+        m.transcript=String(result.text||"").trim();
+        m.transcribedAt=new Date().toISOString();
+        m.recordingStatus="transcribed";
+        meetingAudioBlob=null;
+        if(m.status==="منتهية")m.summaryText=composeMeetingReportText(m);
+        persist();
+        notify(m.transcript?"تم تفريغ الاجتماع وحفظ النص في سجله":"اكتمل التفريغ لكن لم يُرجع نصًا");
+      }catch(e){notify("تعذر تفريغ الاجتماع: "+(e.message||e))}
+      finally{state.meetingTranscribing=null;render()}
     }
     function saveMeetingNotes(id,value){
       const m=state.meetings.find(x=>x.id===id);
@@ -236,6 +359,7 @@ const e=`"use strict";
     }
     async function endAndAnalyzeMeeting(id){
       stopMeetingTimer();
+      await stopMeetingRecording(id);
       await apiEndMeeting(id);
       persist();notify("تم إنهاء الاجتماع، وتم إعداد المحضر تلقائيًا");render();
     }
@@ -323,6 +447,19 @@ const e=`"use strict";
       const startBtn=m.status==="مجدولة"?\`<button class="btn btn-primary" onclick="startMeeting('\${m.id}')">\${ic("video",14)} بدء الاجتماع</button>\`:"";
       const endBtn=isLive?\`<button class="btn btn-primary" onclick="endAndAnalyzeMeeting('\${m.id}')">\${ic("check",14)} إنهاء وتحليل الاجتماع</button>\`:"";
       const attendeesHtml=\`<div class="chips">\${attendees.map(p=>\`<span class="chip">\${esc(p.name)}</span>\`).join("")||\`<span class="muted">لا يوجد حضور مسجّل</span>\`}</div>\`;
+      const recordingActive=!!(meetingCapture&&meetingCapture.id===m.id);
+      const audioReady=!!(meetingAudioBlob&&meetingAudioBlob.id===m.id);
+      const consentControl=!isEnded&&!recordingActive&&!audioReady?\`<label class="notice" style="display:flex;align-items:flex-start;gap:9px;margin-top:12px"><input id="meeting-recording-consent" type="checkbox" style="margin-top:4px"><span>أؤكد أن جميع الحاضرين وافقوا على تسجيل صوت الاجتماع.</span></label>\`:"";
+      const recordingControls=recordingActive
+        ?\`<div class="notice-blue" style="margin-top:10px">🔴 التسجيل جارٍ. الملف الصوتي مؤقت في هذه الصفحة فقط، ويُحذف بعد التفريغ أو عند حذفه يدويًا.</div>\`
+        :audioReady
+          ?\`<div class="notice" style="margin-top:10px">التسجيل جاهز. لن يُرسل إلى OpenAI إلا بعد تأكيدك في الخطوة التالية.</div><div class="actions" style="margin-top:8px"><button class="btn btn-primary" onclick="transcribeMeeting('\${m.id}')" \${state.meetingTranscribing===m.id?"disabled":""}>\${state.meetingTranscribing===m.id?"جارٍ التفريغ…":"إرسال للتفريغ"}</button><button class="btn btn-outline" onclick="discardMeetingAudio('\${m.id}')">حذف التسجيل</button></div>\`
+          :m.recordingStatus==="captured"&&!m.transcript
+            ?\`<div class="notice" style="margin-top:10px">التسجيل المؤقت لم يعد متاحًا بعد إغلاق الصفحة أو تحديثها. أعد تسجيل هذا الجزء لتفريغه.</div>\`
+            :isLive&&!isEnded
+                ?\`\${m.recordingStatus==="recording"?\`<div class="notice" style="margin-top:10px">توقف التسجيل السابق عند إغلاق الصفحة أو تحديثها. ابدأ تسجيلًا جديدًا لمتابعة التفريغ.</div>\`:""}<div style="margin-top:10px"><button class="btn btn-outline" onclick="startMeetingRecording('\${m.id}')">بدء تسجيل الصوت</button></div>\`
+              :"";
+      const transcriptBlock=m.transcript?\`<section class="card" style="margin-top:14px"><div class="card-head"><h2>تفريغ الاجتماع</h2><span class="muted">\${m.transcribedAt?date(m.transcribedAt):""}</span></div><div class="notice" style="white-space:pre-wrap;line-height:1.9">\${esc(m.transcript)}</div><small class="muted">راجع النص قبل اعتماده في المحضر؛ قد يحتاج تصحيحًا يدويًا.</small></section>\`:"";
       const notesBlock=isEnded
         ? \`<div class="notice" style="white-space:pre-line;line-height:2">\${esc(m.notes||"لا توجد ملاحظات مسجّلة لهذا الاجتماع.")}</div>\`
         : \`<textarea class="textarea" id="meeting-notes" placeholder="دوّني نقاط النقاش أثناء الاجتماع..." oninput="saveMeetingNotes('\${m.id}',this.value)" style="min-height:160px">\${esc(m.notes||"")}</textarea>\`;
@@ -333,8 +470,8 @@ const e=`"use strict";
       const actionItemForm=isEnded?"":\`<form onsubmit="addMeetingActionItem(event,'\${m.id}')" style="margin-top:10px"><div class="form-grid"><div class="field full"><label>بند العمل (Action Item)</label><input class="input" name="text" required placeholder="مثال: إعداد جدول موحّد"></div><div class="field"><label>المسؤول</label><select class="select" name="ownerId">\${state.staff.map(s=>\`<option value="\${s.id}">\${esc(s.name)}</option>\`).join("")}</select></div><div class="field"><label>الموعد المستهدف</label><input class="input" type="date" name="dueDate"></div></div><div class="actions" style="margin-top:8px"><button class="btn btn-outline">＋ إضافة بند عمل</button></div></form>\`;
       const reportBlock=isEnded?\`<section class="card" style="margin-top:18px"><div class="card-head"><h2>\${m.audience==="family"?"التقرير الرسمي للمدير العام":"محضر الاجتماع"}</h2><button class="btn btn-outline" onclick="window.print()">\${ic("chart",14)} حفظ نسخة PDF</button></div><pre style="white-space:pre-wrap;font-family:inherit;line-height:2;font-size:12.5px;margin:0">\${esc(m.summaryText||"")}</pre></section>\`:"";
       return backBtn("backToConnect()","رجوع لأوان كونكت")+head("أوان كونكت / 10", m.title, \`\${meetingKindLabel(m.kind)}\${patient?" — "+patient.name:""}\${deptNames.length?" — "+deptNames.join(" · "):""}\`, "")
-      +\`<div class="grid-2"><section class="card"><div class="card-head"><h2>غرفة الاجتماع</h2>\${meetingStatusPill(m.status)}</div><div class="notice-blue" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><b>\${ic("video",16)} \${isLive?"الاجتماع جارٍ الآن":isEnded?"انتهى الاجتماع":"لم يبدأ بعد"}</b><br><small>\${date(m.scheduledDate)}</small></div><div style="text-align:left"><span id="meeting-timer-display" style="font-size:22px;font-weight:800;color:var(--navy)">\${mm}:\${ss}</span><br><small class="muted">مدة الاجتماع</small></div></div><div style="margin-top:14px">\${startBtn}\${endBtn}</div><hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><div class="muted" style="margin-bottom:8px">الحضور</div>\${attendeesHtml}<hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><div class="muted" style="margin-bottom:8px">ملاحظات النقاش \${isEnded?"":"(تُحفظ تلقائيًا)"}</div>\${notesBlock}</section><section class="card"><div class="card-head"><h2>القرارات المتخذة</h2><span class="muted">\${decisionsForMeeting.length}</span></div><div class="list">\${decisionRows||\`<div class="empty">لم تُسجَّل قرارات بعد.</div>\`}</div>\${decisionForm}<hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><div class="card-head"><h2>بنود العمل</h2><span class="muted">\${(m.actionItems||[]).length}</span></div><div class="list">\${actionItemsRows||\`<div class="empty">لا توجد بنود عمل بعد.</div>\`}</div>\${actionItemForm}</section></div>\`
-      +reportBlock;
+      +\`<div class="grid-2"><section class="card"><div class="card-head"><h2>غرفة الاجتماع</h2>\${meetingStatusPill(m.status)}</div><div class="notice-blue" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><b>\${ic("video",16)} \${isLive?"الاجتماع جارٍ الآن":isEnded?"انتهى الاجتماع":"لم يبدأ بعد"}</b><br><small>\${date(m.scheduledDate)}</small></div><div style="text-align:left"><span id="meeting-timer-display" style="font-size:22px;font-weight:800;color:var(--navy)">\${mm}:\${ss}</span><br><small class="muted">مدة الاجتماع</small></div></div>\${consentControl}<div style="margin-top:14px">\${startBtn}\${endBtn}</div>\${recordingControls}<hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><div class="muted" style="margin-bottom:8px">الحضور</div>\${attendeesHtml}<hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><div class="muted" style="margin-bottom:8px">ملاحظات النقاش \${isEnded?"":"(تُحفظ تلقائيًا)"}</div>\${notesBlock}</section><section class="card"><div class="card-head"><h2>القرارات المتخذة</h2><span class="muted">\${decisionsForMeeting.length}</span></div><div class="list">\${decisionRows||\`<div class="empty">لم تُسجَّل قرارات بعد.</div>\`}</div>\${decisionForm}<hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><div class="card-head"><h2>بنود العمل</h2><span class="muted">\${(m.actionItems||[]).length}</span></div><div class="list">\${actionItemsRows||\`<div class="empty">لا توجد بنود عمل بعد.</div>\`}</div>\${actionItemForm}</section></div>\`
+      +transcriptBlock+reportBlock;
     }
     // ==================== نهاية أوان كونكت ====================
     // ==================== أوان تواصل — Oan Live Communication & Notification Hub ====================
@@ -867,4 +1004,4 @@ const e=`"use strict";
       return \`<div class="muted" style="margin-bottom:10px">يمكن تغييره لاحقاً من إعدادات المركز</div><div class="role-grid">\${Object.entries(roles).map(([key,r])=>\`<div class="role-card \${state.role===key?"selected":""}" onclick="changeRole('\${key}');closeModal()"><span class="role-icon">\${ic(r.icon,22)}</span><b>\${r.label}</b><small>\${r.desc}</small></div>\`).join("")}</div><hr style="border:0;border-top:1px solid var(--line);margin:22px 0"><div class="card-head" style="padding:0 0 10px"><h2 style="font-size:15px">دخول موظف بالكود الشخصي</h2><span class="muted">\${person?\`مسجّلة الدخول: \${esc(person.name)}\`:"كل موظف لديه كود دخول خاص به"}</span></div><form onsubmit="staffCodeLogin(event)" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><div class="field" style="flex:1;min-width:180px;margin:0"><label>الكود الشخصي</label><input class="input" name="code" id="staff-code-input" placeholder="مثال: ه1" required></div><button class="btn btn-primary" type="submit">دخول</button>\${person?\`<button type="button" class="btn btn-outline" onclick="staffLogout()">تسجيل الخروج</button>\`:""}</form>\`;
     }
 `;export{e as default};
-//# sourceMappingURL=04-connect-comm-library-BWOzi9J4.js.map
+//# sourceMappingURL=04-connect-comm-library-CiNQ0HsX.js.map

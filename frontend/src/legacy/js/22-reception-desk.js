@@ -27,7 +27,7 @@
 .rc-sec{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:16px}
 .rc-sec>h2{margin:0 0 4px;font-size:17px;display:flex;align-items:center;gap:8px}.rc-sec>p{margin:0 0 12px;color:var(--muted);font-size:12px}
 .rc-task{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);margin-bottom:6px}
-.rc-task .ic{font-size:18px;flex:none;width:28px;text-align:center}.rc-task .tx{flex:1;min-width:0}.rc-task .tx b{display:block;font-size:13px}.rc-task .tx small{color:var(--muted);font-size:11.5px}
+.rc-task .ic{font-size:18px;flex:none;width:28px;text-align:center}.rc-task .tx{flex:1;min-width:0}.rc-task .tx b{display:block;font-size:13px}.rc-task .tx small{color:var(--muted);font-size:11.5px}.rc-task .tx .rc-task-hint{color:var(--navy);font-weight:700}
 .rc-task.p3{border-color:#fca5a5;background:var(--danger-2)}.rc-task.p2{border-color:#f5d48b;background:var(--gold-2)}
 .rc-task .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.rc-task .btn{padding:7px 12px;font-size:12px}
 .rc-cols{display:grid;grid-template-columns:1fr 1.25fr;gap:16px;align-items:start}
@@ -93,6 +93,21 @@
       if(tm.length)T.push({p:1,ic:"✅",t:`أكّد مواعيد بكرة (${tm.length})`,d:"رسالة تذكير لكل أسرة بالوقت واسم الأخصائي",acts:[["أرسل التذكيرات",`rcConfirmTomorrow()`,1]],execute:()=>rcConfirmTomorrow()});
       return T.sort((a,b)=>b.p-a.p);
     }
+    function rcTaskHint(t){
+      if(t.executeHint)return t.executeHint;
+      const label=(t.acts&&t.acts[0]&&t.acts[0][0])||"";
+      if(/أرسل التذكيرات/.test(label))return "يرسل تذكيرًا للأسرة بموعد الغد مباشرة.";
+      if(/احجز التقييم/.test(label))return "يحجز أول موعد متاح مع المختص ويبلّغ الأسرة والمختص.";
+      if(/احجز (المواعيد|الجلسات)/.test(label))return "يفتح جدول الخطة؛ راجعي المواعيد وسجّلي موافقة ولي الأمر قبل اعتمادها.";
+      if(/احجز تعويض/.test(label))return "يفتح اقتراح موعد تعويضي لمراجعته قبل تثبيت الحجز.";
+      if(/تحصيل/.test(label))return "يفتح نموذج التحصيل لمراجعة المبلغ وطريقة الدفع قبل التسجيل.";
+      if(/تم الاطلاع/.test(label))return "يعلّم الطلب بأنه تمت مراجعته فقط، ولا يؤكد الحجز.";
+      if(/تواصل/.test(label))return "يفتح بيانات الأسرة لتسجيل نتيجة التواصل؛ لا يرسل رسالة تلقائيًا.";
+      if(/وصل/.test(label))return "يفتح الموعد لتسجيل الوصول أو الغياب بعد التأكد.";
+      if(/قرار|نتيجة|تقييم إضافي|جلسات/.test(t.t||""))return "يفتح الإجراء الذي أوصى به المختص لتراجعيه وتكمليه.";
+      if(/تفاصيل/.test(label))return "يعرض تفاصيل المهمة دون تغيير بياناتها.";
+      return "يفتح الخطوة التالية للمراجعة؛ لا يعتمد إجراء يحتاج موافقتك تلقائيًا.";
+    }
 
     // ---- الشاشة ----
     function rcDeskView(){
@@ -106,7 +121,7 @@
         <button class="rc-kpi ${newC?"hot":""}" onclick="document.getElementById('rc-contacts').scrollIntoView({behavior:'smooth'})"><b>${newC}</b><span>تواصل جديد</span><small>واتساب وسوشيال واتصال</small></button>
         <button class="rc-kpi" onclick="rcSet('rcDay','today')"><b>${todayA.length}</b><span>مواعيد اليوم</span><small>وصل ${arrived}</small></button>
         <button class="rc-kpi" onclick="rcSet('rcDay','tomorrow')"><b>${tm.length}</b><span>مواعيد بكرة</span><small>${tm.filter(a=>!a.confirmSent).length} بانتظار تأكيد</small></button></div>`;
-      h+=`<section class="rc-sec" id="rc-tasks"><h2>📋 مهامي الحين</h2><p>مرتبة بالأولوية — الأحمر أول.</p>${T.length?T.map((t,i)=>`<div class="rc-task p${t.p}"><span class="ic">${t.ic}</span><div class="tx"><b>${esc(t.t)}</b><small>${esc(t.d)}</small></div><div class="acts">${t.acts.map(([l,js,pri])=>`<button class="btn ${pri?"btn-primary":"btn-outline"}" onclick="${js}">${esc(l)}</button>`).join("")}<button class="btn btn-outline" onclick="rsExecuteTask(${i})" title="ينفّذ الإجراء الآمن أو يفتح الخطوة الجاهزة للمراجعة">✦ تنفيذ آلي</button></div></div>`).join(""):`<div class="fd-empty">✓ ما عندك مهام الحين</div>`}</section>`;
+      h+=`<section class="rc-sec" id="rc-tasks"><h2>📋 مهامي الحين</h2><p>مرتبة بالأولوية — الأحمر أول.</p>${T.length?T.map((t,i)=>`<div class="rc-task p${t.p}"><span class="ic">${t.ic}</span><div class="tx"><b>${esc(t.t)}</b><small>${esc(t.d)}</small><small class="rc-task-hint">✦ التنفيذ الآلي: ${esc(rcTaskHint(t))}</small></div><div class="acts">${t.acts.map(([l,js,pri])=>`<button class="btn ${pri?"btn-primary":"btn-outline"}" onclick="${js}">${esc(l)}</button>`).join("")}<button class="btn btn-outline" onclick="rsExecuteTask(${i})" title="ينفّذ الإجراء الموضح بجانب المهمة">✦ تنفيذ آلي</button></div></div>`).join(""):`<div class="fd-empty">✓ ما عندك مهام الحين</div>`}</section>`;
       // التواصل
       const f=state.rcChF||"open";const CL=C.filter(c=>f==="all"?true:f==="open"?["new","contacted"].includes(c.status):c.ch===f).sort((a,b)=>b.at-a.at);
       const chips=[["open","المفتوحة"],["all","الكل"],...Object.entries(RC_CH).filter(([k])=>C.some(c=>c.ch===k)).map(([k,v])=>[k,v[0]+" "+v[1]])];
@@ -259,5 +274,5 @@
       return state.role==="reception"?h.split(`onclick="setView('intakeHome')">→ الاستقبال<`).join(`onclick="setView('rcDesk')">→ مكتب الاستقبال<`):h};
     const _rcOrgBadge=orgBadge;
     orgBadge=function(k){if(k==="rcDesk"){const n=rcTasks().filter(t=>t.p>=2).length;return n?`<em class="og-b red">${n}</em>`:""}return _rcOrgBadge.apply(this,arguments)};
-    Object.assign(window,{rcDeskView,rcOpen,rcClose,rcSet,rcContactSave,rcContactAct,rcTouched,rcArrive,rcAbsent,rcComp,rcConfirmOne,rcConfirmTomorrow,rcBookSet,rcBookConfirm,roleHome,hubGo,hubBar,orgBadge});
+    Object.assign(window,{rcDeskView,rcOpen,rcClose,rcSet,rcContactSave,rcContactAct,rcTouched,rcArrive,rcAbsent,rcComp,rcConfirmOne,rcConfirmTomorrow,rcBookSet,rcBookConfirm,rcTaskHint,roleHome,hubGo,hubBar,orgBadge});
     if(state.view==="rcDesk")render();

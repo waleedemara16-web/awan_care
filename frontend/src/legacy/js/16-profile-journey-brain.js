@@ -937,7 +937,7 @@
     const HUBS=[
       {k:"brain",l:"عقل أوان",d:"القيادة بالذكاء الاصطناعي",ic:"idea",views:[["brain","مركز القيادة"],["agents","الإدارة الآلية"],["liveOps","المراقبة الحية"],["digital","لوحة الرقمنة"]]},
       {k:"my",l:"آيبادي",d:"يومي وجلساتي",ic:"tablet",views:[["myIpad","آيبادي"],["staffPage","صفحتي"]]},
-      {k:"intake",l:"الاستقبال",d:"إحالات ودراسة حالة",ic:"referrals",views:[["referrals","الإحالات"],["intakeAI","الاستقبال الذكي"],["calls","الاستقبال الصوتي"]]},
+      {k:"intake",l:"الاستقبال",d:"الإحالات والتسجيل",ic:"referrals",views:[["referrals","الإحالات"],["intakeAI","التسجيل ودراسة الحالة"],["calls","المكالمات"]]},
       {k:"kids",l:"الأطفال",d:"الرحلة والملفات والتقييم",ic:"patients",views:[["journey","رحلة الطفل"],["patients","الملفات"],["assessments","التقييمات"],["videoLab","التقييم بالفيديو"]]},
       {k:"sessions",l:"الجلسات",d:"المواعيد والجداول",ic:"schedule",views:[["schedule","المواعيد"],["deptPlan","جدول القسم"],["scribe","الكاتب الذكي"],["ipads","آيبادات الفريق"]]},
       {k:"family",l:"الأسرة والتواصل",d:"رسائل واجتماعات وإرشاد",ic:"heart",views:[["communicationHub","أوان تواصل"],["connect","أوان كونكت"],["ebnak","ابنك ابني"],["library","مكتبة الإرشاد"]]},
@@ -986,7 +986,7 @@
       (typeof evEnsure==="function"?evEnsure():[]).filter(r=>r.status==="بانتظار المشرف"&&brDeptOK(r.dept)).forEach(r=>add({cat:"kids",sev:2,ic:"clipboardCheck",src:"تقييم من الآيباد",t:`تقييم ${r.patientName} بانتظار اعتمادك`,d:`${r.staffName||""} · ${(r.goals||[]).filter(g=>g.on).length} أهداف مقترحة`,acts:[["راجع واعتمد",`jrGo('${r.patientId}','plan')`,1]]}));
       state.patients.filter(p=>!p.archived&&(p.goals||[]).some(g=>g.status==="مقترح")&&!(typeof evEnsure==="function"&&evEnsure().some(r=>r.patientId===p.id&&r.status==="بانتظار المشرف"))).forEach(p=>{const n=p.goals.filter(g=>g.status==="مقترح").length;add({cat:"kids",sev:2,ic:"target",src:"الأهداف",t:`${n} أهداف مقترحة لـ ${p.name}`,d:"من دراسة الحالة / الذكاء الاصطناعي",acts:[["اعتمد الكل",`csApproveAll('${p.id}')`,1],["راجع",`jrGo('${p.id}','plan')`]]})});
       (state.progressReports||[]).filter(r=>r.reportType==="quarterly"&&!r.approvedBy).forEach(r=>add({cat:"kids",sev:1,ic:"star",src:"تقرير ٣ شهور",t:`اعتماد تقرير ٣ شهور: ${r.patientName}`,d:`${date(r.date)} · ${r.staffName||""}`,acts:[["راجع واعتمد",`jrQuarterView('${r.id}')`,1]]}));
-      (state.smartIntakes||[]).filter(r=>r.submittedAt&&r.patientId&&!["approved","info","rejected"].includes(r.status)).forEach(r=>add({cat:"kids",sev:2,ic:"idea",src:"الاستقبال الذكي",t:`دراسة حالة جديدة: ${(r.fields&&r.fields.child)||""}`,d:"المسودة والأهداف جاهزين من التحليل الذكي",acts:[["افتح واعتمد",`setView('intakeAI')`,1]]}));
+      (state.smartIntakes||[]).filter(r=>r.submittedAt&&r.patientId&&!["approved","info","rejected"].includes(r.status)).forEach(r=>add({cat:"kids",sev:2,ic:"idea",src:"دراسة الحالة",t:`دراسة حالة جديدة: ${(r.fields&&r.fields.child)||""}`,d:"المسودة والأهداف جاهزين للمراجعة",acts:[["افتح وراجع",`setView('intakeAI')`,1]]}));
       if(typeof decisionsScopedToCurrent==="function")decisionsScopedToCurrent().filter(d=>d.status==="قيد المراجعة").forEach(d=>add({cat:"ops",sev:1,ic:"video",src:"قرارات الاجتماعات",t:d.text,d:`${d.ownerName||""}${d.dueDate?" · قبل "+date(d.dueDate):""}`,acts:[["اعتمد",`advanceDecision('${d.id}','معتمدة')`,1],["افتح",`setView('connect')`]]}));
       if(state.role==="management"||state.role==="reception"){const nb=(state.sessionBookings||[]).filter(b=>!b.seen&&b.status!=="ملغي");if(nb.length)add({cat:"family",sev:2,ic:"bell",src:"بوابة الأسرة",t:`${nb.length} حجز جديد من الأسر`,d:nb.slice(0,3).map(b=>b.childName||b.patientName||b.child||"").filter(Boolean).join("، "),acts:[["افتح المواعيد",`setView('schedule')`,1]]})}
       if(state.hr){const lv=(state.hr.leaves||[]).filter(l=>l.status==="مقدمة");if(lv.length&&state.role==="management")add({cat:"team",sev:1,ic:"schedule",src:"الإجازات",t:`${lv.length} طلب إجازة بانتظار`,d:lv.slice(0,3).map(l=>l.name||"").join("، "),acts:[["راجع",`brAgents('leaves')`,1]]});
@@ -1039,6 +1039,24 @@
     }
     function brCmd(e){e.preventDefault();const v=e.target.cmd.value;e.target.cmd.value="";if(String(v).trim()){agCommand(v)}}
     function brFilter(k){state.brCat=k;render()}
+    function brWorkflow(){
+      const all=jrList();
+      const pendingReferrals=(state.referrals||[]).filter(r=>r.status==="جديدة"||r.status==="قيد الفرز").length;
+      const pendingInvoices=(state.invoices||[]).filter(i=>(i.status==="مُصدرة"||i.status==="مسدد جزئياً")&&invoiceBalance(i)>0).length;
+      const unbilled=(state.appointments||[]).filter(a=>a.status==="مكتمل"&&!a.invoiced&&a.date>=agDay(-30)&&a.date<=apToday()).length;
+      const dueReports=all.filter(J=>J.S.quarter.due).length;
+      const pendingDecisions=decisionsScopedToCurrent().filter(d=>d.status==="قيد المراجعة").length;
+      const upcoming=(state.appointments||[]).filter(a=>a.status!=="ملغي"&&a.status!=="مكتمل"&&a.date>=apToday()&&a.date<=agDay(7)).length;
+      const flow=[
+        ["referrals","الاستقبال","إحالات جديدة أو قيد الفرز",pendingReferrals,"referrals"],
+        ["patients","التقييم والخطة","ملفات الأطفال على مسار الرعاية",all.length,"journey"],
+        ["schedule","المواعيد والجلسات","مواعيد قادمة",upcoming,"schedule"],
+        ["invoice","الفواتير والتحصيل",`${unbilled} جلسة غير مفوترة · ${pendingInvoices} فاتورة مستحقة`,unbilled+pendingInvoices,"invoices"],
+        ["chart","التقارير والمتابعة","تقارير ربع سنوية مستحقة",dueReports,"journey"],
+        ["video","الاجتماعات والتوصيات","قرارات بانتظار المراجعة",pendingDecisions,"connect"]
+      ].filter(x=>roles[state.role].nav.includes(x[4]));
+      return `<section class="card" style="margin:0 0 16px"><div class="card-head"><h2>${ic("pulse",18)} مسار العمل — من الاستقبال إلى التقارير والتوصيات</h2></div><p class="muted br-sub">الأرقام تقرأ من السجلات الحالية؛ افتح المرحلة لمتابعتها دون إنشاء بيانات مكررة.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:9px">${flow.map(([icon,label,desc,count,view])=>`<button class="box-card" style="text-align:start;cursor:pointer;display:flex;flex-direction:column;gap:5px" onclick="${view==="journey"&&label==="التقارير والمتابعة"?"state.jrFilter='quarter';":""}setView('${view}')"><span class="muted">${ic(icon,15)} ${esc(label)}</span><b style="font-size:22px">${count}</b><small class="muted">${esc(desc)}</small></button>`).join("")}</div></section>`;
+    }
     // ---- ٥) مركز القيادة ----
     function brainView(){
       const F=brFacts();const A=apEnsure();const me=brMe();const hr=new Date().getHours();
@@ -1049,11 +1067,8 @@
       const todayLog=A.log.filter(l=>localDateOf(new Date(l.at))===F.day);
       const sel=state.role==="management";
       const tiles=[
-        ["kids","patients","الأطفال",F.kids,`${jrList().filter(J=>J.step.sup).length} محتاجين قرار · ${F.dq} تقرير مستحق`,"journey"],
-        ["sessions","schedule","جلسات اليوم",F.ap,`${F.done} خلصت${F.live?` · ${F.live} شغالة`:""}`,"schedule"],
         ["team","team","الفريق الحاضر",`${F.pres}/${F.T}`,`${F.T-F.pres?F.T-F.pres+" غايب":"الكل موجود"}`,"attendance"],
         ["family","heart","الأسر",pendingCommCount()+((state.role==="management"||state.role==="reception")?newBookingsCount():0),"رسائل وحجوزات جديدة","communicationHub"],
-        sel?["money","invoice","مو متفوتر",state.appointments.filter(a=>a.status==="مكتمل"&&!a.invoiced&&a.date>=agDay(-30)).length,"جلسة آخر ٣٠ يوم","invoices"]:null,
         ["gov","shield","الامتثال",jrList().filter(J=>J.S.consent.status!=="done").length,"ملف من غير موافقة علاج","journey"]
       ].filter(Boolean).filter(x=>roles[state.role].nav.includes(x[5]));
       return `<div class="br">
@@ -1072,6 +1087,7 @@
         <div class="br-chips">${["أدِر المركز كله الحين","وازن جداول الأخصائيين اليوم","عوّض كل الجلسات اللي فاتت","افرز الإحالات الجديدة وحوّلها"].map(x=>`<button type="button" onclick="agChip('${x}')">${esc(x)}</button>`).join("")}<span class="br-chips-n">${aiReady()?"يفهم أي صياغة (OpenAI)":"بالقواعد المحلية — OpenAI يوسّع الفهم"}</span></div>
         ${A.plans.filter(p=>p.status!=="dropped").slice(0,2).length?`<section class="br-plans"><div class="br-sh"><h2>${ic("chat",16)} أوامرك</h2><button class="br-link" onclick="brAgents('hq')">كل الأوامر</button></div>${A.plans.filter(p=>p.status!=="dropped").slice(0,2).map(agPlanCard).join("")}</section>`:""}
         <section class="br-tiles">${tiles.map(([k,icn,l,v,s,go])=>`<button class="br-tile t-${k}" onclick="setView('${go}')"><span class="br-tile-ic">${ic(icn,18)}</span><b>${esc(String(v))}</b><span>${esc(l)}</span><small>${esc(s)}</small></button>`).join("")}</section>
+        ${brWorkflow()}
         <div class="br-grid">
           <section class="card br-dec"><div class="card-head"><h2>${ic("check",18)} صندوق القرارات <span class="br-count">${D.length}</span></h2>${A.queue.filter(q=>!q.forced&&brDeptOK(q.dept)).length>1?`<button class="btn btn-outline" style="font-size:12px;padding:7px 12px" onclick="apApproveAll()">نفّذ كل اقتراحات الوكلاء</button>`:""}</div>
             <p class="muted br-sub">كل شي بانتظار قرار من كل التابات — الخطط، التقييمات، الأهداف، الوكلاء، الاجتماعات، الحجوزات، الإجازات والرواتب — في مكان واحد.</p>
@@ -1093,4 +1109,3 @@
     DEVICE_ONLY.add("brBusy");DEVICE_ONLY.add("brAll");DEVICE_ONLY.add("brAgAll");
     Object.assign(window,{brAutoBook,brAgAllShow,agCommand,hubGo,brAgents,brBriefAI,brCmd,brFilter,brShowAll,brToast,agChip,apMode,apApprove,apApproveAll,reviewPlan,csApproveAll,advanceDecision,jrQuarterView,jrQuarterOpen});
     render();
-

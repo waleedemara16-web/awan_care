@@ -1,4 +1,5 @@
 import json
+import re
 
 import frappe
 from frappe.rate_limiter import rate_limit
@@ -68,6 +69,119 @@ def save_patients(changed=None, deleted=None):
 			frappe.delete_doc("Awan Patient", pid)
 			removed.append(pid)
 	return {"saved": saved, "deleted": removed}
+
+
+CENTER_STATE_NAME = "center"
+CENTER_STATE_PRIVATE_KEYS = {
+	"patients",
+	"ai",
+	"facilities",
+	"role",
+	"view",
+	"portal",
+	"parentTab",
+	"patientId",
+	"currentStaffId",
+	"staffSection",
+	"familySession",
+	"facilitySession",
+	"lang",
+	"theme",
+	"ai_local",
+}
+CENTER_STATE_PRIVATE_FIELD = re.compile(r"(password|secret|token|api.?key|credential|authorization)", re.I)
+CENTER_STATE_MAX_BYTES = 12 * 1024 * 1024
+
+
+def _contains_private_state(value):
+	if isinstance(value, dict):
+		return any(
+			key in CENTER_STATE_PRIVATE_KEYS
+			or CENTER_STATE_PRIVATE_FIELD.search(str(key))
+			or _contains_private_state(item)
+			for key, item in value.items()
+		)
+	if isinstance(value, list):
+		return any(_contains_private_state(item) for item in value)
+	return False
+
+
+def _center_state_data(doc):
+	return frappe.parse_json(doc.data) if doc and doc.data else {}
+
+
+def _get_center_state_doc(create=False):
+	if frappe.db.exists("Awan Center State", CENTER_STATE_NAME):
+		return frappe.get_doc("Awan Center State", CENTER_STATE_NAME)
+	if not create:
+		return None
+	try:
+		return frappe.get_doc(
+			{
+				"doctype": "Awan Center State",
+				"state_id": CENTER_STATE_NAME,
+				"revision": 0,
+				"data": "{}",
+			}
+		).insert(ignore_permissions=True)
+	except frappe.DuplicateEntryError:
+		return frappe.get_doc("Awan Center State", CENTER_STATE_NAME)
+
+
+@frappe.whitelist()
+def get_center_state():
+	"""Return the current Frappe site's shared operating data."""
+	_require_user()
+	frappe.has_permission("Awan Center State", "read", throw=True)
+	doc = _get_center_state_doc()
+	if not doc:
+		return {"revision": 0, "data": {}}
+	return {"revision": int(doc.revision or 0), "data": _center_state_data(doc)}
+
+
+@frappe.whitelist(methods=["POST"])
+def save_center_state(base_revision=None, changed=None):
+	"""Save changed top-level operating keys with optimistic concurrency control."""
+	_require_user()
+	frappe.has_permission("Awan Center State", "write", throw=True)
+	try:
+		base_revision = int(base_revision or 0)
+	except (TypeError, ValueError):
+		frappe.throw("إصدار مزامنة غير صالح")
+	if base_revision < 0:
+		frappe.throw("إصدار مزامنة غير صالح")
+	changed = frappe.parse_json(changed) or {}
+	if not isinstance(changed, dict):
+		frappe.throw("بيانات المزامنة غير صالحة")
+	if _contains_private_state(changed):
+		frappe.throw("تحتوي المزامنة على بيانات محلية أو حساسة")
+	if len(json.dumps(changed, ensure_ascii=False).encode("utf-8")) > CENTER_STATE_MAX_BYTES:
+		frappe.throw("بيانات المزامنة أكبر من الحد المسموح")
+
+	_get_center_state_doc(create=True)
+	frappe.db.sql(
+		"SELECT `name` FROM `tabAwan Center State` WHERE `name` = %s FOR UPDATE",
+		CENTER_STATE_NAME,
+	)
+	doc = frappe.get_doc("Awan Center State", CENTER_STATE_NAME)
+	current_revision = int(doc.revision or 0)
+	current_data = _center_state_data(doc)
+	if base_revision != current_revision:
+		return {"conflict": True, "revision": current_revision, "data": current_data}
+
+	next_data = dict(current_data)
+	for key, value in changed.items():
+		if value is None:
+			next_data.pop(key, None)
+		else:
+			next_data[key] = value
+	if len(json.dumps(next_data, ensure_ascii=False).encode("utf-8")) > CENTER_STATE_MAX_BYTES:
+		frappe.throw("بيانات المركز أكبر من الحد المسموح")
+
+	doc.revision = current_revision + 1
+	doc.data = json.dumps(next_data, ensure_ascii=False, separators=(",", ":"))
+	doc.save(ignore_permissions=True)
+	return {"conflict": False, "revision": int(doc.revision)}
 
 
 # ---------------- Sign-in ----------------
