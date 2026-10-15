@@ -427,6 +427,7 @@ const t=`"use strict";
       },350);
     }
     function intakeNextSlot(staffName){
+      if(!staffName)return null;
       const d=new Date();d.setDate(d.getDate()+1);
       for(let k=0;k<21;k++){
         const day=new Date(d.getTime()+k*864e5);if(day.getDay()===5||day.getDay()===6)continue;
@@ -436,45 +437,48 @@ const t=`"use strict";
           if(!busy)return {date:ds,time:hr};
         }
       }
-      return {date:localDateOf(new Date(Date.now()+864e5)),time:"09:00"};
+      return null;
     }
     function intakeSubmit(e){
       e.preventDefault();ensureIntakeState();clearTimeout(_intakeTimer);
       const form=e.target;let id=form.getAttribute("data-draft")||("si-"+Date.now());
       const f=Object.fromEntries(new FormData(form).entries());const an=analyzeIntake(f);
       let rec=state.smartIntakes.find(x=>x.id===id);if(!rec){rec={id,startedAt:new Date().toISOString()};state.smartIntakes.unshift(rec)}
+      if(rec.patientId){notify("دراسة الحالة أُرسلت بالفعل؛ لن ننشئ ملفًا أو موعدًا مكررًا");return}
       Object.assign(rec,{fields:f,analysis:an,status:"draft",submittedAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
       // 1) فتح ملف «قيد التقييم»
-      const dept=an.primary||"speech";
-      const pool=state.staff.filter(s=>s.clinical&&s.department===dept);
-      const clin=(pool.length?pool:state.staff.filter(s=>s.clinical)).slice().sort((a,b)=>state.appointments.filter(x=>x.clinician===a.name).length-state.appointments.filter(x=>x.clinician===b.name).length)[0];
+      const dept=an.primary||null;
+      const pool=dept?state.staff.filter(s=>s.clinical&&s.department===dept):[];
+      const clin=pool.slice().sort((a,b)=>state.appointments.filter(x=>x.clinician===a.name).length-state.appointments.filter(x=>x.clinician===b.name).length)[0]||null;
       const pid="p-"+Date.now();const num=1000+state.patients.length+1;
       const code=((f.child||"CH").trim().split(" ")[0].replace(/[^A-Za-z]/g,"").toUpperCase()||"AWN")+"-"+num;
       const slot=intakeNextSlot(clin?clin.name:"");
-      const pt={id:pid,name:(f.child||"").trim(),file:"AWN-SRC-"+num,age:f.age||"—",need:an.flags.slice(0,3).map(x=>x.area).filter((v,i,a)=>a.indexOf(v)===i).join("، ")||"قيد التقييم",program:an.depts.slice(0,2).map(d=>deptName(d.id)).join(" · ")||"قيد التقييم",school:"",status:"قيد التقييم",notes:"ملف انفتح تلقائيًا من دراسة الحالة الإلكترونية. الوصف: "+(f.reason||""),goal:"يُحدَّد بعد التقييم الأولي",next:slot.date+"T"+slot.time,code,schoolCode:"",guardian:f.guardian||"",phone:f.phone||"",archived:false,assignedPrograms:[],consents:[]};
+      const pt={id:pid,name:(f.child||"").trim(),file:"AWN-SRC-"+num,age:f.age||"—",need:an.flags.slice(0,3).map(x=>x.area).filter((v,i,a)=>a.indexOf(v)===i).join("، ")||"قيد التقييم",program:an.depts.slice(0,2).map(d=>deptName(d.id)).join(" · ")||"قيد التقييم",school:"",status:"قيد التقييم",notes:"ملف انفتح تلقائيًا من دراسة الحالة الإلكترونية. الوصف: "+(f.reason||""),goal:"يُحدَّد بعد التقييم الأولي",next:slot?slot.date+"T"+slot.time:"",code,schoolCode:"",guardian:f.guardian||"",phone:f.phone||"",archived:false,assignedPrograms:[],consents:[]};
       pt.health=typeof defaultHealth==="function"?defaultHealth(pt):undefined;
       if(pt.health&&f.hearingChecked)pt.health.hearingScreening.status=f.hearingChecked;
       if(pt.health&&f.birthType)pt.health.birthType=f.birthType;
       pt.caseStudy={fields:f,analysis:an,at:new Date().toISOString(),by:f.guardian||"ولي الأمر",source:"دراسة الحالة الإلكترونية"};
       state.patients.unshift(pt);csSyncSuggestions(pt);
       // 2) حجز تقييم أولي
-      const apt={id:"apt-"+Date.now(),date:slot.date,time:slot.time,patient:pt.name,service:"تقييم أولي — "+(INTAKE_INSTRUMENTS[dept]||"تقييم شامل"),clinician:clin?clin.name:"",room:"غرفة التقييم",status:"مجدول",newForStaff:true,autoBooked:true,familyNote:f.reason||""};
-      state.appointments.push(apt);
+      const apt=slot&&clin?{id:"apt-"+Date.now(),date:slot.date,time:slot.time,patient:pt.name,service:"تقييم أولي — "+(INTAKE_INSTRUMENTS[dept]||"تقييم شامل"),clinician:clin.name,room:"غرفة التقييم",status:"مجدول",newForStaff:true,autoBooked:true,familyNote:f.reason||""}:null;
+      if(apt)state.appointments.push(apt);
       // 3) إبلاغ المشرف
       const sups=state.staff.filter(s=>s.roleCategory==="supervisor"&&(s.department===dept||!s.department));
-      (sups.length?sups:state.staff.filter(s=>s.roleCategory==="management")).slice(0,2).forEach(s=>state.messages.unshift({id:"msg-"+Date.now()+"-"+s.id,fromId:null,fromName:"محرك أوان",toId:s.id,toName:s.name,text:\`\${an.urgent?"🔴 عاجل — ":""}دراسة حالة جديدة: \${pt.name} · مسودة خطة جاهزة للاعتماد (\${an.progs.length} برامج، \${an.goals.length} أهداف)\`,date:todayISO(),read:false}));
-      rec.patientId=pid;rec.aptId=apt.id;rec.clinician=clin?clin.name:"";rec.dept=dept;
+      (      sups.length?sups:state.staff.filter(s=>s.roleCategory==="management")).slice(0,2).forEach(s=>state.messages.unshift({id:"msg-"+Date.now()+"-"+s.id,fromId:null,fromName:"محرك أوان",toId:s.id,toName:s.name,text:\`\${an.urgent?"🔴 عاجل — ":""}دراسة حالة جديدة: \${pt.name} · \${dept?\`القسم المقترح: \${deptName(dept)}\`:"المؤشرات غير كافية للتوجيه التلقائي؛ مطلوب فرز سريري"} · \${an.progs.length} برامج و\${an.goals.length} أهداف مقترحة\`,date:todayISO(),read:false}));
+      if(clin&&!apt)state.messages.unshift({id:"msg-"+Date.now()+"-clin",fromId:null,fromName:"محرك أوان",toId:clin.id,toName:clin.name,text:\`\${an.urgent?"🔴 أولوية عاجلة — ":""}دراسة حالة جديدة تحتاج مراجعتك: \${pt.name} · \${deptName(dept)}\${f.reason?\` · ملاحظة الأسرة: \${f.reason}\`:""} · لم يتوفر موعد تلقائي؛ يحتاج تنسيقًا من الاستقبال\`,date:todayISO(),read:false});
+      rec.patientId=pid;rec.aptId=apt?apt.id:null;rec.clinician=clin?clin.name:"";rec.dept=dept;
       rec.draftProgs=an.progs.map(p=>p.prog);rec.draftGoals=an.goals.map(g=>g.text);
-      state.registrations.unshift({child:pt.name,guardian:f.guardian,phone:f.phone,reason:f.reason,status:"مسودة خطة بانتظار الاعتماد",date:localDateOf(new Date())});
-      audit("دراسة حالة إلكترونية ← فتح ملف وحجز تقييم تلقائي",pt.name);
+      state.registrations.unshift({child:pt.name,guardian:f.guardian,phone:f.phone,reason:f.reason,status:apt?"توجيه للقسم · تقييم محجوز":"توجيه للقسم · بانتظار تنسيق التقييم",date:localDateOf(new Date())});
+      audit(apt?"دراسة حالة إلكترونية ← توجيه وحجز تقييم":"دراسة حالة إلكترونية ← توجيه بانتظار حجز التقييم",pt.name);
       persist();
       form.reset();form.removeAttribute("data-draft");
       const res=document.getElementById("portal-result");
       if(res)res.innerHTML=\`<div class="notice-blue" style="line-height:2">وصلتنا دراسة حالة <b>\${esc(pt.name)}</b>، وما فيه أي ورق محتاجينه منكم.<br>
-        ✓ انفتح ملف لطفلك<br>✓ انحجز له تقييم أولي يوم <b>\${date(slot.date)}</b> الساعة <b>\${time(slot.time)}</b>\${clin?\` مع <b>\${esc(clin.name)}</b>\`:""}<br>
+        ✓ انفتح ملف لطفلك<br>\${apt?\`✓ انحجز له تقييم أولي يوم <b>\${date(slot.date)}</b> الساعة <b>\${time(slot.time)}</b> مع <b>\${esc(clin.name)}</b><br>\`:\`⚠️ لم يتوفر مختص أو وقت مناسب للحجز التلقائي؛ فريق الاستقبال سيتواصل لتنسيق التقييم.<br>\`}
         ✓ كود متابعة طفلك: <b style="direction:ltr;unicode-bidi:isolate">\${esc(code)}</b> (تقدري تدخلي بيه من «متابعة طفلي»)<br>
         \${an.red.length?\`<span style="color:var(--danger)">قبل التقييم محتاجين: \${an.red.map(r=>esc(r.text)).join("، ")}</span><br>\`:""}
-        الخطة المبدئية يراجعها المشرف ويعتمدها، ويوصلك إشعار أول ما تتعتمد.</div>\`;
+        الاقتراحات تساعد الفريق على التوجيه فقط؛ المختص يقيّم الطفل أولًا، ثم تُبنى الخطة العلاجية وتُراجع قبل اعتمادها.</div>\`;
+      if(state.rcCaseReturnToDesk){delete state.rcCaseReturnToDesk;state.view="rcDesk";state.rsTab="case";persist();notify("وصلت دراسة الحالة؛ راجعي التوجيه والتنبيهات في تبويب دراسة الحالة");render();return}
       notify("انرسلت دراسة الحالة");
     }
     // ---- جهة المشرف ----
@@ -486,7 +490,7 @@ const t=`"use strict";
       const live=state.smartIntakes.filter(x=>x.status==="live"&&x.fields&&Object.values(x.fields).some(v=>String(v).trim()));
       const drafts=state.smartIntakes.filter(x=>x.status==="draft");
       const done=state.smartIntakes.filter(x=>x.status==="approved"||x.status==="info").slice(0,6);
-      let h=head("الاستقبال الذكي","من أول تواصل لين أول جلسة — بدون ورق","ولي الأمر يملا دراسة الحالة من جواله أو آيباد الاستقبال، والمحرك يحللها وهي تتكتب. الملف والتقييم الأولي يتعملوا تلقائي، والخطة تستنى اعتمادك.",\`<button class="btn btn-outline" onclick="goPublic('parent');setParentTab('case')">فتح دراسة الحالة (للآيباد)</button>\`);
+      let h=head("مراجعة دراسة الحالة","من إجابات الأسرة إلى التقييم ثم الخطة","تُوجَّه الحالة حسب المؤشرات، وتظل التوصيات مساندة للقرار؛ الخطة العلاجية تُبنى بعد التقييم السريري وتحتاج مراجعة مختص مؤهل.",\`<button class="btn btn-outline" onclick="setView('rcDesk');rsTabSet('case')">العودة إلى الاستقبال</button> <button class="btn btn-outline" onclick="goPublic('parent');setParentTab('case')">فتح نموذج الأسرة</button>\`);
       h+=\`<section class="ai-flow">\${["ولي الأمر يملا دراسة الحالة","المحرك يحلل كل نقطة لحظيًا","فتح ملف + حجز تقييم تلقائي","المشرف يعتمد الخطة بضغطة","الطفل يظهر في جدول الأخصائي"].map((t,i)=>\`<div class="ai-step \${i===3?"human":""}"><b>\${i+1}</b><span>\${t}</span></div>\`).join("")}</section>\`;
       h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2><span class="ai-live-dot"></span> يتكتب الآن</h2><span class="muted">\${live.length?live.length+" دراسة حالة مفتوحة":"ما فيه حد يكتب الحين"}</span></div>
         \${live.length?\`<div class="ai-live-grid">\${live.map(r=>{const an=r.analysis||analyzeIntake(r.fields||{});return \`<div class="ai-live"><div class="spread-row"><b>\${esc((r.fields.child||"طفل بدون اسم للحين").trim())}</b><span class="muted">\${aiAgo(r.updatedAt)}</span></div>
@@ -494,45 +498,60 @@ const t=`"use strict";
           \${an.red.length?\`<div class="ai-red">\${an.red.map(x=>esc(x.text)).join("<br>")}</div>\`:""}
           \${aiDeptBars(an)}
           \${an.flags.length?\`<div class="ai-chips">\${an.flags.slice(-6).map(x=>\`<span>\${esc(x.area)}</span>\`).join("")}</div>\`:""}</div>\`}).join("")}</div>\`:\`<div class="empty">أول ما ولي أمر يبدأ يكتب في دراسة الحالة بتظهر هنا لحظة بلحظة.</div>\`}</section>\`;
-      h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2>مسودات جاهزة لاعتمادك</h2><span class="muted">\${drafts.length}</span></div>\${drafts.length?drafts.map(r=>aiDraftCard(r)).join(""):\`<div class="empty">ما فيه مسودات بانتظار الاعتماد.</div>\`}</section>\`;
+      h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2>توجيهات بانتظار مراجعتك</h2><span class="muted">\${drafts.length}</span></div>\${drafts.length?drafts.map(r=>aiDraftCard(r)).join(""):\`<div class="empty">ما فيه توجيهات بانتظار المراجعة.</div>\`}</section>\`;
       if(done.length)h+=\`<section class="card" style="margin-top:16px"><div class="card-head"><h2>تعاملت معها مؤخرًا</h2></div><div class="list">\${done.map(r=>\`<div class="list-row"><div class="list-main"><strong>\${esc(r.fields.child||"")}</strong><small>\${r.status==="approved"?"اعتُمدت ودخل البرنامج":"انطلبت معلومات إضافية من ولي الأمر"} · \${aiAgo(r.decidedAt||r.updatedAt)}</small></div><div class="list-end">\${r.status==="approved"?\`<button class="btn btn-outline" onclick="openPatient('\${r.patientId}')">فتح الملف</button>\`:pill("معلقة")}</div></div>\`).join("")}</div></section>\`;
-      h+=\`<p class="muted" style="font-size:11.5px;margin-top:12px">المحرك في النسخة هذي يشتغل بقواعد مكتوبة وواضحة (كل اقتراح مكتوب جنبه النقطة اللي طلع منها). ممكن يتضاف بعدين نموذج ذكاء اصطناعي يقرأ الوصف الحر بشكل أعمق، وقرار الخطة يفضل عند المشرف المرخّص.</p>\`;
+      h+=\`<p class="muted" style="font-size:11.5px;margin-top:12px">التوجيه الحالي يعتمد قواعد واضحة قابلة للمراجعة ويبيّن سبب كل اقتراح؛ لا يصدر تشخيصًا ولا يعتمد خطة علاجية آليًا. القرار السريري والخطة النهائية للمختص المؤهل بعد التقييم.</p>\`;
       return h;
     }
     function aiDraftCard(r){
       const an=r.analysis;const f=r.fields;const apt=state.appointments.find(a=>a.id===r.aptId);
       const allProgs=[...new Set([...(an.progs||[]).map(p=>p.prog),...(r.draftProgs||[])])];
       return \`<div class="ai-draft \${an.urgent?"urgent":""}"><div class="spread-row"><div><b style="font-size:17px">\${esc(f.child||"")}</b> <span class="muted">· \${esc(f.age||"")} · ولي الأمر \${esc(f.guardian||"")} \${esc(f.phone||"")}</span></div>\${an.urgent?\`<span class="pill pill-red">عاجل</span>\`:""}</div>
-        <div class="ai-auto"><span>✓ الملف انفتح (قيد التقييم)</span><span>✓ تقييم أولي \${apt?\`\${date(apt.date)} \${time(apt.time)} · \${esc(apt.clinician)}\`:""}</span><span>✓ المشرف تبلّغ</span><span class="wait">⏳ الخطة بانتظارك</span></div>
+        <div class="ai-auto"><span>✓ الملف انفتح (قيد التقييم)</span><span>\${apt?\`✓ تقييم أولي \${date(apt.date)} \${time(apt.time)} · \${esc(apt.clinician)}\`:"⚠️ يحتاج تنسيق موعد تقييم"}</span><span>\${r.dept?"✓ القسم والمختص المقترحان محددان":"⚠️ مطلوب فرز بشري للقسم والمختص"}</span><span class="wait">⏳ الخطة العلاجية بعد التقييم السريري</span></div>
         \${an.red.length?\`<div class="ai-red"><b>قبل البدء:</b><br>\${an.red.map(x=>\`\${x.urgent?"🔴 ":""}\${esc(x.text)} <small class="muted">(\${esc(x.from)})</small>\`).join("<br>")}</div>\`:""}
         \${f.reason?\`<div class="notice" style="margin:10px 0"><b>وصف ولي الأمر:</b> \${esc(f.reason)}</div>\`:""}
+        \${!r.dept?\`<div class="notice" style="margin:10px 0"><b>مطلوب فرز بشري:</b> المؤشرات لا تكفي لاختيار قسم تلقائيًا. اختاري القسم المناسب؛ وسيُقترح مختص وموعد إن توفرا.<div class="field" style="margin-top:8px"><label>القسم المحوّل إليه</label><select class="select" onchange="aiSetDept('\${r.id}',this.value)"><option value="">اختاري القسم</option>\${state.departments.map(d=>\`<option value="\${esc(d.id)}">\${esc(d.name)}</option>\`).join("")}</select></div></div>\`:""}
         <div class="ai-cols"><div><h4>الأقسام حسب المؤشرات</h4>\${aiDeptBars(an)}</div>
           <div><h4>البرامج المقترحة</h4>\${allProgs.length?allProgs.map(p=>\`<label class="ai-check"><input type="checkbox" \${r.draftProgs.includes(p)?"checked":""} onchange="aiToggle('\${r.id}','prog',this.value,this.checked)" value="\${esc(p)}"><span>\${esc(p)}</span></label>\`).join(""):\`<div class="muted">ما فيه</div>\`}</div>
           <div><h4>الأهداف المبدئية</h4>\${(an.goals||[]).length?an.goals.map(g=>\`<label class="ai-check"><input type="checkbox" \${r.draftGoals.includes(g.text)?"checked":""} onchange="aiToggle('\${r.id}','goal',this.value,this.checked)" value="\${esc(g.text)}"><span>\${esc(g.text)}</span></label>\`).join(""):\`<div class="muted">تتحدد بعد التقييم</div>\`}</div></div>
         <details class="ai-why"><summary>ليش المحرك اقترح كذا؟ (\${an.flags.length} نقطة)</summary>\${aiFlagTable(an)}</details>
-        <div class="ai-actions"><button class="btn btn-primary" onclick="aiApprove('\${r.id}')">اعتماد وإدخال الطفل البرنامج</button><button class="btn btn-outline" onclick="aiAskInfo('\${r.id}')">طلب معلومات من ولي الأمر</button>\${r.patientId?\`<button class="btn btn-outline" onclick="openPatient('\${r.patientId}')">فتح الملف</button>\`:""}</div></div>\`;
+        <div class="ai-actions"><button class="btn btn-primary" onclick="aiApprove('\${r.id}')">اعتماد التوجيه للقسم</button><button class="btn btn-outline" onclick="aiAskInfo('\${r.id}')">طلب معلومات من ولي الأمر</button>\${r.patientId?\`<button class="btn btn-outline" onclick="openPatient('\${r.patientId}')">فتح الملف</button>\`:""}</div><small class="muted">اعتماد التوجيه لا يعتمد علاجًا؛ الخطة تُنشأ بعد التقييم السريري.</small></div>\`;
     }
     function aiToggle(id,kind,val,on){const r=state.smartIntakes.find(x=>x.id===id);if(!r)return;const k=kind==="prog"?"draftProgs":"draftGoals";r[k]=on?[...new Set([...(r[k]||[]),val])]:(r[k]||[]).filter(x=>x!==val);persist()}
+    function aiSetDept(id,dept){
+      if(!["management","supervisor"].includes(state.role)){notify("توجيه الحالة متاح للمشرف أو الإدارة فقط");return}
+      const r=state.smartIntakes.find(x=>x.id===id),d=state.departments.find(x=>x.id===dept);if(!r||!d||r.dept)return;
+      const pool=state.staff.filter(s=>s.clinical&&s.department===dept);
+      const clin=pool.slice().sort((a,b)=>state.appointments.filter(x=>x.clinician===a.name).length-state.appointments.filter(x=>x.clinician===b.name).length)[0]||null;
+      const slot=clin?intakeNextSlot(clin.name):null;
+      const p=state.patients.find(x=>x.id===r.patientId);
+      r.dept=dept;r.clinician=clin?clin.name:"";r.routeReviewedAt=new Date().toISOString();
+      if(p)p.program=deptName(dept);
+      if(clin&&slot&&p){
+        const apt={id:"apt-"+Date.now(),date:slot.date,time:slot.time,patient:p.name,service:"تقييم أولي — "+(INTAKE_INSTRUMENTS[dept]||"تقييم شامل"),clinician:clin.name,room:"غرفة التقييم",status:"مجدول",newForStaff:true,autoBooked:true,familyNote:r.fields.reason||""};
+        state.appointments.push(apt);r.aptId=apt.id;p.next=slot.date+"T"+slot.time;
+      }else{
+        const why=!clin?"لا يوجد مختص سريري معيّن للقسم":!slot?"لا يوجد موعد متاح خلال فترة البحث":"";
+        const supervisors=state.staff.filter(s=>s.roleCategory==="supervisor"&&(s.department===dept||!s.department)),targets=supervisors.length?supervisors:state.staff.filter(s=>s.roleCategory==="management");
+        targets.slice(0,2).forEach(s=>state.messages.unshift({id:"msg-"+Date.now()+"-"+s.id,fromId:null,fromName:"محرك أوان",toId:s.id,toName:s.name,text:\`دراسة حالة \${r.fields.child}: \${why}؛ يلزم تنسيق يدوي للحجز.\`,date:todayISO(),read:false}));
+      }
+      const reg=state.registrations.find(x=>x.child===(r.fields.child||"")&&/توجيه/.test(x.status||""));if(reg)reg.status=r.aptId?"توجيه للقسم · تقييم محجوز":"توجيه للقسم · بانتظار تنسيق التقييم";
+      persist();notify(clin&&slot?"تم توجيه الحالة وحجز تقييم للمختص المقترح":"تم تحديد القسم؛ يحتاج حجز التقييم إلى تنسيق يدوي");render();
+    }
     function aiApprove(id){
+      if(!["management","supervisor"].includes(state.role)){notify("اعتماد التوجيه متاح للمشرف أو الإدارة فقط");return}
       const r=state.smartIntakes.find(x=>x.id===id);if(!r)return;const p=state.patients.find(x=>x.id===r.patientId);if(!p){notify("الملف مو موجود");return}
-      const who=auditActor().name;const d=localDateOf(new Date());
-      const progDept=prog=>{for(const [dep,list] of Object.entries(PROGRAM_LIBRARY)){if(list.includes(prog))return dep}return r.dept};
-      p.assignedPrograms=p.assignedPrograms||[];
-      (r.draftProgs||[]).forEach((prog,i)=>{if(!p.assignedPrograms.some(a=>a.program===prog))p.assignedPrograms.push({id:"ap-"+Date.now()+"-"+i,department:progDept(prog),program:prog,date:d,addedBy:"اعتماد "+who})});
-      if((r.draftGoals||[]).length)p.goal=r.draftGoals[0];
-      {const who2=auditActor().name;goalsOf(p).forEach(g=>{if((r.draftGoals||[]).includes(g.text)){g.status="معتمد";g.approvedBy=who2;g.approvedAt=new Date().toISOString()}else if(g.status==="مقترح"&&g.source==="دراسة الحالة"){g.status="مرفوض"}})}
-      p.status="نشط";
-      if(!state.departmentPrograms)state.departmentPrograms={};
-      (r.draftProgs||[]).forEach(prog=>{const dep=progDept(prog);state.departmentPrograms[dep]=state.departmentPrograms[dep]||[];if(!state.departmentPrograms[dep].includes(prog))state.departmentPrograms[dep].push(prog)});
-      const clin=state.staff.find(s=>s.name===r.clinician);
-      state.plans.unshift({id:"pl-"+Date.now(),staffId:clin?clin.id:null,department:r.dept,patient:p.name,title:"خطة أولية — من دراسة الحالة الإلكترونية",status:"معتمدة",date:d,note:(r.draftGoals||[]).join(" · ")});
-      state.messages.unshift({id:"msg-"+Date.now(),fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:p.id,text:\`خطة \${p.name} المبدئية اعتُمدت. أول خطوة: التقييم الأولي في موعده، وبعدها البرامج: \${(r.draftProgs||[]).join("، ")||"تتحدد بعد التقييم"}.\`,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
-      const reg=state.registrations.find(x=>x.child===p.name&&x.status==="مسودة خطة بانتظار الاعتماد");if(reg)reg.status="معتمدة";
+      if(!r.dept){notify("حددي القسم المقترح أو أكملي مراجعة المعلومات قبل اعتماد التوجيه");return}
+      const who=auditActor().name;
+      if(r.status==="approved"){notify("تم اعتماد توجيه هذه الحالة بالفعل");return}
+      const reg=state.registrations.find(x=>x.child===p.name&&/توجيه/.test(x.status||""));if(reg)reg.status=r.aptId?"تم اعتماد التوجيه · التقييم محجوز":"تم اعتماد التوجيه · بانتظار تنسيق التقييم";
+      state.messages.unshift({id:"msg-"+Date.now(),fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:p.id,text:\`تمت مراجعة دراسة حالة \${p.name} وتوجيهها إلى \${deptName(r.dept)}. التوصيات المبدئية ليست خطة علاجية؛ سيقيّمه المختص أولًا ثم تُبنى الخطة العلاجية وتُراجع قبل اعتمادها.\`,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
       r.status="approved";r.decidedAt=new Date().toISOString();r.decidedBy=who;
-      audit("اعتماد خطة من دراسة الحالة ("+(r.draftProgs||[]).length+" برامج)",p.name);
-      persist();notify("اعتُمدت الخطة ودخل "+p.name+" البرنامج");render();
+      audit("اعتماد توجيه دراسة الحالة ("+(r.draftProgs||[]).length+" برامج مقترحة)",p.name);
+      persist();notify("اعتُمد توجيه الحالة؛ الخطة العلاجية بعد التقييم السريري");render();
     }
     function aiAskInfo(id){
+      if(!["management","supervisor"].includes(state.role)){notify("طلب استكمال المعلومات متاح للمشرف أو الإدارة فقط");return}
       const r=state.smartIntakes.find(x=>x.id===id);if(!r)return;
       const miss=(r.analysis.missing||[]).join("، ")||"تفاصيل إضافية عن الحالة";
       if(r.patientId)state.messages.unshift({id:"msg-"+Date.now(),fromId:null,fromName:state.center.name,fromDept:"reception",toId:null,toName:null,toDept:"family",patientId:r.patientId,text:\`محتاجين منكم نكمل دراسة حالة \${r.fields.child}: \${miss}. تقدروا تردوا من هنا.\`,date:todayISO(),kind:"رسالة",status:"مُرسلة",read:false});
@@ -543,7 +562,7 @@ const t=`"use strict";
       const live=state.smartIntakes.filter(x=>x.status==="live"&&x.fields&&Object.values(x.fields).some(v=>String(v).trim())).length;
       const drafts=state.smartIntakes.filter(x=>x.status==="draft");const urgent=drafts.filter(x=>x.analysis&&x.analysis.urgent).length;
       if(!live&&!drafts.length)return "";
-      return \`<section class="ai-banner" onclick="setView('intakeAI')" role="button" tabindex="0"><span class="ai-live-dot"></span><div><b>الاستقبال الذكي</b><small>\${live?live+" دراسة حالة تتكتب الآن · ":""}\${drafts.length} مسودة خطة بانتظار اعتمادك\${urgent?\` · \${urgent} عاجلة\`:""}</small></div><span class="btn btn-primary">افتح</span></section>\`;
+      return \`<section class="ai-banner" onclick="setView('rcDesk');rsTabSet('case')" role="button" tabindex="0"><span class="ai-live-dot"></span><div><b>دراسة الحالة</b><small>\${live?live+" دراسة حالة تتكتب الآن · ":""}\${drafts.length} توجيه بانتظار المراجعة\${urgent?\` · \${urgent} عاجلة\`:""}</small></div><span class="btn btn-primary">افتح</span></section>\`;
     }
     // مزامنة لحظية بين التابات/الشاشات على نفس الجهاز (في النسخة الكاملة تصير عبر السيرفر)
     window.addEventListener("storage",ev=>{
@@ -663,4 +682,4 @@ const t=`"use strict";
     // ↩ منقولة من js/16-profile-journey-brain.js (لازم تكون متعرّفة هنا قبل ما تتستخدم وقت التحميل)
     function cancelBooking(id){const b=state.sessionBookings.find(x=>x.id===id);if(b){b.status="ملغي";persist();notify("تم إلغاء الحجز، نتمنى نشوفك قريب");render()}}
 `;export{t as default};
-//# sourceMappingURL=06-assess-programs-consents-intake-DxRPoTMZ.js.map
+//# sourceMappingURL=06-assess-programs-consents-intake-5Pbno2_u.js.map

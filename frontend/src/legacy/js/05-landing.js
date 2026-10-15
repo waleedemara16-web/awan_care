@@ -331,7 +331,19 @@
     function toggleTheme(){state.theme=state.theme==="dark"?"light":"dark";persist();notify(state.theme==="dark"?"تم تفعيل الوضع الليلي":"تم تفعيل الوضع النهاري");render()}
     function changeRole(role){state.role=role;state.currentStaffId=null;state.staffSection=null;if(!roles[role].nav.includes(state.view))state.view="dashboard";persist();notify(`تم التبديل إلى دور ${roles[role].label}`);render()}
     function resetData(){if(confirm("سيتم حذف تعديلات هذا الملف وإعادة البيانات التجريبية. هل تريد المتابعة؟")){localStorage.removeItem(KEY);state=clone(seed);render();notify("تمت إعادة البيانات التجريبية")}}
-    function saveSettings(e){e.preventDefault();const f=new FormData(e.target);state.center=Object.fromEntries(["name","city","phone","email","address","supervisor"].map(k=>[k,f.get(k)]));persist();notify("تم حفظ بيانات المركز — ستبقى بعد إعادة التحميل");render()}
+    function saveSettings(e){e.preventDefault();const f=new FormData(e.target);state.center=Object.assign({},state.center,Object.fromEntries(["name","city","phone","email","address","supervisor","vatNumber"].map(k=>[k,f.get(k)])),{logo:f.get("logo")||""});persist();notify("تم حفظ بيانات المركز — ستظهر في الفواتير الجديدة");render()}
+    function centerLogoSelected(input){
+      const file=input.files&&input.files[0];if(!file)return;
+      if(!/^image\/(png|jpeg|webp)$/.test(file.type)){notify("اختاري صورة PNG أو JPG أو WEBP للشعار");input.value="";return}
+      if(file.size>512*1024){notify("حجم الشعار يجب ألا يتجاوز 512 كيلوبايت");input.value="";return}
+      const reader=new FileReader();
+      reader.onload=()=>{const hidden=input.form&&input.form.elements.logo;if(!hidden)return;hidden.value=String(reader.result||"");const preview=document.getElementById("center-logo-preview");if(preview)preview.innerHTML=`<img src="${esc(hidden.value)}" alt="شعار المركز" style="width:64px;height:64px;object-fit:contain;border:1px solid var(--line);border-radius:10px"><button type="button" class="btn btn-outline" style="padding:6px 10px" onclick="centerLogoClear(this)">إزالة الشعار</button>`};
+      reader.onerror=()=>notify("تعذر قراءة ملف الشعار؛ اختاري الصورة مرة أخرى");
+      reader.readAsDataURL(file)
+    }
+    function centerLogoClear(button){const form=button.form||button.closest("form");if(form&&form.elements.logo)form.elements.logo.value="";const preview=document.getElementById("center-logo-preview");if(preview)preview.innerHTML=""}
+    function printInvoice(){document.body.classList.add("awan-print-invoice");const done=()=>{document.body.classList.remove("awan-print-invoice");window.removeEventListener("afterprint",done)};window.addEventListener("afterprint",done);window.print();setTimeout(done,60000)}
+    Object.assign(window,{centerLogoSelected,centerLogoClear,printInvoice});
     function openPatient(id){state.patientId=id;state.view="patient-detail";persist();render()}
     function openModal(type,id){
       const m=document.getElementById("modal");let title="",body="";
@@ -411,7 +423,7 @@
           title=(inv.taxAmount>0?"فاتورة ضريبية":"فاتورة")+" — "+esc(inv.id);
           body=`<div id="invoice-print-area">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-              <div><b style="font-size:16px">${esc(inv.centerName||state.center.name)}</b><br><small class="muted">${esc(state.center.city||"")} · ${esc(state.center.phone||"")}</small></div>
+              <div style="display:flex;align-items:center;gap:12px">${(inv.centerLogo||state.center.logo)?`<img src="${esc(inv.centerLogo||state.center.logo)}" alt="شعار المركز" style="width:64px;height:64px;object-fit:contain">`:""}<div><b style="font-size:16px">${esc(inv.centerName||state.center.name)}</b><br><small>${esc([inv.centerAddress||state.center.address,inv.centerCity||state.center.city].filter(Boolean).join(" · "))}</small><br><small>${esc([inv.centerPhone||state.center.phone,inv.centerEmail||state.center.email].filter(Boolean).join(" · "))}</small>${(inv.centerVatNumber||state.center.vatNumber)?`<br><small>الرقم الضريبي: ${esc(inv.centerVatNumber||state.center.vatNumber)}</small>`:""}</div></div>
               <div style="text-align:left">${invoiceStatusPill(inv.status)}<br><small class="muted">${date(inv.date)}</small></div>
             </div>
             <div class="notice" style="margin-bottom:14px">العميل: <b>${esc(inv.patientName||"—")}</b>${inv.guardianName?` · ولي الأمر: ${esc(inv.guardianName)}`:""}${inv.guardianPhone?` · ${esc(inv.guardianPhone)}`:""}</div>
@@ -425,7 +437,7 @@
             </div>
             ${payRows?`<h4 style="margin:16px 0 8px;font-size:13px">سجل الدفعات</h4><div class="table-wrap"><table class="data-table"><thead><tr><th>التاريخ</th><th>الطريقة</th><th>المبلغ</th><th>ملاحظة</th></tr></thead><tbody>${payRows}</tbody></table></div>`:""}
           </div>
-          <div class="actions" style="margin-top:16px">${(balance>0&&inv.status!=="مسودة"&&inv.status!=="ملغاة")?`<button type="button" class="btn btn-primary" onclick="closeModal();openModal('recordPayment','${inv.id}')">تسجيل دفعة</button>`:""}<button type="button" class="btn btn-outline" onclick="window.print()">${ic("chart",14)} حفظ نسخة PDF</button><button type="button" class="btn btn-outline" onclick="closeModal()">إغلاق</button></div>`;
+          <div class="actions" style="margin-top:16px">${(balance>0&&inv.status!=="مسودة"&&inv.status!=="ملغاة")?`<button type="button" class="btn btn-primary" onclick="closeModal();openModal('recordPayment','${inv.id}')">تسجيل دفعة</button>`:""}<button type="button" class="btn btn-outline" onclick="printInvoice()">${ic("chart",14)} طباعة / حفظ PDF</button><button type="button" class="btn btn-outline" onclick="closeModal()">إغلاق</button></div>`;
         }
       }
       if(type==="recordPayment"){

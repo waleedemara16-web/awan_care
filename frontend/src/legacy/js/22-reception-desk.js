@@ -140,6 +140,36 @@
       h+=`<section class="rc-sec"><h2>👤 استقبال الأسرة</h2><p>سجّلي بيانات الأسرة أو أرسلي لها رابط دراسة الحالة، وتابعي الملف والموعد من هنا.</p><button class="btn btn-primary" onclick="typeof rsQuickOpen==='function'?rsQuickOpen():setView('frontDesk')">تسجيل سريع وحجز تقييم</button></section>`;
       return h+rcPopHtml();
     }
+    function rcStudyStart(){
+      state.rcCaseReturnToDesk=true;persist();
+      goPublic("parent");setParentTab("case");
+    }
+    function rcStudyCancel(){
+      delete state.rcCaseReturnToDesk;state.view="rcDesk";state.rsTab="case";persist();render();
+    }
+    const _rcPortals=portals;
+    portals=function(kind){
+      const html=_rcPortals.apply(this,arguments);
+      if(!state.rcCaseReturnToDesk||kind!=="parent"||state.parentTab!=="case")return html;
+      return html.replace('<h2 style="margin-top:18px">دراسة حالة إلكترونية</h2>',`<div class="actions" style="margin-top:12px"><button class="btn btn-outline" onclick="rcStudyCancel()">← العودة إلى الاستقبال</button></div><h2 style="margin-top:18px">دراسة حالة إلكترونية</h2>`);
+    };
+    function rcCaseStudyView(){
+      if(typeof ensureIntakeState==="function")ensureIntakeState();
+      const rows=(state.smartIntakes||[]).filter(r=>r.fields&&r.status!=="live").sort((a,b)=>Date.parse(b.submittedAt||b.updatedAt||b.startedAt||0)-Date.parse(a.submittedAt||a.updatedAt||a.startedAt||0));
+      const live=(state.smartIntakes||[]).filter(r=>r.status==="live"&&r.fields&&Object.values(r.fields).some(v=>String(v).trim()));
+      const drafts=rows.filter(r=>r.status==="draft");
+      const reviewer=["management","supervisor"].includes(state.role);
+      let h=`<section class="rc-sec"><h2>🧭 رحلة التقييم الذكية</h2><p>تُجمع إجابات الأسرة إلكترونيًا، ثم تُوجَّه للمختص المناسب مع تنبيهات المؤشرات المهمة. التوصيات مساندة للقرار وليست تشخيصًا؛ ويعتمد الخطة أخصائي/مشرف مؤهل بعد التقييم.</p><div class="ai-flow">${["إجابات الأسرة","توجيه للقسم والمختص","تقييم سريري","خطة علاجية للمراجعة","اعتماد وتنبيهات الأسرة والفريق"].map((s,i)=>`<div class="ai-step ${i>=2?"human":""}"><b>${i+1}</b><span>${s}</span></div>`).join("")}</div><div class="actions" style="margin-top:14px"><button class="btn btn-primary" onclick="rcStudyStart()">＋ ابدأ دراسة حالة مع الأسرة</button>${reviewer?`<button class="btn btn-outline" onclick="setView('intakeAI')">فتح صندوق مراجعة المشرف</button>`:""}</div></section>`;
+      h+=`<section class="rc-sec"><h2><span class="ai-live-dot"></span> دراسات تُكتب الآن <small>${live.length}</small></h2>${live.length?`<div class="ai-live-grid">${live.map(r=>{const an=r.analysis||analyzeIntake(r.fields||{});return `<article class="ai-live"><b>${esc(r.fields.child||"بيانات الأسرة")}</b><div class="ai-prog"><i style="width:${an.progress||0}%"></i></div><small>اكتمال ${an.progress||0}% · ${esc((an.missing||[]).join("، ")||"الإجابات تتحدث تلقائيًا")}</small>${an.red&&an.red.length?`<div class="ai-red">${an.red.map(x=>esc(x.text)).join("<br>")}</div>`:""}</article>`}).join("")}</div>`:`<div class="fd-empty">ما فيه دراسة حالة مفتوحة حاليًا. ابدئي من الزر أعلاه أو أرسلي رابط النموذج للأسرة.</div>`}</section>`;
+      const listed=rows.filter(r=>!(reviewer&&r.status==="draft"));
+      h+=`<section class="rc-sec"><h2>📋 إحالات ودراسات الحالة <small>${rows.length} سجل</small></h2>${listed.length?listed.map(r=>{
+        const f=r.fields||{},an=r.analysis||analyzeIntake(f),p=(state.patients||[]).find(x=>x.id===r.patientId),apt=(state.appointments||[]).find(x=>x.id===r.aptId),plan=(state.plans||[]).find(x=>x.patient===(p&&p.name)&&x.evId);
+        const st=plan?(plan.status==="معلقة"?"التقييم اكتمل · الخطة بانتظار اعتماد المشرف":`الخطة العلاجية ${plan.status}`):r.status==="draft"?"بانتظار مراجعة التوجيه":r.status==="approved"?"وُجّهت للقسم · بانتظار التقييم":r.status==="info"?"بانتظار استكمال الأسرة":r.status==="live"?"قيد الإدخال":r.status;
+        return `<article class="rc-task ${an.urgent?"p3":""}"><span class="ic">${an.urgent?"🔔":"📝"}</span><div class="tx"><b>${esc(f.child||"طفل")}</b><small>${esc(st)} · ${esc(f.guardian||"ولي الأمر")} · ${esc(f.phone||"")}</small><small>القسم: ${esc(r.dept?deptName(r.dept):(an.depts||[]).slice(0,2).map(d=>deptName(d.id)).join("، ")||"يحتاج مراجعة المعلومات")}${r.clinician?` · المختص: ${esc(r.clinician)}`:""}${apt?` · التقييم: ${date(apt.date)} ${time(apt.time)}`:""}</small>${an.red&&an.red.length?`<small class="ai-red">${an.red.map(x=>`${x.urgent?"🔴 ":""}${esc(x.text)}`).join(" · ")}</small>`:""}${plan?`<small>الخطة: ${esc(plan.title||"خطة علاجية بعد التقييم")} · ${esc(plan.note||"")}</small>`:""}<small>${(an.progs||[]).length?`برامج مقترحة: ${esc(an.progs.map(x=>x.prog).join("، "))}`:""}${(an.goals||[]).length?` · أهداف مبدئية: ${esc(an.goals.map(x=>x.text).join("؛ "))}`:""}</small></div><div class="acts">${p?`<button class="btn btn-outline" onclick="openPatient('${p.id}')">فتح الملف</button>`:""}${reviewer&&r.status==="draft"?`<button class="btn btn-primary" onclick="setView('intakeAI')">مراجعة واعتماد التوجيه</button>`:""}</div></article>`;
+      }).join(""):`<div class="fd-empty">${rows.length?"مسودات التوجيه بانتظار مراجعتها في القسم التالي.":"ستظهر هنا دراسة الحالة وإحالات التقييم بمجرد إرسال الأسرة للنموذج."}</div>`}</section>`;
+      if(reviewer&&drafts.length)h+=`<section class="rc-sec"><h2>✅ مراجعة التوجيهات المقترحة <small>${drafts.length}</small></h2><p>اعتماد هذا الإجراء يوجّه الحالة فقط؛ الخطة العلاجية لا تعتمد إلا بعد التقييم السريري ومراجعة المختص.</p>${drafts.map(r=>aiDraftCard(r)).join("")}</section>`;
+      return h;
+    }
     function rcContactCard(c){
       const [st,cls]=RC_ST[c.status]||["جديد","red"];const p=c.pid&&state.patients.find(x=>x.id===c.pid);
       const platform=RC_PLATFORM[c.ch]||["•","منصة أخرى","#64748b","#f1f5f9"];

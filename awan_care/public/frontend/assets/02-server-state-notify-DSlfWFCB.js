@@ -376,6 +376,9 @@ const e=`"use strict";
         patientId:data.patientId||null, patientName:data.patientName,
         guardianName:patient?(patient.guardian||""):"", guardianPhone:patient?(patient.phone||""):"",
         centerName:state.center.name,
+        centerCity:state.center.city||"", centerAddress:state.center.address||"",
+        centerPhone:state.center.phone||"", centerEmail:state.center.email||"",
+        centerVatNumber:state.center.vatNumber||"", centerLogo:state.center.logo||"",
         type:data.type, label:data.label, items,
         subtotal, taxRate, taxAmount, discountAmount, total,
         amount: total, // legacy alias — existing dashboard/report code reads inv.amount
@@ -438,4 +441,4 @@ const e=`"use strict";
     //   PATCH  /api/v1/invoices/:invoiceId/status            -> apiUpdateInvoiceStatus
     //   GET    /api/v1/patients/:patientId/ledger            -> apiGetPatientLedger
 `;export{e as default};
-//# sourceMappingURL=02-server-state-notify-DGb6HqV3.js.map
+//# sourceMappingURL=02-server-state-notify-DSlfWFCB.js.map

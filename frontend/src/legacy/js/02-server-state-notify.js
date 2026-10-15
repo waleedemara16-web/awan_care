@@ -376,6 +376,9 @@
         patientId:data.patientId||null, patientName:data.patientName,
         guardianName:patient?(patient.guardian||""):"", guardianPhone:patient?(patient.phone||""):"",
         centerName:state.center.name,
+        centerCity:state.center.city||"", centerAddress:state.center.address||"",
+        centerPhone:state.center.phone||"", centerEmail:state.center.email||"",
+        centerVatNumber:state.center.vatNumber||"", centerLogo:state.center.logo||"",
         type:data.type, label:data.label, items,
         subtotal, taxRate, taxAmount, discountAmount, total,
         amount: total, // legacy alias — existing dashboard/report code reads inv.amount

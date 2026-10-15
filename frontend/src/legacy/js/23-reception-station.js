@@ -126,13 +126,13 @@
     // ---- الشاشة ----
     function rsView(){
       rcSeed();rsSeed();const tab=state.rsTab==="smart"?"today":state.rsTab||"today";const today=rcToday();
-      const T=rsTasks();const newC=rcContacts().filter(c=>c.status==="new").length;
+      const T=rsTasks();const newC=rcContacts().filter(c=>c.status==="new").length;const caseCount=(state.smartIntakes||[]).filter(r=>r.status==="draft"||r.status==="live").length;
       const now=new Date();const clock=pad2(now.getHours())+":"+pad2(now.getMinutes());
       let h=`<div class="rs-top"><div><div class="eyebrow">الاستقبال</div><h1>الاستقبال</h1><div class="muted">${esc(date(today))} · الساعة ${clock}</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="rsQuickOpen()">＋ تسجيل أسرة</button><button class="btn btn-outline" onclick="rsBookOpen({type:'session'})">＋ حجز موعد</button><button class="btn btn-outline" onclick="rcOpen('contactNew')">＋ تواصل جديد</button></div></div>`;
-      const tabs=[["today","🏠 اليوم",T.filter(t=>t.p>=3).length],["cal","🗓️ الجدول",0],["kashf","🩺 الكشوفات",0],["assess","🧩 التقييمات",rsAssessNeeded().length],["contacts","💬 الاستفسارات",newC],["tasks","📋 يحتاج منك",T.length]];
+      const tabs=[["today","🏠 اليوم",T.filter(t=>t.p>=3).length],["cal","🗓️ الجدول",0],["kashf","🩺 الكشوفات",0],["assess","🧩 التقييمات",rsAssessNeeded().length],["case","📝 دراسة الحالة",caseCount],["contacts","💬 الاستفسارات",newC],["tasks","📋 يحتاج منك",T.length]];
       h+=`<div class="rs-tabs">${tabs.map(([k,l,n])=>`<button class="${tab===k?"on":""}" onclick="rsTabSet('${k}')">${l}${n?`<em>${n}</em>`:""}</button>`).join("")}</div>`;
-      h+=tab==="today"?rsToday():tab==="cal"?rsCal():tab==="kashf"?rsTypeTab("kashf"):tab==="assess"?rsTypeTab("assess"):tab==="contacts"?rsContactsTab():rsTasksTab(T);
+      h+=tab==="today"?rsToday():tab==="cal"?rsCal():tab==="kashf"?rsTypeTab("kashf"):tab==="assess"?rsTypeTab("assess"):tab==="case"?rcCaseStudyView():tab==="contacts"?rsContactsTab():rsTasksTab(T);
       return h+rsPopHtml()+rcPopHtml();
     }
     function rsTabSet(k){state.rsTab=k;render();window.scrollTo(0,0)}
