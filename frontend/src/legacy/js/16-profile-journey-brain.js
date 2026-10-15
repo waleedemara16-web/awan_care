@@ -117,8 +117,6 @@
     try{if(sessionStorage.getItem("awan-sipad-mode")==="1"){state.sipadMode=true;const _sid=sessionStorage.getItem("awan-sipad");if(_sid&&personById(_sid))state.sipad=_sid}}catch(_e){}
     if(window.__awanSim){state.sipadMode=true;if(state.view==="public")state.view="dashboard"}
     window.addEventListener("hashchange",()=>{if(location.hash==="#staff-ipad"){openStaffIpad()}else if(location.hash==="#intake-kiosk"){openIntakeKiosk()}else if(location.hash==="#case"){state.intakeKiosk=false;state.view="public";state.portal="parent";state.parentTab="case";render()}});
-    render();
-
     /* === تفاعلية إضافية: ميل ثلاثي الأبعاد للكروت + توهج يتبع المؤشر + تموّج عند الضغط ===
        تعمل بالتفويض (delegation) على document عشان تفضل شغالة حتى بعد كل render() اللي يستبدل محتوى #app بالكامل. */
     (function initExtraInteractivity(){
@@ -799,7 +797,6 @@
     Object.assign(window,{jrGo,jrCtxClose,jrSet,jrQuarterOpen,jrQuarterSave,jrQuarterView,jrQuarterApprove,jrOvClose,jrPrint,state_jrNoop,viewProgressReport,rfConvert});
     ["management","supervisor","reception","staff"].forEach(r=>{const nav=roles[r].nav;if(!nav.includes("journey")){const i=nav.indexOf("patients");nav.splice(i>=0?i:0,0,"journey")}});
     navItems.splice(Math.max(0,navItems.findIndex(n=>n[0]==="patients")),0,["journey","target"]);
-    render();
 
     // =================== تنظيم أوان: قائمة مجمّعة بترتيب الرحلة + ملف طفل بتبويبات + الطفل يمشي معك بين التابات + بحث شامل ===================
     // ---- ١) القائمة الجانبية: مجموعات مرتبة بنفس ترتيب رحلة الطفل ----
@@ -930,7 +927,6 @@
     function ogMapToggle(o){state.ogMapClosed=!o}
     DEVICE_ONLY.add("ogMapClosed");
     Object.assign(window,{ogMapToggle,orgToggleGroup,pdSet,focusGo,focusClear,cmdkOpen,cmdkClose,cmdkType,cmdkHover,cmdkRun,jrGo,render});
-    render();
 
     // =================== عقل أوان: الذكاء الاصطناعي في خدمة الإدارة + المنصة متقسمة على ٩ محاور بدل ٣٠ تاب ===================
     // ---- ١) المحاور: كل مجموعة تابات متكررة/متشابهة صارت محور واحد في القائمة، وجواه شريط تبويبات ----
