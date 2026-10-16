@@ -67,8 +67,13 @@ export function applyPath(s, path) {
     s.portal = parts[1] || 'home'
   } else if (parts[0] === 'app') {
     if (parts[1] === 'patients' && parts[2]) {
-      s.view = 'patient-detail'
-      s.patientId = parts[2]
+      if (s.patients?.some((patient) => patient.id === parts[2])) {
+        s.view = 'patient-detail'
+        s.patientId = parts[2]
+      } else {
+        s.view = 'patients'
+        s.patientId = null
+      }
     } else if (parts[1]) {
       s.view = parts[1]
     } else if (s.view === 'public' || !s.view) {
