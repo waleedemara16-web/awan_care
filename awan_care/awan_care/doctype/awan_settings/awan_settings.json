@@ -1,0 +1,72 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 02:00:00.000000",
+ "modified": "2026-10-19 02:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "module": "Awan Care",
+ "name": "Awan Settings",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "issingle": 1,
+ "description": "إعدادات منصة أوان على السيرفر. المفاتيح بتتحفظ متشفرة وما بتوصلش لأي جهاز.",
+ "fields": [
+  {
+   "fieldname": "section_ai",
+   "fieldtype": "Section Break",
+   "label": "الربط الخارجي"
+  },
+  {
+   "fieldname": "openai_api_key",
+   "fieldtype": "Password",
+   "label": "مفتاح OpenAI",
+   "description": "كل طلبات الذكاء الاصطناعي من المنصة بتعدّي على السيرفر بالمفتاح ده"
+  },
+  {
+   "fieldname": "google_places_key",
+   "fieldtype": "Password",
+   "label": "مفتاح Google Places",
+   "description": "اختياري — لرادار الفرص"
+  },
+  {
+   "fieldname": "section_family",
+   "fieldtype": "Section Break",
+   "label": "بوابة الأسر"
+  },
+  {
+   "fieldname": "family_portal",
+   "fieldtype": "Check",
+   "label": "بوابة الأسر شغالة",
+   "default": "1",
+   "description": "ولي الأمر بيدخل بكود الطفل + رقم الجوال المسجّل، وبيشوف طفله بس"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "role": "Awan Management",
+   "read": 1,
+   "print": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "field_order": [
+  "section_ai",
+  "openai_api_key",
+  "google_places_key",
+  "section_family",
+  "family_portal"
+ ]
+}

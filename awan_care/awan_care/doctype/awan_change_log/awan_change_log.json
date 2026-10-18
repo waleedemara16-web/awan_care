@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 02:00:00.000000",
+ "modified": "2026-10-19 02:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "module": "Awan Care",
+ "name": "Awan Change Log",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "states": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "autoname": "hash",
+ "read_only": 1,
+ "in_create": 1,
+ "description": "سجل التغييرات: مين غيّر إيه وإمتى في بيانات المنصة.",
+ "fields": [
+  {
+   "fieldname": "state_key",
+   "fieldtype": "Data",
+   "label": "المفتاح",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "action",
+   "fieldtype": "Select",
+   "label": "العملية",
+   "options": "change\ninit\nrejected\nfamily\nlogin\nfamily-login\nsettings\nuser",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "actor",
+   "fieldtype": "Data",
+   "label": "المستخدم",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Data",
+   "label": "الدور"
+  },
+  {
+   "fieldname": "revision",
+   "fieldtype": "Int",
+   "label": "الإصدار"
+  },
+  {
+   "fieldname": "client",
+   "fieldtype": "Data",
+   "label": "الجهاز"
+  },
+  {
+   "fieldname": "patient_id",
+   "fieldtype": "Data",
+   "label": "الطفل",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Small Text",
+   "label": "التفاصيل"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Awan Management",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "field_order": [
+  "state_key",
+  "action",
+  "actor",
+  "role",
+  "revision",
+  "client",
+  "patient_id",
+  "details"
+ ]
+}

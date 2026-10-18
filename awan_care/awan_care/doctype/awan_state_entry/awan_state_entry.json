@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 02:00:00.000000",
+ "modified": "2026-10-19 02:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "module": "Awan Care",
+ "name": "Awan State Entry",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "autoname": "field:state_key",
+ "naming_rule": "By fieldname",
+ "read_only": 1,
+ "description": "بيانات المنصة المشتركة: كل نوع بيانات (مواعيد، رسايل، فواتير…) في سجل، وليه رقم إصدار للمزامنة. بتتعدل من المنصة بس.",
+ "fields": [
+  {
+   "fieldname": "state_key",
+   "fieldtype": "Data",
+   "label": "المفتاح",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "revision",
+   "fieldtype": "Int",
+   "label": "الإصدار",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "client",
+   "fieldtype": "Data",
+   "label": "آخر جهاز عدّل",
+   "read_only": 1
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Long Text",
+   "label": "البيانات (JSON)",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Awan Management",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "field_order": [
+  "state_key",
+  "revision",
+  "client",
+  "data"
+ ]
+}
