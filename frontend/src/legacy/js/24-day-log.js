@@ -130,26 +130,22 @@
       const A=state.appointments.filter(a=>a.date===day);const live=A.filter(a=>a.status!=="ملغي");
       const cnt=t=>{const L=live.filter(a=>(t==="session"?["session","comp"]:[t]).includes(rsType(a)));return {all:L.length,done:L.filter(a=>a.status==="مكتمل").length,abs:L.filter(a=>a.status==="غائب").length,open:L.filter(a=>a.status==="مجدول").length}};
       const audits=(state.auditLog||[]).filter(x=>(x.at||"").slice(0,10)===day);
-      const inv=(state.invoices||[]).filter(i=>i.date===day&&i.fromReception);const byM={};inv.forEach(i=>{byM[i.payment||"—"]=(byM[i.payment||"—"]||0)+(+i.total||0)});
-      const unpaid=live.filter(a=>a.status==="مكتمل"&&rsPrice(a)&&!a.paid).map(a=>({p:a.patient,amt:rsPrice(a),t:RS_T[rsType(a)].l}));
       const outcomes=A.filter(a=>a.outcome).map(a=>({p:a.patient,t:RS_T[rsType(a)].l,o:a.outcome.label,by:a.outcome.by,handled:!!a.outcome.handled}));
       const staff={};live.forEach(a=>{const s=staff[a.clinician]=staff[a.clinician]||{n:a.clinician,done:0,abs:0,open:0,kashf:0,assess:0};if(a.status==="مكتمل")s.done++;else if(a.status==="غائب")s.abs++;else s.open++;if(rsType(a)==="kashf")s.kashf++;if(rsType(a)==="assess")s.assess++});
       const newFam=state.patients.filter(p=>{const m=/^p-?(\d{13})/.exec(p.id);return m&&localDateOf(new Date(+m[1]))===day}).map(p=>p.name);
       const C=rcContacts().filter(c=>localDateOf(new Date(c.at))===day||c.updatedOn===day);
       const notClosed=day<=rcToday()?live.filter(a=>a.status==="مجدول"&&(day<rcToday()||sipadMin(a.time)+(+a.duration||40)<rcNowM())).map(a=>({id:a.id,p:a.patient,t:time(a.time),c:a.clinician,ty:RS_T[rsType(a)].l})):[];
       return {day,k:cnt("kashf"),as:cnt("assess"),s:cnt("session"),cancelled:A.filter(a=>a.status==="ملغي").length,booked:audits.filter(x=>/^حجز|^تأجيل/.test(x.action)).length,
-        collected:inv.reduce((s,i)=>s+(+i.total||0),0),byM,unpaid,outcomes,staff:Object.values(staff).sort((a,b)=>b.done-a.done),newFam,
+        outcomes,staff:Object.values(staff).sort((a,b)=>b.done-a.done),newFam,
         contacts:{n:C.length,newOpen:C.filter(c=>c.status==="new").length,reg:C.filter(c=>["registered","link"].includes(c.status)).length},notClosed,
         pending:ocPending().length+rcMsgs().filter(m=>!m.rcDone).length};
     }
     function rdHtml(d,forMgmt){
       const k=(b,l)=>`<div><b>${b}</b><small>${l}</small></div>`;
-      return `<div class="rd-kpis">${k(`${d.k.done}/${d.k.all}`,"🩺 كشوفات")}${k(`${d.as.done}/${d.as.all}`,"🧩 تقييمات")}${k(`${d.s.done}/${d.s.all}`,"🎯 جلسات")}${k(d.k.abs+d.as.abs+d.s.abs,"✕ غياب")}${k(d.cancelled,"🗑 إلغاء")}${k((d.collected||0).toLocaleString("en"),"💳 تحصيل (ر.س)")}</div>
+      return `<div class="rd-kpis">${k(`${d.k.done}/${d.k.all}`,"🩺 كشوفات")}${k(`${d.as.done}/${d.as.all}`,"🧩 تقييمات")}${k(`${d.s.done}/${d.s.all}`,"🎯 جلسات")}${k(d.k.abs+d.as.abs+d.s.abs,"✕ غياب")}${k(d.cancelled,"🗑 إلغاء")}</div>
         <div class="rs-grid2"><div>
         <div class="rs-day">📥 نتائج الأخصائيين (${d.outcomes.length})</div>${d.outcomes.length?`<table class="rd-t"><tr><th>الطفل</th><th>النوع</th><th>النتيجة</th><th>الأخصائي</th><th>الاستقبال</th></tr>${d.outcomes.map(o=>`<tr><td>${esc(o.p)}</td><td>${esc(o.t)}</td><td>${esc(o.o)}</td><td>${esc(o.by)}</td><td>${o.handled?"✓":"⏳ مفتوحة"}</td></tr>`).join("")}</table>`:`<div class="fd-empty">ما فيه نتائج مسجّلة</div>`}
         <div class="rs-day">👩‍⚕️ الأخصائيين</div><table class="rd-t"><tr><th>الأخصائي</th><th>خلص</th><th>غياب</th><th>باقي</th><th>كشف</th><th>تقييم</th></tr>${d.staff.slice(0,forMgmt?40:12).map(s=>`<tr><td>${esc(s.n)}</td><td>${s.done}</td><td>${s.abs}</td><td>${s.open}</td><td>${s.kashf}</td><td>${s.assess}</td></tr>`).join("")}</table></div>
-        <div><div class="rs-day">💳 التحصيل</div>${Object.keys(d.byM).length?Object.entries(d.byM).map(([m,v])=>`<div style="font-size:13px">${esc(m)}: <b>${v.toLocaleString("en")}</b> ر.س</div>`).join(""):`<div class="muted" style="font-size:12px">ما فيه تحصيل</div>`}
-        ${d.unpaid.length?`<div style="margin-top:6px;color:var(--danger);font-size:12.5px">غير مدفوع: ${d.unpaid.map(u=>`${esc(u.p)} (${u.amt})`).join("، ")}</div>`:""}
         <div class="rs-day">👪 أسر جديدة (${d.newFam.length})</div><div style="font-size:12.5px">${esc(d.newFam.join("، "))||"—"}</div>
         <div class="rs-day">💬 الاستفسارات</div><div style="font-size:12.5px">${d.contacts.n} اليوم · انسجّل/انرسل رابط: ${d.contacts.reg} · بدون رد: ${d.contacts.newOpen}</div>
         <div class="rs-day">📅 حجوزات انعملت اليوم</div><div style="font-size:12.5px">${d.booked}</div>
@@ -159,7 +155,7 @@
     function rdSubmit(day,auto){
       const d=rdData(day);const notes=auto?"":(document.getElementById("rd-notes")||{}).value||"";const by=auto?"أوان (رفع تلقائي)":auditActor().name;
       const R=rdReports();const old=R.findIndex(r=>r.day===day);const rec={id:"rd-"+Date.now(),day,at:new Date().toISOString(),by,auto:!!auto,notes,d};if(old>=0)R.splice(old,1);R.unshift(rec);
-      const txt=`🧾 تقرير الاستقبال ${date(day)}${auto?" (تلقائي)":""}: كشوفات ${d.k.done}/${d.k.all} · تقييمات ${d.as.done}/${d.as.all} · جلسات ${d.s.done}/${d.s.all} · غياب ${d.k.abs+d.as.abs+d.s.abs} · تحصيل ${d.collected.toLocaleString("en")} ر.س${d.notClosed.length?` · ⚠️ ${d.notClosed.length} موعد ما انقفل`:""}${notes?" · ملاحظة: "+notes:""}`;
+      const txt=`🧾 تقرير الاستقبال ${date(day)}${auto?" (تلقائي)":""}: كشوفات ${d.k.done}/${d.k.all} · تقييمات ${d.as.done}/${d.as.all} · جلسات ${d.s.done}/${d.s.all} · غياب ${d.k.abs+d.as.abs+d.s.abs}${d.notClosed.length?` · ⚠️ ${d.notClosed.length} موعد ما انقفل`:""}${notes?" · ملاحظة: "+notes:""}`;
       if(typeof cmSendTo==="function"){const m=cmSendTo("dept:management",txt);if(m){m.fromName="الاستقبال"+(auto?" (آلي)":"");m.fromDept="reception";m.fromId=null}}
       _flAudit(`رفع تقرير اليوم ${date(day)}${auto?" (تلقائي)":""}`,"");persist();if(!auto){notify("انرفع تقرير اليوم للإدارة");render()}
     }
@@ -177,7 +173,7 @@
     function dayReportsView(){
       const R=rdReports();
       return head("التقارير","تقارير الاستقبال اليومية","كل يوم يوصلك تقرير بكل شي صار في الاستقبال — يرفعه الاستقبال آخر اليوم أو ينرفع تلقائي.",`<button class="btn btn-outline" onclick="rdSubmit(rcToday(),true)">ولّد تقرير اليوم الحين</button>`)
-        +(R.map((r,i)=>`<details class="rd-card" ${i===0?"open":""}><summary>📅 ${esc(date(r.day))} <span class="muted" style="font-weight:600">· ${esc(r.by)} · ${esc(localTimeOf(new Date(r.at)))}</span>${r.auto?'<span class="rd-auto">تلقائي</span>':""}<span class="muted" style="font-weight:600;margin-inline-start:auto">كشوفات ${r.d.k.done}/${r.d.k.all} · تقييمات ${r.d.as.done}/${r.d.as.all} · تحصيل ${(r.d.collected||0).toLocaleString("en")} ر.س</span></summary>${r.notes?`<div class="oc-box">📝 ${esc(r.notes)}</div>`:""}<div style="margin-top:12px">${rdHtml(r.d,true)}</div></details>`).join("")||`<div class="fd-empty">لسه ما وصل أي تقرير</div>`);
+        +(R.map((r,i)=>`<details class="rd-card" ${i===0?"open":""}><summary>📅 ${esc(date(r.day))} <span class="muted" style="font-weight:600">· ${esc(r.by)} · ${esc(localTimeOf(new Date(r.at)))}</span>${r.auto?'<span class="rd-auto">تلقائي</span>':""}<span class="muted" style="font-weight:600;margin-inline-start:auto">كشوفات ${r.d.k.done}/${r.d.k.all} · تقييمات ${r.d.as.done}/${r.d.as.all}</span></summary>${r.notes?`<div class="oc-box">📝 ${esc(r.notes)}</div>`:""}<div style="margin-top:12px">${rdHtml(r.d,true)}</div></details>`).join("")||`<div class="fd-empty">لسه ما وصل أي تقرير</div>`);
     }
     function rdTick(){
       const h=new Date().getHours();const today=rcToday();const R=rdReports();

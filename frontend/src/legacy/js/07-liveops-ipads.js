@@ -3,8 +3,8 @@
 // كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
     // =================== المراقبة الحية + الوكلاء (Agents) + OpenAI ===================
     function ensureOps2(){if(!Array.isArray(state.liveFeed))state.liveFeed=[];if(!state.liveBoard||typeof state.liveBoard!=="object")state.liveBoard={};if(!state.agents)state.agents={intake:true,booking:true,notify:true,parentSummary:true,daily:true,alerts:true};if(!state.ai)state.ai={key:"",model:"gpt-4o-mini",enabled:false}}
-    const FEED_KINDS={door:"الباب",session:"الجلسات",intake:"التسجيل والأهداف",staff:"الموظفين",finance:"المالية",system:"النظام"};
-    function feedKind(a){if(/وصول طفل|خروج طفل/.test(a))return "door";if(/جلسة|محاول|هدف ·|خلص هدف|مساعدة عاجل/.test(a))return "session";if(/حضور|انصراف|دخول موظف|خروج موظف/.test(a))return "staff";if(/فاتورة|دفعة|باقة/.test(a))return "finance";if(/دراسة الحالة|ملف|هدف|خطة|برنامج|تقييم|موافقة|إحالة|موعد|حجز/.test(a))return "intake";return "system"}
+    const FEED_KINDS={door:"الباب",session:"الجلسات",intake:"التسجيل والأهداف",staff:"الموظفين",system:"النظام"};
+    function feedKind(a){if(/وصول طفل|خروج طفل/.test(a))return "door";if(/جلسة|محاول|هدف ·|خلص هدف|مساعدة عاجل/.test(a))return "session";if(/حضور|انصراف|دخول موظف|خروج موظف/.test(a))return "staff";if(/دراسة الحالة|ملف|هدف|خطة|برنامج|تقييم|موافقة|إحالة|موعد|حجز/.test(a))return "intake";return "system"}
     function pushFeed(action,target,who){ensureOps2();state.liveFeed.unshift({id:"f-"+Date.now()+"-"+Math.random().toString(36).slice(2,5),at:new Date().toISOString(),kind:feedKind(action),who:who||auditActor().name,text:action,target:target||""});if(state.liveFeed.length>800)state.liveFeed.length=800}
     const _auditBase=audit;
     audit=function(action,target){_auditBase(action,target);try{pushFeed(action,target)}catch(_e){}};
@@ -60,8 +60,6 @@
     addStaff=_auditWrap(addStaff,"إضافة موظف",()=>{const s=state.staff[state.staff.length-1];return s?s.name:""});
     addReferral=_auditWrap(addReferral,"إضافة إحالة",()=>"");
     advanceReferral=_auditWrap(advanceReferral,"تحديث حالة إحالة",()=>"");
-    confirmNewInvoice=_auditWrap(confirmNewInvoice,"إصدار فاتورة");
-    submitRecordPayment=_auditWrap(submitRecordPayment,"تسجيل دفعة");
     submitNewBooking=_auditWrap(submitNewBooking,"حجز جديد من بوابة الأسرة",()=>"");
     confirmReschedule=_auditWrap(confirmReschedule,"تغيير موعد",()=>"");
     cancelBooking=_auditWrap(cancelBooking,"إلغاء حجز",()=>"");

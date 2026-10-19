@@ -212,8 +212,6 @@ const e=`"use strict";
       familyServices: [
         {id:"follow", icon:"eye", title:"متابعة طفلي وحجوزاتي", desc:"عرض ملف طفلك، التقدم في الأهداف، الموعد القادم، وكل حجوزاتك.", cta:"متابعة الملف", enabled:true, builtin:true},
         {id:"sessionBooking", icon:"schedule", title:"حجز جلسة علاجية", desc:"اختاري الأخصائي واليوم والوقت، مع عروض الحجز الذهبي.", cta:"احجزي الآن", enabled:true, builtin:true},
-        {id:"packages", icon:"target", title:"الباقات العلاجية", desc:"باقات جلسات بسعر أوفر من الحجز الفردي.", cta:"عرض الباقات", enabled:true, builtin:true},
-        {id:"insurance", icon:"idcard", title:"التأمين وطرق الدفع", desc:"شركات التأمين المتعاملة، ما تغطيه، وطرق الدفع الإلكتروني.", cta:"التفاصيل", enabled:true, builtin:true},
         {id:"addons", icon:"heart", title:"خدمات مكمّلة", desc:"متابعة منزلية أو شادو تيتشر داخل المدرسة، بأسعارها.", cta:"استكشفي الخدمات", enabled:true, builtin:true},
         {id:"case", icon:"book", title:"دراسة حالة إلكترونية", desc:"سجّلي بيانات طفلك الأولية ليقوم فريق المركز بدراسة حالته والتواصل معك.", cta:"بدء الدراسة", enabled:true, builtin:true},
         {id:"booking", icon:"schedule", title:"حجز كشف استشارة", desc:"احجزي موعد الكشف الأولي مع أحد مختصي المركز.", cta:"حجز موعد", enabled:true, builtin:true},
@@ -245,7 +243,7 @@ const e=`"use strict";
         {name:"والاء (Walaa)", covers:["تقييم وتشخيص"], notCovers:["علاج تخاطب","علاج وظيفي","تعديل سلوك"], copay:100, note:"تغطية التأهيل غير متوفرة حاليًا في أغلب البوالص الفردية."}
       ],
       facilities: [
-        {id:"center-demo", type:"مركز", icon:"briefcase", label:"مركز الرعاية النموذجي", code:"CENTER-1001", username:"center-team", password:"1234", tagline:"دخول كامل لنظام إدارة المركز.", services:["تقييم وتشخيص شامل","علاج تخاطب","علاج وظيفي","تعديل سلوك","برنامج تدخل مبكر","إدارة الفواتير والتأمين"]},
+        {id:"center-demo", type:"مركز", icon:"briefcase", label:"مركز الرعاية النموذجي", code:"CENTER-1001", username:"center-team", password:"1234", tagline:"دخول كامل لنظام إدارة المركز.", services:["تقييم وتشخيص شامل","علاج تخاطب","علاج وظيفي","تعديل سلوك","برنامج تدخل مبكر"]},
         {id:"clinic-demo", type:"عيادة", icon:"medical", label:"عيادة شريكة", code:"CLINIC-2001", username:"clinic-team", password:"1234", tagline:"خدمات علاجية مركّزة.", services:["كشف تقييم سريع","جلسات علاج تخاطب فردية","تحويل للمركز عند الشي لبرنامج شامل"]},
         {id:"hospital-demo", type:"مستشفى", icon:"pulse", label:"قسم شريك بمستشفى", code:"HOSPITAL-3001", username:"hospital-team", password:"1234", tagline:"تنسيق إحالات وتقارير.", services:["استقبال إحالات القسم","تقارير تشخيصية للأطباء المحوّلين","تنسيق برنامج علاجي بعد الخروج"]},
         {id:"school-demo", type:"مدرسة", icon:"school", label:"مدرسة شريكة", code:"SCHOOL-2001", username:"school-team", password:"1234", tagline:"متابعة أهداف الطلاب.", services:["عرض الأهداف العلاجية المصرح بها للمعلمين","متابعة تقدم الطالب داخل الفصل","تنسيق خطة الدمج مع المركز"]}
@@ -263,15 +261,18 @@ const e=`"use strict";
         ], notes:"تقدّم واضح في المخاطبة والتقليد الحركي مقارنة بالتقييم السابق. يحتاج دعمًا إضافيًا في مهارات المجموعة."}
       ]
     };
+    // المالية اتشالت من المنصة: خدمتا «الباقات» و«التأمين» ممكن تكون لسه متحفظة في بيانات قديمة (على الجهاز أو السيرفر)
+    const FINANCE_SERVICE_IDS=new Set(["packages","insurance"]);
+    function familyServicesShown(){return (state.familyServices||[]).filter(s=>s&&!FINANCE_SERVICE_IDS.has(s.id))}
     const roles = {
-      supervisor:{label:"الإشراف",icon:"eye",desc:"الإشراف على التشغيل والملفات والفريق",nav:["myIpad","scribe","claims","calls","digital","patients","assessments","videoLab","ebnak","schedule","referrals","team","departments","attendance","connect","communicationHub","library","liveOps","ipads","deptPlan","intakeAI","audit"]},
-      management:{label:"الإدارة",icon:"chart",desc:"لوحة التحكم الأم — الأقسام وبوابة الأسرة وصلاحيات الفريق وإعدادات المركز",nav:["scribe","claims","calls","server","digital","patients","assessments","videoLab","ebnak","schedule","referrals","team","departments","attendance","reports","invoices","connect","communicationHub","library","reviewRequests","liveOps","ipads","deptPlan","intakeAI","agents","audit","settings"]},
+      supervisor:{label:"الإشراف",icon:"eye",desc:"الإشراف على التشغيل والملفات والفريق",nav:["myIpad","scribe","calls","digital","patients","assessments","videoLab","ebnak","schedule","referrals","team","departments","attendance","connect","communicationHub","library","liveOps","ipads","deptPlan","intakeAI","audit"]},
+      management:{label:"الإدارة",icon:"chart",desc:"لوحة التحكم الأم — الأقسام وبوابة الأسرة وصلاحيات الفريق وإعدادات المركز",nav:["scribe","calls","server","digital","patients","assessments","videoLab","ebnak","schedule","referrals","team","departments","attendance","reports","connect","communicationHub","library","reviewRequests","liveOps","ipads","deptPlan","intakeAI","agents","audit","settings"]},
       staff:{label:"الموظفون",icon:"medical",desc:"ملفات الجلسات والخطة اليومية",nav:["myIpad","scribe","patients","assessments","videoLab","ebnak","schedule","departments","communicationHub","library"]},
-      reception:{label:"الاستقبال",icon:"bell",desc:"المواعيد والتسجيل والإحالات",nav:["claims","calls","digital","patients","assessments","schedule","referrals","departments","attendance","communicationHub"]}
+      reception:{label:"الاستقبال",icon:"bell",desc:"المواعيد والتسجيل والإحالات",nav:["calls","digital","patients","assessments","schedule","referrals","departments","attendance","communicationHub"]}
     };
     const navItems = [
-      ["myIpad","tablet"],["digital","clipboardCheck"],["patients","patients"],["assessments","target"],["videoLab","video"],["ebnak","heart"],["scribe","book"],["claims","idcard"],["calls","chat"],["server","globe"],["schedule","schedule"],["referrals","referrals"],
-      ["team","team"],["departments","departments"],["attendance","idcard"],["reports","chart"],["invoices","invoice"],["connect","video"],["communicationHub","commHub"],["library","book"],["reviewRequests","star"],["liveOps","pulse"],["ipads","tablet"],["deptPlan","schedule"],["intakeAI","idea"],["agents","bell"],["audit","shield"],["settings","settings"]
+      ["myIpad","tablet"],["digital","clipboardCheck"],["patients","patients"],["assessments","target"],["videoLab","video"],["ebnak","heart"],["scribe","book"],["calls","chat"],["server","globe"],["schedule","schedule"],["referrals","referrals"],
+      ["team","team"],["departments","departments"],["attendance","idcard"],["reports","chart"],["connect","video"],["communicationHub","commHub"],["library","book"],["reviewRequests","star"],["liveOps","pulse"],["ipads","tablet"],["deptPlan","schedule"],["intakeAI","idea"],["agents","bell"],["audit","shield"],["settings","settings"]
     ];
     // ↩ منقولة من js/04-connect-comm-library.js (لازم تكون متعرّفة هنا قبل ما تتستخدم وقت التحميل)
     function migrateLibrary(st){
@@ -285,4 +286,4 @@ const e=`"use strict";
       });
     }
 `;export{e as default};
-//# sourceMappingURL=01-core-seed-CUu7aV1u.js.map
+//# sourceMappingURL=01-core-seed-D_JLd024.js.map

@@ -38,7 +38,6 @@
       if(today&&recv&&["up","late","no"].includes(k))return [`rsAct('${a.id}','arrive')`,"✓ وصل"];
       if(today&&k==="wait")return [`rsAct('${a.id}','in')`,"🚪 دخّله"];
       if(today&&k==="live")return [`rsAct('${a.id}','done')`,"✔ خلص"];
-      if(recv&&a.status==="مكتمل"&&rsPrice(a)&&!a.paid)return [`rsPayOpen('${a.id}')`,"💳 تحصيل"];
       if(recv&&a.date>rcToday()&&!a.confirmSent)return [`rsAct('${a.id}','confirm')`,"✅ تأكيد"];
       return null;
     }

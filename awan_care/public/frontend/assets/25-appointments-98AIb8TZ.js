@@ -38,7 +38,6 @@ const t=`"use strict";
       if(today&&recv&&["up","late","no"].includes(k))return [\`rsAct('\${a.id}','arrive')\`,"✓ وصل"];
       if(today&&k==="wait")return [\`rsAct('\${a.id}','in')\`,"🚪 دخّله"];
       if(today&&k==="live")return [\`rsAct('\${a.id}','done')\`,"✔ خلص"];
-      if(recv&&a.status==="مكتمل"&&rsPrice(a)&&!a.paid)return [\`rsPayOpen('\${a.id}')\`,"💳 تحصيل"];
       if(recv&&a.date>rcToday()&&!a.confirmSent)return [\`rsAct('\${a.id}','confirm')\`,"✅ تأكيد"];
       return null;
     }
@@ -91,4 +90,4 @@ const t=`"use strict";
     Object.assign(window,{schedule,apShift,apSet,apFilter,rsBookOpen});
     if(state.view==="schedule")render();
 `;export{t as default};
-//# sourceMappingURL=25-appointments-D1MLGjlp.js.map
+//# sourceMappingURL=25-appointments-98AIb8TZ.js.map

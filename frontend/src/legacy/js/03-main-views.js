@@ -3,31 +3,6 @@
 // كل ملفات js/ هذي تشتغل كأنها ملف واحد بالترتيب — ما تغيّر ترتيبها في index.html
     // =====================================================================
     const AWAN_API_BASE = "https://api.awan.sa"; // placeholder base URL for the future production billing server
-    async function apiCreateInvoice(payload){
-      // future: return fetch(`${AWAN_API_BASE}/centers/${state.centerId||"demo"}/invoices`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}).then(r=>r.json());
-      return Promise.resolve(createInvoice(payload));
-    }
-    async function apiListInvoices(){
-      // future: return fetch(`${AWAN_API_BASE}/centers/${state.centerId||"demo"}/invoices`).then(r=>r.json());
-      return Promise.resolve(state.invoices);
-    }
-    async function apiRecordPayment(invoiceId,amount,method,note){
-      // future: return fetch(`${AWAN_API_BASE}/invoices/${invoiceId}/payments`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount,method,note})}).then(r=>r.json());
-      return Promise.resolve(recordInvoicePayment(invoiceId,amount,method,note));
-    }
-    async function apiUpdateInvoiceStatus(invoiceId,status){
-      // future: return fetch(`${AWAN_API_BASE}/invoices/${invoiceId}/status`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status})}).then(r=>r.json());
-      return Promise.resolve(updateInvoiceStatus(invoiceId,status));
-    }
-    async function apiGetPatientLedger(patientId){
-      // future: return fetch(`${AWAN_API_BASE}/patients/${patientId}/ledger`).then(r=>r.json());
-      return Promise.resolve(patientLedger(patientId));
-    }
-    function activePackageForPatientName(name){
-      const patient=state.patients.find(p=>p.name===name);
-      if(!patient) return null;
-      return state.packagePurchases.find(pp=>pp.patientId===patient.id&&(pp.sessionsTotal-pp.sessionsUsed)>0)||null;
-    }
     function genStaffCode(name){
       const clean=(name||"").replace(/^(د\.|أ\.)\s*/,"").trim();
       const letter=clean.charAt(0)||"م";
@@ -171,16 +146,6 @@
       const genAlert=genStats.status==="gap"?`<div class="notice" style="background:var(--danger-2);border-color:#fecaca;color:var(--danger)">⚠ يُلاحظ تراجع في تعميم الهدف الحالي إلى المنزل — أداء المركز أعلى بوضوح من الأداء المنزلي. يُنصح بتكثيف نفس التمرين في البيت ومناقشة السبب مع الأسرة.</div>`:genStats.status==="homeAhead"?`<div class="notice-blue">ملحوظ: الأداء في المنزل أعلى من أداء الجلسات المسجلة داخل المركز — قد يفيد مراجعة أسلوب التدريب على هذا الهدف داخل المركز.</div>`:genStats.status==="aligned"?`<div class="notice">✓ أداء متقارب بين المركز والمنزل — تعميم جيد للمهارة حاليًا.</div>`:`<div class="empty">تحتاجين تسجيلات من المركز ومن المنزل معًا لقياس التعميم — سجّلي أداء جلسة، واطلبي من الأسرة تسجيل ملاحظة من المنزل عبر بوابتهم.</div>`;
       const recentGenLogs=[...genStats.recentSessions.map(l=>({...l,source:"المركز"})),...genStats.recentHomes.map(l=>({...l,source:"المنزل"}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
       const genCard=(state.role!=="reception")?`<section class="card" style="margin-top:16px"><div class="card-head"><h2>${ic("pulse",18)} محرك تعميم المهارات</h2>${canEditP?`<button class="btn btn-outline" onclick="openModal('sessionLog','${p.id}')">＋ تسجيل أداء جلسة</button>`:""}</div><p class="muted" style="margin:-6px 0 14px">يقارن أداء ${esc((p.name||"").split(" ")[0])} داخل جلسات المركز مع ما تسجله الأسرة في المنزل لنفس الهدف، وينبّه عند وجود فجوة تعميم.</p>${genChart?`<div class="grid-2" style="align-items:center"><div>${genChart}</div><div>${genAlert}</div></div>`:genAlert}${recentGenLogs.length?`<div class="box-grid" style="margin-top:14px">${recentGenLogs.map(l=>`<div class="box-card"><div class="box-card-head"><h4>${date(l.date)}</h4>${pill(l.source)}</div>${genResultPill(l.result)}<small style="white-space:pre-line">${esc((l.goalText||"").slice(0,80))}</small>${l.notes?`<small style="white-space:pre-line">${esc(l.notes.slice(0,100))}</small>`:""}</div>`).join("")}</div>`:""}</section>`:"";
-      const canSeeBilling=state.role==="management"||state.role==="reception";
-      let ledgerCard="";
-      if(canSeeBilling){
-        const ledger=patientLedger(p.id);
-        const invBoxes=ledger.invoices.map(inv=>{
-          const balance=invoiceBalance(inv);
-          return `<div class="box-card"><div class="box-card-head"><h4>${date(inv.date)}</h4>${invoiceStatusPill(inv.status)}</div><small>${esc(inv.label||"")}</small><small><b>${(inv.total||0).toLocaleString("ar-SA")} ر.س</b>${balance>0?` — متبقي ${balance.toLocaleString("ar-SA")} ر.س`:""}</small><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="openModal('viewInvoice','${inv.id}')">عرض الفاتورة</button>${(balance>0&&inv.status!=="مسودة"&&inv.status!=="ملغاة")?`<button class="btn btn-primary" style="padding:6px 10px;font-size:11px" onclick="openModal('recordPayment','${inv.id}')">تسجيل دفعة</button>`:""}</div></div>`;
-        }).join("");
-        ledgerCard=`<section class="card" style="margin-top:16px"><div class="card-head"><h2>${ic("invoice",18)} الحساب المالي</h2>${state.role==="management"?`<button class="btn btn-outline" onclick="openModal('newInvoice')">＋ فاتورة جديدة</button>`:""}</div><section class="metric-grid" style="grid-template-columns:repeat(3,1fr)">${metric("invoice","إجمالي المفوتر",ledger.totalInvoiced.toLocaleString("ar-SA")+" ر.س","كل فواتير هذا الملف")}${metric("check","إجمالي المحصّل",ledger.totalPaid.toLocaleString("ar-SA")+" ر.س","كل الدفعات المسجّلة")}${metric("referrals","الرصيد المتبقي",ledger.balanceDue.toLocaleString("ar-SA")+" ر.س",ledger.balanceDue>0?"مستحق على ولي الأمر":"لا يوجد مستحق",ledger.balanceDue>0?"gold":undefined)}</section>${invBoxes?`<div class="box-grid" style="margin-top:14px">${invBoxes}</div>`:`<div class="empty">لا توجد فواتير على هذا الملف بعد.</div>`}</section>`;
-      }
       const headActions=`<div style="display:flex;gap:8px;flex-wrap:wrap">${canEditP?(p.archived?`<button class="btn btn-outline" onclick="restorePatient('${p.id}')">استعادة من الأرشيف</button><button class="btn btn-outline" style="color:var(--danger)" onclick="deletePatientPermanently('${p.id}')">حذف نهائي</button>`:`<button class="btn btn-outline" style="color:var(--danger)" onclick="archivePatient('${p.id}')">حذف (نقل للأرشيف)</button>`):""}</div>`;
       const canSeeHealth=state.role!=="reception";
       let healthCard="";
@@ -194,7 +159,7 @@
         const apps=state.libraryApplications.filter(x=>x.patientId===p.id);
         if(apps.length) libraryAppliedCard=`<section class="card" style="margin-top:16px"><div class="card-head"><h2>${ic("book",18)} أنشطة المكتبة المطبّقة في المنزل</h2></div><div class="box-grid">${apps.map(a=>`<div class="box-card"><div class="box-card-head"><h4>${date(a.date)}</h4></div><small>${esc(a.articleTitle)}</small></div>`).join("")}</div></section>`;
       }
-      return backBtn("setView('patients')","العودة للملفات")+patientProfileHeader(p,headActions)+`<div class="grid-2"><section class="card"><div class="card-head"><h2>بيانات المستفيد</h2><div style="display:flex;gap:8px;align-items:center">${p.archived?`<span class="pill pill-red">مؤرشف</span>`:""}${pill(p.status)}${canEditP?`<button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="openModal('editPatient','${p.id}')">تعديل البيانات</button>`:""}</div></div><div class="form-grid"><div><span class="muted">رقم الملف</span><b style="display:block">${esc(p.file)}</b></div><div><span class="muted">العمر</span><b style="display:block">${esc(p.age)}</b></div><div><span class="muted">المدرسة</span><b style="display:block">${esc(p.school)}</b></div><div><span class="muted">كود الأسرة</span><b style="display:block">${esc(p.code)}</b></div><div><span class="muted">ولي الأمر</span><b style="display:block">${esc(p.guardian||"—")}</b></div><div><span class="muted">رقم تواصل ولي الأمر</span><b style="display:block">${esc(p.phone||"—")}</b></div></div><hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><div class="card-head"><h2>الملاحظات السريرية</h2>${canEditP?`<button class="btn btn-outline" onclick="openModal('notes','${p.id}')">تعديل</button>`:""}</div><p class="muted" style="line-height:2">${esc(p.notes)}</p></section><section class="card"><div class="card-head"><h2>الخطة العلاجية</h2>${jrPlanPill(p)}</div><div class="notice-blue"><b>الهدف الحالي</b><br>${esc(p.goal)}</div><div style="margin-top:20px"><div class="muted">الموعد القادم</div>${jrNextHtml(p)}</div><div style="margin-top:20px"><div class="muted">التقدم في الأهداف</div>${jrProgHtml(p)}</div></section></div>`+awanNextCard(p)+patientCaseStudyCard(p)+reportsCard+stdAssessCard+assignedProgramsCard+genCard+ledgerCard+healthCard+libraryAppliedCard+consentsCard(p)+patientAuditCard(p);
+      return backBtn("setView('patients')","العودة للملفات")+patientProfileHeader(p,headActions)+`<div class="grid-2"><section class="card"><div class="card-head"><h2>بيانات المستفيد</h2><div style="display:flex;gap:8px;align-items:center">${p.archived?`<span class="pill pill-red">مؤرشف</span>`:""}${pill(p.status)}${canEditP?`<button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="openModal('editPatient','${p.id}')">تعديل البيانات</button>`:""}</div></div><div class="form-grid"><div><span class="muted">رقم الملف</span><b style="display:block">${esc(p.file)}</b></div><div><span class="muted">العمر</span><b style="display:block">${esc(p.age)}</b></div><div><span class="muted">المدرسة</span><b style="display:block">${esc(p.school)}</b></div><div><span class="muted">كود الأسرة</span><b style="display:block">${esc(p.code)}</b></div><div><span class="muted">ولي الأمر</span><b style="display:block">${esc(p.guardian||"—")}</b></div><div><span class="muted">رقم تواصل ولي الأمر</span><b style="display:block">${esc(p.phone||"—")}</b></div></div><hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><div class="card-head"><h2>الملاحظات السريرية</h2>${canEditP?`<button class="btn btn-outline" onclick="openModal('notes','${p.id}')">تعديل</button>`:""}</div><p class="muted" style="line-height:2">${esc(p.notes)}</p></section><section class="card"><div class="card-head"><h2>الخطة العلاجية</h2>${jrPlanPill(p)}</div><div class="notice-blue"><b>الهدف الحالي</b><br>${esc(p.goal)}</div><div style="margin-top:20px"><div class="muted">الموعد القادم</div>${jrNextHtml(p)}</div><div style="margin-top:20px"><div class="muted">التقدم في الأهداف</div>${jrProgHtml(p)}</div></section></div>`+awanNextCard(p)+patientCaseStudyCard(p)+reportsCard+stdAssessCard+assignedProgramsCard+genCard+healthCard+libraryAppliedCard+consentsCard(p)+patientAuditCard(p);
     }
     function familyBookingsAlertSection(){
       const rows=state.sessionBookings.filter(b=>b.status!=="ملغي");
@@ -203,7 +168,7 @@
       return `<section class="card" style="margin-bottom:16px">
         <div class="card-head"><h2>${unseenCount>0?"🔴 ":""}حجوزات الأسرة عبر بوابة الأسرة</h2><span class="muted">${rows.length} حجز${unseenCount>0?` · ${unseenCount} جديد`:""}</span></div>
         ${unseenCount>0?`<div class="actions" style="margin-bottom:10px"><button class="btn btn-outline" onclick="markAllBookingsSeen()">تحديد الكل كمقروء</button></div>`:""}
-        <div class="list">${rows.map(b=>`<div class="list-row" style="align-items:flex-start"><div class="list-main"><strong>${!b.seen?`<span class="pill pill-red" style="margin-inline-end:6px">جديد</span>`:""}${esc(b.patientName)}</strong><small>${date(b.day)} · ${time(b.time)} — ${esc(b.specialist)} · ${b.price} ر.س · ${esc(b.payment)}</small></div><div class="list-end">${pillFor(b.status)}${!b.seen?`<button class="btn btn-outline" style="margin-top:8px;padding:6px 10px;font-size:11px" onclick="markBookingSeen('${b.id}')">تم الاطلاع</button>`:""}</div></div>`).join("")}</div>
+        <div class="list">${rows.map(b=>`<div class="list-row" style="align-items:flex-start"><div class="list-main"><strong>${!b.seen?`<span class="pill pill-red" style="margin-inline-end:6px">جديد</span>`:""}${esc(b.patientName)}</strong><small>${date(b.day)} · ${time(b.time)} — ${esc(b.specialist)}</small></div><div class="list-end">${pillFor(b.status)}${!b.seen?`<button class="btn btn-outline" style="margin-top:8px;padding:6px 10px;font-size:11px" onclick="markBookingSeen('${b.id}')">تم الاطلاع</button>`:""}</div></div>`).join("")}</div>
       </section>`;
     }
     function appointmentActionsCell(a){
@@ -235,7 +200,7 @@
       const rows=person?filterApptsByRange(ownRows,activeFilter):ownRows;
       const scopeNote=person?`<div class="notice-blue" style="margin-bottom:16px">${newCount>0?"🔴 ":""}هذا جدولك الشخصي كـ${esc(person.role)} — توزّعه إدارة الاستقبال.${newCount>0?` لديك ${newCount} إضافة جديدة.`:""}${newCount>0?` <a class="back-link" onclick="ackAllNewChildAppts()">تحديد الكل كمقروء</a>`:""}</div>`:"";
       const filterChips=person?`<div class="chips" style="margin-bottom:14px">${[["all","📋 الكل"],["today","📅 جدول اليوم"],["week","🗓️ جدول الأسبوع"],["month","📆 جدول الشهر"],["comp","🔄 الجلسات التعويضية"]].map(([key,label])=>`<label class="chip ${activeFilter===key?"checked":""}" onclick="setStaffScheduleFilter('${key}')">${label}</label>`).join("")}</div>`:"";
-      return head("الجدول / 03","إيقاع اليوم",person?"جلساتك المجدولة اليوم وقادمًا.":"نظرة هادئة على الجلسات القادمة وتوزيع الغرف والفريق.",addApptBtn)+familyBookingsAlertSection()+scopeNote+filterChips+`<section class="card"><div class="card-head"><h2>جدول المواعيد</h2><span class="muted">${rows.length} مواعيد محفوظة</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستفيد</th><th>الخدمة</th><th>المعالج</th><th>الغرفة</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.length?rows.map(a=>{const pkg=activePackageForPatientName(a.patient);const pkgRemaining=pkg?(pkg.sessionsTotal-pkg.sessionsUsed):null;const pkgAlert=(pkg&&pkgRemaining<=1)?` <span class="pill pill-gold" title="الباقة على وشك الانتهاء">⚠️ باقة توشك تنتهي</span>`:"";return `<tr><td>${date(a.date)}</td><td><b>${time(a.time)}</b></td><td>${esc(a.patient)}${pkgAlert}</td><td>${esc(a.service)}</td><td>${esc(a.clinician)}</td><td>${esc(a.room)}</td><td>${pill(a.status)}${a.compensationFor?` <span class="pill pill-blue">🔄 تعويض</span>`:""}${a.newForStaff?` <span class="pill pill-red">جديد</span> <button class="btn btn-outline" style="padding:4px 8px;font-size:10px" onclick="ackNewChildAppt('${a.id}')">تم الاطلاع</button>`:""}</td>${appointmentActionsCell(a)}</tr>`}).join(""):`<tr><td colspan="8"><div class="empty">${activeFilter==="all"?"لا توجد مواعيد في جدولك حاليًا.":"لا توجد مواعيد ضمن هذا الفلتر."}</div></td></tr>`}</tbody></table></div></section>`;
+      return head("الجدول / 03","إيقاع اليوم",person?"جلساتك المجدولة اليوم وقادمًا.":"نظرة هادئة على الجلسات القادمة وتوزيع الغرف والفريق.",addApptBtn)+familyBookingsAlertSection()+scopeNote+filterChips+`<section class="card"><div class="card-head"><h2>جدول المواعيد</h2><span class="muted">${rows.length} مواعيد محفوظة</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستفيد</th><th>الخدمة</th><th>المعالج</th><th>الغرفة</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.length?rows.map(a=>{return `<tr><td>${date(a.date)}</td><td><b>${time(a.time)}</b></td><td>${esc(a.patient)}</td><td>${esc(a.service)}</td><td>${esc(a.clinician)}</td><td>${esc(a.room)}</td><td>${pill(a.status)}${a.compensationFor?` <span class="pill pill-blue">🔄 تعويض</span>`:""}${a.newForStaff?` <span class="pill pill-red">جديد</span> <button class="btn btn-outline" style="padding:4px 8px;font-size:10px" onclick="ackNewChildAppt('${a.id}')">تم الاطلاع</button>`:""}</td>${appointmentActionsCell(a)}</tr>`}).join(""):`<tr><td colspan="8"><div class="empty">${activeFilter==="all"?"لا توجد مواعيد في جدولك حاليًا.":"لا توجد مواعيد ضمن هذا الفلتر."}</div></td></tr>`}</tbody></table></div></section>`;
     }
     function referrals(){return head("الإحالات / 04","صندوق الإحالات","حوّل طلبات التعاون الجديدة إلى مسارات رعاية واضحة، دون أن يفوتك أي طلب.","<button class=\"btn btn-primary\" onclick=\"openModal('referral')\">＋ تسجيل إحالة</button>")+`<section class="card"><div class="notice" style="margin-bottom:17px">الإحالة العامة أو الطبية تدخل الصندوق الداخلي أولاً للمراجعة. لا يتم إنشاء ملف مستفيد تلقائياً قبل موافقة المركز.</div><div class="table-wrap"><table class="data-table"><thead><tr><th>الطلب</th><th>الجهة / الشخص</th><th>النوع</th><th>الأولوية</th><th>التاريخ</th><th>الحالة</th><th></th></tr></thead><tbody>${state.referrals.map((r,i)=>`<tr><td class="wrap"><b>${esc(r.name)}</b>${r.note?`<br><small class="muted">${esc(r.note)}</small>`:""}</td><td>${esc(r.person)}</td><td>${esc(r.type)}</td><td>${pill(r.priority)}</td><td>${date(r.date)}</td><td>${pill(r.status)}</td><td>${r.type==="تقرير طبي"?(r.patientId?`<button class="btn btn-outline" style="margin-left:6px" onclick="openModal('medReferral',${i})">عرض</button>${r.status==="أُلحق بالملف الصحي"?"":`<button class="btn btn-primary" onclick="attachMedicalReport(${i})">إلحاق بالملف الصحي</button>`}`:`<span class="muted" style="font-size:11px">لا يوجد ملف مطابق</span>`):`<button class="btn btn-outline" onclick="advanceReferral(${i})">تحديث</button>`}</td></tr>`).join("")}</tbody></table></div></section><section class="card" style="margin-top:18px"><div class="card-head"><h2>طلبات تسجيل أولية</h2><span class="muted">لا تنشئ ملفاً تلقائياً</span></div><div class="list">${state.registrations.map((r,i)=>`<div class="list-row"><div class="list-main"><strong>${esc(r.child)}</strong><small>ولي الأمر: ${esc(r.guardian||"—")} · ${esc(r.phone||"—")} · ${esc((r.reason||"").slice(0,60))}${(r.reason||"").length>60?"…":""}</small></div><div class="list-end">${pill(r.status)}<button class="btn btn-outline" style="margin-right:7px" onclick="openModal('registration',${i})">عرض التفاصيل</button><button class="btn btn-outline" style="margin-right:7px" onclick="advanceRegistration(${i})">تحديث</button></div></div>`).join("")}</div></section>`;
     }
@@ -244,19 +209,13 @@
     function receptionDashboard(){
       const todayStr=todayISO();
       const todayAppts=state.appointments.filter(a=>a.date===todayStr);
-      const activePackages=state.packagePurchases.filter(pp=>(pp.sessionsTotal-pp.sessionsUsed)>0);
-      const lowBalance=activePackages.filter(pp=>(pp.sessionsTotal-pp.sessionsUsed)<=1);
       const pendingConsults=state.consultationReviews.filter(c=>c.status==="بانتظار المراجعة");
-      const todayInvoices=state.invoices.filter(inv=>inv.date===todayStr);
-      const receivables=state.invoices.filter(inv=>inv.status==="مُصدرة"||inv.status==="مسدد جزئياً");
             const commPending=pendingCommCount();
 const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name===a.clinician);return s&&s.department}).filter(Boolean));
-      return head("الاستقبال / 09","الاستقبال والحجوزات والمالية","سجّلي حجزاً جديداً، تابعي الباقات، وأصدري الفواتير — كل شيء من هنا.",`<button class="btn btn-primary" onclick="openModal('newBooking')">＋ تسجيل حجز جديد</button>`)
-      +`<section class="metric-grid">${metric("schedule","مواعيد اليوم",todayAppts.length,"على جدول اليوم")}${metric("check","استشارات بانتظار المراجعة",pendingConsults.length,"لدى الإشراف الفني","gold")}${metric("idea","باقات قاربت على الانتهاء",lowBalance.length,"تنبيه للمتابعة","gold")}${metric("departments","الجدول موزّع على الأقسام",todayDeptIds.size,"من "+state.departments.length+" قسم بالمركز")}</section>`
+      return head("الاستقبال / 09","الاستقبال والحجوزات","سجّلي حجزاً جديداً وتابعي مواعيد اليوم — كل شيء من هنا.",`<button class="btn btn-primary" onclick="openModal('newBooking')">＋ تسجيل حجز جديد</button>`)
+      +`<section class="metric-grid">${metric("schedule","مواعيد اليوم",todayAppts.length,"على جدول اليوم")}${metric("check","استشارات بانتظار المراجعة",pendingConsults.length,"لدى الإشراف الفني","gold")}${metric("departments","الجدول موزّع على الأقسام",todayDeptIds.size,"من "+state.departments.length+" قسم بالمركز")}</section>`
             +`<section class="card" style="margin-top:18px;border-color:var(--comm-1)"><div class="card-head"><h2><span class="comm-badge sm" style="margin-inline-end:8px;vertical-align:middle">${ic("commHub",14)}</span>أوان تواصل</h2>${commPending>0?`<span class="pill pill-red">${commPending} جديد</span>`:`<span class="muted">لا يوجد جديد</span>`}</div><p class="muted" style="margin:0 0 12px">مركز تواصل حي بين الاستقبال والأقسام والإشراف وبوابة الأهل — رسائل وقرارات وحالتها لحظيًا.</p><button class="btn btn-primary" onclick="setView('communicationHub')">فتح أوان تواصل</button></section>`
-+`<section class="card" style="margin-top:18px"><div class="card-head"><h2>حجوزات اليوم</h2><button class="back-link" onclick="setView('schedule')">عرض الجدول الكامل ←</button></div><div class="list">${todayAppts.length?todayAppts.map(a=>`<div class="list-row"><div class="list-main"><strong>${esc(a.patient)}</strong><small>${esc(a.service)} · ${esc(a.clinician)} · ${esc(a.room)}${a.bookingType?" · "+esc(a.bookingType):""}</small></div><div class="list-end"><b style="font-size:13px;color:var(--navy)">${time(a.time)}</b>${pill(a.status)}</div></div>`).join(""):`<div class="empty">لا توجد مواعيد مسجّلة اليوم بعد.</div>`}</div></section>`
-      +`<section class="card" style="margin-top:18px"><div class="card-head"><h2>الباقات النشطة</h2><span class="muted">${activePackages.length} باقة سارية</span></div><div class="list">${activePackages.length?activePackages.map(pp=>{const remaining=pp.sessionsTotal-pp.sessionsUsed;return `<div class="list-row"><div class="list-main"><strong>${esc(pp.patientName)}</strong><small>${esc(pp.package)} · استُخدم ${pp.sessionsUsed} من ${pp.sessionsTotal}</small></div><div class="list-end">${remaining<=1?`<span class="pill pill-red">باقي ${remaining} جلسة</span>`:`<span class="pill pill-good">متبقي ${remaining}</span>`}</div></div>`}).join(""):`<div class="empty">لا توجد باقات نشطة حالياً.</div>`}</div><button class="btn btn-outline" style="margin-top:14px" onclick="openModal('assignPackage')">＋ إسناد باقة لطفل</button></section>`
-      +`<section class="card" style="margin-top:18px"><div class="card-head"><h2>الفواتير والمعاملات المالية</h2><span class="muted">${todayInvoices.length} عملية اليوم</span></div><div class="list">${todayInvoices.length?todayInvoices.map(inv=>`<div class="list-row"><div class="list-main"><strong>${esc(inv.patientName||"زائر")}</strong><small>${esc(inv.type)} · ${esc(inv.label)} · ${esc(inv.payment)}</small></div><div class="list-end"><b>${inv.amount} ر.س</b>${inv.status&&inv.status!=="مدفوعة"?invoiceStatusPill(inv.status):""}</div></div>`).join(""):`<div class="empty">لا توجد فواتير مسجّلة اليوم بعد.</div>`}</div><button class="btn btn-outline" style="margin-top:14px" onclick="openModal('newInvoice')">＋ إصدار فاتورة يدوية</button>${receivables.length?`<div class="notice" style="margin-top:14px;border-color:var(--danger);color:var(--danger)">⚠️ يوجد ${receivables.length} فاتورة بانتظار التحصيل بإجمالي متبقٍ ${receivables.reduce((s,i)=>s+invoiceBalance(i),0)} ر.س بانتظار التحصيل.</div>`:""}</section>`;
++`<section class="card" style="margin-top:18px"><div class="card-head"><h2>حجوزات اليوم</h2><button class="back-link" onclick="setView('schedule')">عرض الجدول الكامل ←</button></div><div class="list">${todayAppts.length?todayAppts.map(a=>`<div class="list-row"><div class="list-main"><strong>${esc(a.patient)}</strong><small>${esc(a.service)} · ${esc(a.clinician)} · ${esc(a.room)}${a.bookingType?" · "+esc(a.bookingType):""}</small></div><div class="list-end"><b style="font-size:13px;color:var(--navy)">${time(a.time)}</b>${pill(a.status)}</div></div>`).join(""):`<div class="empty">لا توجد مواعيد مسجّلة اليوم بعد.</div>`}</div></section>`;
     }
     function submitNewBooking(e){
       e.preventDefault();
@@ -274,64 +233,14 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
         if(!patient){notify("تعذر إيجاد ملف الطفل المحدد");return}
       }
       const specialist=state.staff.find(s=>s.name===f.clinician);
-      const amount=Number(f.amount)||0;
-      let payFromPackage=false;
-      let paymentLabel=f.payment;
-      if(f.payment==="من الباقة"){
-        const activePkg=state.packagePurchases.find(pp=>pp.patientId===patient.id&&(pp.sessionsTotal-pp.sessionsUsed)>0);
-        if(!activePkg){notify("لا يوجد رصيد باقة متاح لهذا الطفل — اختاري طريقة دفع أخرى");return}
-        activePkg.sessionsUsed=(activePkg.sessionsUsed||0)+1;
-        payFromPackage=true;
-        paymentLabel="من الباقة — "+activePkg.package;
-      }
       const isConsultation=f.bookingType==="استشارة مبدئية";
       if(isConsultation){
         state.consultationReviews.unshift({id:"cv-"+Date.now(),patientId:patient.id,patientName:patient.name,department:specialist?specialist.department:null,specialistName:f.clinician,date:f.date,time:f.time,room:f.room,guardian:patient.guardian,phone:patient.phone,status:"بانتظار المراجعة",note:""});
       }
       state.appointments.push({id:"apt-"+Date.now(),date:f.date,time:f.time,patient:patient.name,service:f.service,clinician:f.clinician,room:f.room,status:"مجدول",bookingType:f.bookingType,newForStaff:true});
-      if(payFromPackage){
-        createInvoice({patientId:patient.id,patientName:patient.name,type:"من الباقة",label:f.service,amount:0,payment:paymentLabel});
-      } else if(amount>0){
-        createInvoice({patientId:patient.id,patientName:patient.name,type:isConsultation?"استشارة":(f.bookingType==="جلسة تعويضية"?"جلسة تعويضية":"جلسة منفردة"),label:f.service,amount,payment:f.payment});
-      }
       persist();closeModal();
       notify(isConsultation?`تم تسجيل الاستشارة وترحيلها للإشراف الفني للمراجعة قبل اعتماد جدول ثابت لـ ${patient.name}`:`تم تسجيل الحجز لـ ${patient.name} بنجاح`);
       render();
-    }
-    function confirmAssignPackage(e){
-      e.preventDefault();
-      const f=formData(e);
-      const pkg=state.packages.find(x=>x.id===f.package);
-      const patient=state.patients.find(x=>x.id===f.patientId);
-      if(!pkg||!patient){notify("تأكدي من اختيار الطفل والباقة");return}
-      state.packagePurchases.unshift({id:"PK-"+Date.now().toString().slice(-6),patientId:patient.id,patientName:patient.name,package:pkg.name,packageId:pkg.id,sessionsTotal:pkg.sessions,sessionsUsed:0,price:pkg.price,payment:f.payment,date:todayISO()});
-      createInvoice({patientId:patient.id,patientName:patient.name,type:"باقة",label:pkg.name,amount:pkg.price,payment:f.payment});
-      persist();closeModal();notify(`تم إسناد ${pkg.name} لـ ${patient.name} ✓`);render();
-    }
-    async function confirmNewInvoice(e){
-      e.preventDefault();
-      const f=formData(e);
-      const patient=f.patientId?state.patients.find(x=>x.id===f.patientId):null;
-      const isDraft=f.status==="مسودة";
-      const taxRate=f.applyTax==="on"?(Number(state.billingSettings.taxRate)||0):0;
-      const discountAmount=Number(f.discountAmount)||0;
-      const inv=await apiCreateInvoice({patientId:patient?patient.id:null,patientName:patient?patient.name:"زائر",type:f.type,label:f.label,amount:f.amount,payment:isDraft?"آجل":f.payment,taxRate,discountAmount,status:isDraft?"مسودة":undefined});
-      persist();closeModal();notify(isDraft?"تم حفظ الفاتورة كمسودة":"تم إصدار الفاتورة");render();
-    }
-    async function submitRecordPayment(e,invoiceId){
-      e.preventDefault();
-      const f=formData(e);
-      await apiRecordPayment(invoiceId,f.amount,f.method,f.note);
-      persist();closeModal();notify("تم تسجيل الدفعة");render();
-    }
-    async function issueInvoiceAction(invoiceId){
-      await apiUpdateInvoiceStatus(invoiceId,"مُصدرة");
-      persist();notify("تم إصدار الفاتورة");render();
-    }
-    async function cancelInvoiceAction(invoiceId){
-      if(!confirm("هل تريدين إلغاء هذه الفاتورة؟ لا يمكن تسجيل دفعات عليها بعد الإلغاء.")) return;
-      await apiUpdateInvoiceStatus(invoiceId,"ملغاة");
-      persist();notify("تم إلغاء الفاتورة");render();
     }
     function reviewConsultation(id,decision){
       const c=state.consultationReviews.find(x=>x.id===id); if(!c)return;
@@ -631,47 +540,10 @@ const todayDeptIds=new Set(todayAppts.map(a=>{const s=state.staff.find(x=>x.name
       state.staff.forEach(s=>{if(s.department){const n=state.appointments.filter(a=>a.clinician===s.name).length;byDept[s.department]=(byDept[s.department]||0)+n}});
       const activePatients=state.patients.filter(p=>!p.archived).length;
       const pendingReferrals=state.referrals.filter(r=>r.status==="جديدة"||r.status==="قيد الفرز").length;
-      const todayStr=todayISO();
-      const monthPrefix=todayStr.slice(0,7);
-      const paidInvoices=state.invoices.filter(inv=>inv.paid);
-      const dailyRevenue=paidInvoices.filter(inv=>inv.date===todayStr).reduce((s,i)=>s+i.amount,0);
-      const monthlyRevenue=paidInvoices.filter(inv=>(inv.date||"").startsWith(monthPrefix)).reduce((s,i)=>s+i.amount,0);
-      const byType={};
-      paidInvoices.forEach(inv=>{byType[inv.type]=(byType[inv.type]||0)+inv.amount});
-      const typePalette=["var(--teal)","var(--gold)","var(--sage)","var(--purple)","var(--navy-2)"];
-      const typeChartData=Object.entries(byType).map(([type,amt],i)=>({label:type,value:amt,color:typePalette[i%typePalette.length]}));
-      const receivables=state.invoices.filter(inv=>inv.status==="مُصدرة"||inv.status==="مسدد جزئياً");
-      const receivablesTotal=receivables.reduce((s,i)=>s+invoiceBalance(i),0);
       const deptPalette=["var(--teal)","var(--gold)","var(--sage)","var(--purple)","var(--navy-2)","#E4A6C5","#7FB3D5","#C9A66B"];
       const deptChartData=Object.entries(byDept).map(([dept,n],i)=>({label:departmentLabel(dept),value:n,color:deptPalette[i%deptPalette.length]}));
       return head("التقارير / 08","تقارير الأداء العامة","نظرة عامة سريعة على أداء المركز — للاطّلاع، بدون الشي لتصدير خارجي.","")
       +`<section class="metric-grid">${metric("schedule","إجمالي المواعيد",totalAppts,"كل المواعيد المسجلة")}${metric("check","جلسات مكتملة",completed,scheduled+" مجدولة")}${metric("referrals","إحالات بانتظار المراجعة",pendingReferrals,"تحتاج إجراء","gold")}${metric("patients","ملفات نشطة",activePatients,"من إجمالي "+state.patients.length)}</section>`
       +(deptChartData.length?`<section class="card"><div class="card-head"><h2>توزيع المواعيد على الأقسام</h2><span class="muted">رسم بياني تفاعلي</span></div><div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap"><div>${svgDonutChart(deptChartData)}</div><div style="flex:1;min-width:180px">${chartLegend(deptChartData)}</div></div></section>`:"")
-      +`<div class="grid-2" style="margin-top:18px"><section class="card"><div class="card-head"><h2>المواعيد حسب المعالج</h2></div><div class="list">${Object.keys(byClinician).length?Object.entries(byClinician).sort((a,b)=>b[1]-a[1]).map(([name,n])=>`<div class="list-row"><div class="list-main"><strong>${esc(name)}</strong></div><div class="list-end"><b>${n}</b></div></div>`).join(""):`<div class="empty">لا توجد بيانات كافية.</div>`}</div></section><section class="card"><div class="card-head"><h2>المواعيد حسب القسم</h2></div><div class="list">${Object.keys(byDept).length?Object.entries(byDept).map(([dept,n])=>`<div class="list-row"><div class="list-main"><strong>${esc(departmentLabel(dept))}</strong></div><div class="list-end"><b>${n}</b></div></div>`).join(""):`<div class="empty">لا توجد بيانات كافية.</div>`}</div></section></div>`
-      +`<section class="card" style="margin-top:18px"><div class="card-head"><h2>التقارير المالية</h2><span class="muted">مرحّلة تلقائياً من الاستقبال وبوابة الأسرة</span></div><section class="metric-grid">${metric("idcard","إيرادات اليوم",dailyRevenue+" ر.س","محصّلة فعلياً")}${metric("chart","إيرادات الشهر",monthlyRevenue+" ر.س","إجمالي الشهر الحالي")}${metric("referrals","ذمم مستحقة",receivablesTotal+" ر.س",receivables.length+" فاتورة آجلة","gold")}</section>
-        <div class="grid-2" style="margin-top:16px"><div><div class="card-head"><h2>الإيرادات حسب النوع</h2></div>${typeChartData.length?`<div style="display:flex;gap:16px;align-items:center;margin-bottom:14px">${svgDonutChart(typeChartData,{size:110,stroke:16})}${chartLegend(typeChartData)}</div>`:""}<div class="list">${Object.keys(byType).length?Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([type,amt])=>`<div class="list-row"><div class="list-main"><strong>${esc(type)}</strong></div><div class="list-end"><b>${amt} ر.س</b></div></div>`).join(""):`<div class="empty">لا توجد بيانات مالية كافية.</div>`}</div></div>
-        <div><div class="card-head"><h2>الذمم — مبالغ متبقية على أولياء الأمور</h2></div><div class="list">${receivables.length?receivables.map(r=>`<div class="list-row"><div class="list-main"><strong>${esc(r.patientName||"زائر")}</strong><small>${esc(r.type)} · ${esc(r.label)} · ${date(r.date)}</small></div><div class="list-end"><b style="color:var(--danger)">${invoiceBalance(r)} ر.س</b></div></div>`).join(""):`<div class="empty">لا توجد ذمم مستحقة حالياً 🌿</div>`}</div></div></div>
-      </section>`;
-    }
-    function setInvoiceFilter(f){state.invoiceFilter=f;persist();render()}
-    function invoicesView(){
-      const filter=state.invoiceFilter||"all";
-      const all=state.invoices;
-      const rows = filter==="all"?all:all.filter(i=>i.status===filter);
-      const totalIssued=all.filter(i=>i.status!=="مسودة"&&i.status!=="ملغاة").reduce((s,i)=>s+Number(i.total||0),0);
-      const totalCollected=all.reduce((s,i)=>s+(i.payments||[]).reduce((s2,p)=>s2+Number(p.amount||0),0),0);
-      const totalOutstanding=all.filter(i=>i.status==="مُصدرة"||i.status==="مسدد جزئياً").reduce((s,i)=>s+invoiceBalance(i),0);
-      const statuses=["all","مسودة","مُصدرة","مسدد جزئياً","مدفوعة","ملغاة"];
-      const filterChips=`<div class="chips" style="margin-bottom:14px">${statuses.map(s=>`<label class="chip ${filter===s?"checked":""}" onclick="setInvoiceFilter('${s}')">${s==="all"?"الكل":esc(s)} (${s==="all"?all.length:all.filter(i=>i.status===s).length})</label>`).join("")}</div>`;
-      const tableRows=rows.map(inv=>{
-        const balance=invoiceBalance(inv);
-        const actions=`<button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="openModal('viewInvoice','${inv.id}')">عرض الفاتورة</button>`
-          +(inv.status==="مسودة"?`<button class="btn btn-outline" style="padding:6px 10px;font-size:11px" onclick="issueInvoiceAction('${inv.id}')">إصدار</button>`:"")
-          +((balance>0&&inv.status!=="مسودة"&&inv.status!=="ملغاة")?`<button class="btn btn-primary" style="padding:6px 10px;font-size:11px" onclick="openModal('recordPayment','${inv.id}')">تسجيل دفعة</button>`:"")
-          +((inv.status!=="ملغاة"&&inv.status!=="مدفوعة")?`<button class="btn btn-outline" style="padding:6px 10px;font-size:11px;color:var(--danger)" onclick="cancelInvoiceAction('${inv.id}')">إلغاء</button>`:"");
-        return `<tr><td>${date(inv.date)}</td><td>${esc(inv.patientName||"زائر")}</td><td class="wrap">${esc(inv.label||"")}</td><td>${(inv.total||0).toLocaleString("ar-SA")} ر.س</td><td>${balance>0?`<span style="color:var(--danger)">${balance.toLocaleString("ar-SA")} ر.س</span>`:"—"}</td><td>${invoiceStatusPill(inv.status)}</td><td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">${actions}</td></tr>`;
-      }).join("");
-      return head("الفواتير / 09","الفواتير والمدفوعات","إدارة كاملة لفواتير المركز — الإصدار، تتبّع الحالة، وتسجيل الدفعات الجزئية.","<button class=\"btn btn-primary\" onclick=\"openModal('newInvoice')\">＋ فاتورة جديدة</button>")
-      +`<section class="metric-grid">${metric("invoice","إجمالي المُصدر",totalIssued.toLocaleString("ar-SA")+" ر.س","فواتير غير ملغاة")}${metric("check","إجمالي المُحصّل",totalCollected.toLocaleString("ar-SA")+" ر.س","كل الدفعات المسجّلة")}${metric("referrals","متبقٍ غير محصّل",totalOutstanding.toLocaleString("ar-SA")+" ر.س",all.filter(i=>i.status==="مُصدرة"||i.status==="مسدد جزئياً").length+" فاتورة","gold")}</section>`
-      +`<section class="card">${filterChips}<div class="table-wrap"><table class="data-table"><thead><tr><th>التاريخ</th><th>العميل</th><th>الوصف</th><th>الإجمالي</th><th>المتبقي</th><th>الحالة</th><th></th></tr></thead><tbody>${tableRows||`<tr><td colspan="7"><div class="empty">لا توجد فواتير ضمن هذا الفلتر.</div></td></tr>`}</tbody></table></div></section>`;
+      +`<div class="grid-2" style="margin-top:18px"><section class="card"><div class="card-head"><h2>المواعيد حسب المعالج</h2></div><div class="list">${Object.keys(byClinician).length?Object.entries(byClinician).sort((a,b)=>b[1]-a[1]).map(([name,n])=>`<div class="list-row"><div class="list-main"><strong>${esc(name)}</strong></div><div class="list-end"><b>${n}</b></div></div>`).join(""):`<div class="empty">لا توجد بيانات كافية.</div>`}</div></section><section class="card"><div class="card-head"><h2>المواعيد حسب القسم</h2></div><div class="list">${Object.keys(byDept).length?Object.entries(byDept).map(([dept,n])=>`<div class="list-row"><div class="list-main"><strong>${esc(departmentLabel(dept))}</strong></div><div class="list-end"><b>${n}</b></div></div>`).join(""):`<div class="empty">لا توجد بيانات كافية.</div>`}</div></section></div>`;
     }

@@ -13,9 +13,8 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { applyPath, loadEngine, pathFromState } from './engine'
-import { startPatientSync } from './sync'
-import { applyAccount, installLogin } from './login'
-import { isLoggedIn } from '@/session'
+import { installBridge, leaveGuestServerMode, startServerMode } from './bridge'
+import { installLogin } from './login'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,14 +53,13 @@ function applyRoute() {
 
 onMounted(async () => {
   try {
+    installBridge()
     await loadEngine()
     wrapEngine()
     status.value = 'ready'
     applyRoute()
-    if (isLoggedIn.value) {
-      applyAccount().catch(() => {})
-      startPatientSync().catch(() => window.notify?.('تعذّر تحميل ملفات الأطفال من السيرفر — شغالين على النسخة المحلية'))
-    }
+    // Signed in (or a family session): the center's data on Frappe, synced live between devices
+    startServerMode(route.path).catch(() => window.notify?.('تعذّر الاتصال بالسيرفر — شغالين على النسخة المحلية'))
   } catch (e) {
     status.value = 'error'
     error.value = e.message || String(e)
@@ -73,6 +71,8 @@ watch(
   () => route.path,
   (path) => {
     if (status.value !== 'ready') return
+    if (/^\/family\b/.test(path)) startServerMode(path).catch(() => {})
+    else leaveGuestServerMode()
     const s = engineState()
     if (pathFromState(s) === path) return
     if (applyPath(s, path)) {

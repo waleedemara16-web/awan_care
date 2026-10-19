@@ -84,17 +84,3 @@ export function installLogin() {
     return r
   }
 }
-
-// After a page load with a signed-in account: take the Awan role from the Frappe roles
-export async function applyAccount() {
-  if (!isLoggedIn.value) return null
-  const me = await call('awan_care.api.me')
-  const s = window.__awanState()
-  window.__awanAccount = me
-  if (me.awan_role && s.role !== me.awan_role) {
-    s.role = me.awan_role
-    window.persist()
-    window.render()
-  }
-  return me
-}
